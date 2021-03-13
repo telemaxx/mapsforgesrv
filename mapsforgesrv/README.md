@@ -43,9 +43,9 @@ Command parameters:
 
 longest example:
 ```console
-depends on os with or without .bat
-bin\jars_ready2use\bin\mapsforgesrv.bat -m "path2mapfile1.map, path2mapfile2.map" -t path2themefile.xml -p 8080 -if all -l EN -s "elmt-hiking" -r "direct" -o elmt-mtbs_tracks,elmt-mtb_routes,elmt-mtb_c_routes"
+java -jar mapsforgesrv\bin\jars_ready2use/mapsforgesrv-fatjar.jar -m "path2mapfile1.map, path2mapfile2.map" -t path2themefile.xml -p 8080 -if all -l EN -s "elmt-hiking" -r "direct" -o elmt-mtbs_tracks,elmt-mtb_routes,elmt-mtb_c_routes"
 ```
+
 
 -------------
 ### Contributors

@@ -31,7 +31,7 @@ import org.eclipse.jetty.server.Server;
 public class MapsforgeSrv {
 
 	public static void main(String[] args) throws Exception {
-		final String VERSION = "0.13.1"; //starting with 0.13, the mapsforge version //$NON-NLS-1$
+		final String VERSION = "0.15.1"; //starting with 0.13, the mapsforge version //$NON-NLS-1$
 		System.out.println("MapsforgeSrv - a mapsforge tile server. " + "version: " + VERSION); //$NON-NLS-1$ //$NON-NLS-2$
 
 		String rendererName = null;
