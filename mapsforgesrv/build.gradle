@@ -56,6 +56,9 @@ dependencies {
 
 	task fatJar(type: Jar, dependsOn: classes) {
 	    classifier = 'fatjar'
+	    group 'distribution'
+	    description 'Produces a fatJar in mapsforgesrv\\build\\libs'
+	    
 	    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 		    exclude 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/*.SF'
 		    manifest {
