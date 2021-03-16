@@ -19,6 +19,7 @@ repositories {
     jcenter()
     mavenCentral()
     maven { url 'https://jitpack.io' }
+    //maven { url "https://plugins.gradle.org/m2/" }
 }
 
 dependencies {
@@ -50,6 +51,8 @@ dependencies {
     implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '11.0.1'
     
 	implementation 'com.github.blackears:svgSalamander:v1.1.2'
+	
+	
 }
 
     mainClassName = 'com.telemaxx.mapsforgesrv.MapsforgeSrv'
@@ -67,12 +70,10 @@ dependencies {
 	    with jar
 	}
 
-    //create a single Jar with all dependencies
-/*task customFatJar(type: Jar) {
-    manifest {
-        attributes 'Main-Class': 'com.telemaxx.mapsforgesrv.MapsforgeSrv'
-    }
-    baseName = 'all-in-one-jar'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
-}*/
+	task copyFatJar2jars_ready2use(type: Copy, dependsOn: 'fatJar') {
+		group 'distribution'
+		description 'Copy the fatJar to bin/jars_ready2use/'
+    	from file("$buildDir/libs/mapsforgesrv-fatjar.jar")
+    	into file("$buildDir/../bin/jars_ready2use/")
+	}
+	
