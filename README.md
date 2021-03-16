@@ -13,6 +13,9 @@ https://sourceforge.net/p/mobac/code/HEAD/tree/trunk/tools/MapsforgeSrv/
 An example how to use the tile server on client side, you find eg at qmapshack project:
 https://github.com/Maproom/qmapshack/wiki/DocBasicsMapDem#mapsforge-maps
 
+the ready2use folder is now located in the bin folder: git\mapsforgesrv\mapsforgesrv\bin
+only one jar, which contain everything you need.
+
 Whats different to the orign?
 
 	1. mapsforge libs updated from 0.6.0 to 0.15.0
