@@ -11,6 +11,8 @@ plugins {
     // Apply the java-library plugin to add support for Java Library
     id 'java-library'
     id 'application'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
+	id 'edu.sc.seis.launch4j' version '2.4.9'
 }
 
 repositories {
@@ -57,6 +59,20 @@ dependencies {
 
     mainClassName = 'com.telemaxx.mapsforgesrv.MapsforgeSrv'
 
+//https://imperceptiblethoughts.com/shadow/
+shadowJar {
+   archiveBaseName.set('mapsforgesrv-fatjar')
+   archiveClassifier.set('')
+   archiveVersion.set('')
+}
+
+//https://github.com/TheBoegl/gradle-launch4j
+launch4j {
+  mainClassName = 'com.telemaxx.mapsforgesrv.MapsforgeSrv'
+//  icon = "${projectDir}/icons/myApp.ico"
+}
+
+/*
 	task fatJar(type: Jar, dependsOn: classes) {
 	    classifier = 'fatjar'
 	    group 'distribution'
@@ -69,11 +85,13 @@ dependencies {
 	    }
 	    with jar
 	}
+*/
 
-	task copyFatJar2jars_ready2use(type: Copy, dependsOn: 'fatJar') {
+	task copyFatJar2jars_ready2use(type: Copy, dependsOn: 'shadowJar') {
 		group 'distribution'
 		description 'Copy the fatJar to bin/jars_ready2use/'
     	from file("$buildDir/libs/mapsforgesrv-fatjar.jar")
     	into file("$buildDir/../bin/jars_ready2use/")
 	}
+
 	
