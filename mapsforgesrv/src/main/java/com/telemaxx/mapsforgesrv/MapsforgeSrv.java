@@ -82,12 +82,10 @@ public class MapsforgeSrv {
 		interfaceArgument.setRequired(false);
 		options.addOption(interfaceArgument);
 
-
 		Option contrastArgument = new Option("cs", "contrast-stretch", true, "stretch contrast within range 0..254 (default: 0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		contrastArgument.setRequired(false);
 		options.addOption(contrastArgument);
-				
-		
+					
 		Option helpArgument = new Option("h", "help", false, "print this help text and exit"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		helpArgument.setRequired(false);
 		options.addOption(helpArgument);		
@@ -101,8 +99,8 @@ public class MapsforgeSrv {
 		} catch (ParseException e) {
 			System.out.println(e.getMessage());
 			formatter.printHelp("mapsforgesrv", options); //$NON-NLS-1$
-			//System.exit(1);
-			System.exit(0);
+			System.exit(1);
+			//System.exit(0);
 		}
 
 		if(cmd.hasOption("help")) { //$NON-NLS-1$
