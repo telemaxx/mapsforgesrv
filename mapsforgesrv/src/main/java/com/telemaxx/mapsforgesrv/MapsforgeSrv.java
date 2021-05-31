@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright 2016 r_x
- * Copyright 2019, 2020, 2021 Thomas Theussing and Contributors
+ * Copyright 2019, 2021 Thomas Theussing and Contributors
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -17,9 +17,12 @@
  * changelog:
  * 0.13: selectable style
  * 0.13.1: selectable overlays
+ * 0.16.0: mapsforge 16
+ * 0.16.1: contrast stretching (JFBeck)
  *******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
+
 import java.io.File;
 import java.net.BindException;
 import java.net.InetSocketAddress;
@@ -31,7 +34,7 @@ import org.eclipse.jetty.server.Server;
 public class MapsforgeSrv {
 
 	public static void main(String[] args) throws Exception {
-		final String VERSION = "0.15.1"; //starting with 0.13, the mapsforge version //$NON-NLS-1$
+		final String VERSION = "0.16.1"; //starting with 0.13, the mapsforge version //$NON-NLS-1$
 		System.out.println("MapsforgeSrv - a mapsforge tile server. " + "version: " + VERSION); //$NON-NLS-1$ //$NON-NLS-2$
 
 		String rendererName = null;
@@ -41,6 +44,7 @@ public class MapsforgeSrv {
 		String optionValue = null;
 		String[] themeFileOverlays = null;
 		String preferredLanguage = null;
+		String contrastStretch = null;
 		final int DEFAULTPORT = 8080; 
 		String portNumberString = "" + DEFAULTPORT; //$NON-NLS-1$
 
@@ -77,6 +81,12 @@ public class MapsforgeSrv {
 		Option interfaceArgument = new Option("if", "interface", true, "which interface listening [all,localhost] (default: localhost)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		interfaceArgument.setRequired(false);
 		options.addOption(interfaceArgument);
+
+
+		Option contrastArgument = new Option("cs", "contrast-stretch", true, "stretch contrast within range 0..254 (default: 0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		contrastArgument.setRequired(false);
+		options.addOption(contrastArgument);
+				
 		
 		Option helpArgument = new Option("h", "help", false, "print this help text and exit"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		helpArgument.setRequired(false);
@@ -184,7 +194,24 @@ public class MapsforgeSrv {
 			System.out.println("preferred map language set to: " + preferredLanguage); //$NON-NLS-1$
 		}
 		
-		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(rendererName, mapFiles, themeFile, themeFileStyle, themeFileOverlays, preferredLanguage);
+		int blackValue = 0;
+		contrastStretch = cmd.getOptionValue("contrast-stretch"); //$NON-NLS-1$
+		if (contrastStretch != null) {
+			try {
+				blackValue = Integer.parseInt(contrastStretch.trim());
+				if (blackValue < 0 || blackValue > 254) {
+					System.out.println("contrast-stretch not 0-254, exit"); //$NON-NLS-1$
+					System.exit(1);
+				} else {
+					System.out.println("contrast-stretch set to: " + blackValue); //$NON-NLS-1$
+				}
+			} catch (NumberFormatException e){
+				blackValue = 0;
+				System.out.println("couldnt parse contrast-stretch, using 0" + blackValue); //$NON-NLS-1$
+			}
+		}
+		
+		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(rendererName, mapFiles, themeFile, themeFileStyle, themeFileOverlays, preferredLanguage,blackValue);
 
 		Server server = null;
 		String listeningInterface = cmd.getOptionValue("interface"); //$NON-NLS-1$

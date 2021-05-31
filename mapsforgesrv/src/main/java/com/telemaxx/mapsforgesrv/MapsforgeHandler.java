@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright 2016 r_x
- * Copyright 2019, 2020 Thomas Theussing and Contributors
+ * Copyright 2019, 2021 Thomas Theussing and Contributors
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -18,14 +18,20 @@
 
 package com.telemaxx.mapsforgesrv;
 
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -62,7 +68,7 @@ import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-
+@SuppressWarnings("unused")
 public class MapsforgeHandler extends AbstractHandler {
 
 	//private static Logger LOG = LogManager.getLogger(MapsforgeHandler.class);
@@ -83,21 +89,23 @@ public class MapsforgeHandler extends AbstractHandler {
 	protected XmlRenderThemeStyleMenu renderThemeStyleMenu;
 	protected TileBasedLabelStore tileBasedLabelStore = new MyTileBasedLabelStore(1000);
 	protected DummyCache labelInfoCache = new DummyCache();
+	protected int blackValue;	
 
 	private static final Pattern P = Pattern.compile("/(\\d+)/(\\d+)/(\\d+)\\.(.*)"); //$NON-NLS-1$
 
 	
-	public MapsforgeHandler(String rendererName, List<File> mapFiles, File themeFile) throws FileNotFoundException {
-		this(rendererName, mapFiles, themeFile, (String)null, (String[])null, (String)null);
-	}
+//	public MapsforgeHandler(String rendererName, List<File> mapFiles, File themeFile) throws FileNotFoundException {
+//		this(rendererName, mapFiles, themeFile, (String)null, (String[])null, (String)null);
+//	}
 
-	public MapsforgeHandler(String rendererName, List<File> mapFiles, File themeFile, String themeFileStyle, String[] themeFileOverlays, String preferredLanguage) throws FileNotFoundException {
+	public MapsforgeHandler(String rendererName, List<File> mapFiles, File themeFile, String themeFileStyle, String[] themeFileOverlays, String preferredLanguage, int blackValue) throws FileNotFoundException {
 		super();
 		this.mapFiles = mapFiles;
 		this.themeFile = themeFile;
 		this.themeFileStyle = themeFileStyle;
 		this.themeFileOverlays = themeFileOverlays;
-
+		this.blackValue = blackValue;
+		
 		GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
 		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
 		mapFiles.forEach(mapFile -> multiMapDataStore.addMapDataStore(new MapFile(mapFile, preferredLanguage), true, true));
@@ -298,6 +306,28 @@ public class MapsforgeHandler extends AbstractHandler {
 		}
 		BufferedImage image = AwtGraphicFactory.getBitmap(tileBitmap);
 
+		
+		if (blackValue > 0) {
+			// DataBuffer created by Mapsforge renderer is of type DataBufferInt, i.e. one int value 0xaarrggbb per pixel 
+			DataBufferInt dataBuffer = (DataBufferInt)image.getRaster().getDataBuffer();
+			int[] pixelArray = dataBuffer.getData();
+			int pixelCount = image.getWidth()*image.getHeight();
+			int pixelValue,alphaValue,redValue,greenValue,blueValue;
+			float stretchFactor = (float)255/(float)(255-blackValue);
+			while (pixelCount-- > 0) {
+				pixelValue = pixelArray[pixelCount];
+				alphaValue = (pixelValue>>>24) & 0xff;
+				redValue   = (pixelValue>>>16) & 0xff;
+				greenValue = (pixelValue>>> 8) & 0xff;
+				blueValue  =  pixelValue       & 0xff;
+				redValue   = redValue   > blackValue ? Math.round((redValue  -blackValue)*stretchFactor) : 0;
+				greenValue = greenValue > blackValue ? Math.round((greenValue-blackValue)*stretchFactor) : 0;
+				blueValue  = blueValue  > blackValue ? Math.round((blueValue -blackValue)*stretchFactor) : 0;
+				pixelValue = (((((alphaValue<<8)|redValue)<<8)|greenValue)<<8)|blueValue;
+				pixelArray[pixelCount] = pixelValue;
+			}
+		}
+		
 		baseRequest.setHandled(true);
 		response.setStatus(200);
 		response.setContentType("image/" + ext); //$NON-NLS-1$

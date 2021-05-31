@@ -37,22 +37,22 @@ dependencies {
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
     implementation group: 'commons-cli', name: 'commons-cli', version: '1.4'
-  	implementation 'org.mapsforge:mapsforge-core:[0.15.0]'
-	implementation 'org.mapsforge:mapsforge-map:[0.15.0]'
-	implementation 'org.mapsforge:mapsforge-map-reader:[0.15.0]'
-	implementation 'org.mapsforge:mapsforge-themes:[0.15.0]'
-	implementation 'org.mapsforge:mapsforge-map-awt:[0.15.0]'
-	implementation 'org.mapsforge:mapsforge-poi-awt:[0.15.0]'
-	implementation 'org.mapsforge:mapsforge-poi:[0.15.0]'
+  	implementation 'org.mapsforge:mapsforge-core:[0.16.0]'
+	implementation 'org.mapsforge:mapsforge-map:[0.16.0]'
+	implementation 'org.mapsforge:mapsforge-map-reader:[0.16.0]'
+	implementation 'org.mapsforge:mapsforge-themes:[0.16.0]'
+	implementation 'org.mapsforge:mapsforge-map-awt:[0.16.0]'
+	implementation 'org.mapsforge:mapsforge-poi-awt:[0.16.0]'
+	implementation 'org.mapsforge:mapsforge-poi:[0.16.0]'
 	
 	implementation 'org.xerial:sqlite-jdbc:3.30.1'
 	
 	implementation 'net.sf.kxml:kxml2:2.3.0' 
     
     //implementation 'org.eclipse.jetty:jetty-server:9.4.25.v20191220'
-    implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '11.0.1'
+    implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '11.0.3'
     
-	implementation 'com.github.blackears:svgSalamander:v1.1.2'
+	implementation 'com.formdev:svgSalamander:1.1.2.4'
 	
 	
 }
