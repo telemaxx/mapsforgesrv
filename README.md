@@ -56,5 +56,5 @@ java -jar mapsforgesrv\bin\jars_ready2use/mapsforgesrv-fatjar.jar -m "path2mapfi
 - Thomas Th. @telemaxx: converted the mapserver server part in own git project with gradle nature.
 - @pingurus (fixing styleseets error)
 - Bernd @bjmdev (multi map support)
-- @JFritzle (selectable theme style and overlays and renderer)
+- @JFritzle (selectable theme style, overlays, renderer & contrast-stretch)
 
