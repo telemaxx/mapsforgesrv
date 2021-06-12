@@ -14,7 +14,9 @@ An example how to use the tile server on client side, you find eg at qmapshack p
 https://github.com/Maproom/qmapshack/wiki/DocBasicsMapDem#mapsforge-maps
 
 The ready2use folder is now located in the bin folder: git\mapsforgesrv\mapsforgesrv\bin<br/>
+
 Only one jar containing everything you need.
+
 	1. mapsforgesrv-fatjar.jar developed with java version 11, needs java 11 to run
 	2. mapsforgesrv4java8.jar developed with java version 8, should run on all java starting version 8
 
