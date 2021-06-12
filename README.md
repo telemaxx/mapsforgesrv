@@ -38,16 +38,16 @@ Whats different to the origin?
 Command parameters:
 
 	1. -m  path to the mapfile(s). at least one file is mandatory. comma-separated list of mapsforge map files (.map)
-	2. -t  path to the themefile. this is optional. without, the internal theme is used
+	2. -t  path to the themefile. this is optional. without the internal theme is used
 	3. -p  port to listen on. this is optional. without, 8080 is used
-	4. -if interface to listen on. this is optional. without, localhost is used. possibilities "-if all" "-if localhost"
+	4. -if interface to listen on. this is optional. without, localhost is used. possibilities "-if all" or "-if localhost"
 		with "-if all" its useful to run on a server. raspberry runs nice.
 	5. -l  preferred language if available in the map file
     6. -s  when using a themefile, selecting the style. eg "elmt-hiking"
     7. -o  when using a themefile and -o is given, ignore overlays enabled inside the themefile. use only this comma-separated list of overlays.
     8. -r  mapsforge renderer [database,direct] (default: database). sometimes "direct" giving better results
     9. -cs contrast-stretch. stretch contrast within range 0..254 (default: 0)
-    10. -h  print the help text and terminate
+    10. -h  print the help text and terminate 
     
 
 longest example:
