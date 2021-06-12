@@ -54,10 +54,12 @@ java -jar mapsforgesrv/bin/jars_ready2use/mapsforgesrv-fatjar.jar -m "path2mapfi
 ```
 
 Branches:
+
 	1. "java8", when an old java 8 is installed, this branch is to be used for the development.
 	2. "master", this version is for development with java 11.
 	
 Building the jar:
+
 	there are some gradle task. builing the jar is done by:
 	"copyFatJar2jars_ready2use" builds the jar and copying it to "$buildDir/../bin/jars_ready2use/"
 
