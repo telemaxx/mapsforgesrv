@@ -60,14 +60,12 @@ dependencies {
 
     mainClassName = 'com.telemaxx.mapsforgesrv.MapsforgeSrv'
     
-    // Java 11+
-    //def fatjarName = 'mapsforgesrv-fatjar'
-    // Java 8
-    def fatjarName = 'mapsforgesrv4java8'
-
 //https://imperceptiblethoughts.com/shadow/
 shadowJar {
-   archiveBaseName.set('${fatjarName}')
+   // Java 11+
+   //archiveBaseName.set('mapsforgesrv-fatjar')
+   // Java 8
+   archiveBaseName.set('mapsforgesrv4java8')
    archiveClassifier.set('')
    archiveVersion.set('')
 }
@@ -96,7 +94,10 @@ launch4j {
 	task copyFatJar2jars_ready2use(type: Copy, dependsOn: 'shadowJar') {
 		group 'distribution'
 		description 'Copy the fatJar to bin/jars_ready2use/'
-		from file("$buildDir/libs/${fatjarName}.jar")
+		// Java 11+
+		//from file("$buildDir/libs/mapsforgesrv-fatjar.jar")
+		// Java 8
+		from file("$buildDir/libs/mapsforgesrv4java8.jar")
 		into file("$buildDir/../bin/jars_ready2use/")
 	}
 
