@@ -13,8 +13,8 @@ https://sourceforge.net/p/mobac/code/HEAD/tree/trunk/tools/MapsforgeSrv/
 An example how to use the tile server on client side, you find eg at qmapshack project:<br/>
 https://github.com/Maproom/qmapshack/wiki/DocBasicsMapDem#mapsforge-maps
 
-The ready2use folder is now located in the bin folder: git\mapsforgesrv\mapsforgesrv\bin<br/>
-
+The ready2use folder is now located in the bin folder:<br/>
+git\mapsforgesrv\mapsforgesrv\bin<br/>
 Only one jar containing everything you need.
 
 	1. mapsforgesrv-fatjar.jar developed with java version 11, needs java 11 to run
@@ -26,9 +26,9 @@ Whats different to the origin?
 	2. updates all other libs to latest versions
 	3. build system "gradle" for easier libs management.
 	4. new command line interface: -m mapfile(s) -t themefile(optional) -l language(optional) -s themestyle(optional)
-	5. port selection(optional). eg -p 8081
-	6. interface selection(optional) -if [all,localhost]
-	7. language selection(optional) -l EN
+	5. tcp port selection(optional), eg -p 8081
+	6. interface selection(optional): -if [all,localhost]
+	7. language selection(optional): -l en
     8. selectable style (optional): -s elmt-mtb
     9. selectable overlays (optional): -o "elmt-mtbs_tracks,elmt-mtb_routes"
     10. selectable renderer (optional): -r [database,direct]
@@ -38,13 +38,13 @@ Whats different to the origin?
 Command parameters:
 
 	1. -m  path to the mapfile(s). at least one file is mandatory. comma-separated list of mapsforge map files (.map)
-	2. -t  path to the themefile. this is optional. without the internal theme is used
-	3. -p  port to listen on. this is optional. without, 8080 is used
+	2. -t  path to the themefile. this is optional. without, the internal theme is used
+	3. -p  tcp port to listen on. this is optional. without, port 8080 is used
 	4. -if interface to listen on. this is optional. without, localhost is used. possibilities "-if all" or "-if localhost"
 		with "-if all" its useful to run on a server. raspberry runs nice.
-	5. -l  preferred language if available in the map file
-    6. -s  when using a themefile, selecting the style. eg "elmt-hiking"
-    7. -o  when using a themefile and -o is given, ignore overlays enabled inside the themefile. use only this comma-separated list of overlays.
+	5. -l  preferred language if supported by map file (ISO 639-1 or ISO 639-2 if an ISO 639-1 code doesn't exist)
+    6. -s  when using a themefile, selecting the style, eg "elmt-hiking". (Default: themefile's default style)
+    7. -o  when using a themefile, enable only overlays of this comma-separated list. override enable attributes inside the themefile.
     8. -r  mapsforge renderer [database,direct] (default: database). sometimes "direct" giving better results
     9. -cs contrast-stretch. stretch contrast within range 0..254 (default: 0)
     10. -h  print the help text and terminate 
@@ -52,7 +52,7 @@ Command parameters:
 
 longest example:
 ```console
-java -jar mapsforgesrv/bin/jars_ready2use/mapsforgesrv4java8.jar -m "path2mapfile1.map, path2mapfile2.map" -t path2themefile.xml -p 8080 -if all -l EN -s "elmt-hiking" -r "direct" -o elmt-mtbs_tracks,elmt-mtb_routes,elmt-mtb_c_routes" -cs 32
+java -jar mapsforgesrv/bin/jars_ready2use/mapsforgesrv4java8.jar -m "path2mapfile1.map, path2mapfile2.map" -t path2themefile.xml -p 8080 -if all -l en -s "elmt-hiking" -r "direct" -o elmt-mtbs_tracks,elmt-mtb_routes,elmt-mtb_c_routes" -cs 32
 ```
 
 Branches:
