@@ -94,10 +94,6 @@ public class MapsforgeHandler extends AbstractHandler {
 	private static final Pattern P = Pattern.compile("/(\\d+)/(\\d+)/(\\d+)\\.(.*)"); //$NON-NLS-1$
 
 	
-//	public MapsforgeHandler(String rendererName, List<File> mapFiles, File themeFile) throws FileNotFoundException {
-//		this(rendererName, mapFiles, themeFile, (String)null, (String[])null, (String)null);
-//	}
-
 	public MapsforgeHandler(String rendererName, List<File> mapFiles, File themeFile, String themeFileStyle, String[] themeFileOverlays, String preferredLanguage, int blackValue) throws FileNotFoundException {
 		super();
 		this.mapFiles = mapFiles;
@@ -108,7 +104,19 @@ public class MapsforgeHandler extends AbstractHandler {
 		
 		GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
 		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
-		mapFiles.forEach(mapFile -> multiMapDataStore.addMapDataStore(new MapFile(mapFile, preferredLanguage), true, true));
+
+		mapFiles.forEach(mapFile -> {
+			MapFile map = new MapFile(mapFile, preferredLanguage);
+			String[] mapLanguages = map.getMapLanguages();
+			System.out.print ("Map file: " + mapFile + ", supported languages: ");
+			if (mapLanguages != null) {
+				System.out.println (String.join(",", mapLanguages));
+			} else {
+			    System.out.println ("-");
+			}
+			multiMapDataStore.addMapDataStore(map, true, true);
+		});
+
 
 		displayModel = new DisplayModel();
 

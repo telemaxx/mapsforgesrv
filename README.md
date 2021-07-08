@@ -14,11 +14,10 @@ An example how to use the tile server on client side, you find eg at qmapshack p
 https://github.com/Maproom/qmapshack/wiki/DocBasicsMapDem#mapsforge-maps
 
 The ready2use folder is now located in the bin folder: git\mapsforgesrv\mapsforgesrv\bin<br/>
-
 Only one jar containing everything you need.
 
-	1. mapsforgesrv-fatjar.jar developed with java version 11, needs java 11 to run
-	2. mapsforgesrv4java8.jar developed with java version 8, should run on all java starting version 8
+	1. mapsforgesrv-fatjar.jar developed with java version 11, needs java 11 to run. located in the master branch
+	2. mapsforgesrv4java8.jar developed with java version 8, should run on all java starting version 8. located in java8 branch
 
 Whats different to the origin?
 
@@ -38,10 +37,9 @@ Whats different to the origin?
 Command parameters:
 
 	1. -m  path to the mapfile(s). at least one file is mandatory. comma-separated list of mapsforge map files (.map)
-	2. -t  path to the themefile. this is optional. without the internal theme is used
+	2. -t path to the themefile. this is optional. without the internal theme is used
 	3. -p  port to listen on. this is optional. without, 8080 is used
 	4. -if interface to listen on. this is optional. without, localhost is used. possibilities "-if all" or "-if localhost"
-		with "-if all" its useful to run on a server. raspberry runs nice.
 	5. -l  preferred language if available in the map file
     6. -s  when using a themefile, selecting the style. eg "elmt-hiking"
     7. -o  when using a themefile and -o is given, ignore overlays enabled inside the themefile. use only this comma-separated list of overlays.
