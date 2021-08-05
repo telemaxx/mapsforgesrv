@@ -1,4 +1,4 @@
-# mapsforgesrv
+when an old java 8 is installed, this branch is to be used for the development# mapsforgesrv
 
 ### mapsforgesrv cloned from the MOBAC project:
 http://mobac.sourceforge.net/
@@ -11,14 +11,16 @@ The description of this tool you find at the origin page:<br/>
 https://sourceforge.net/p/mobac/code/HEAD/tree/trunk/tools/MapsforgeSrv/
 
 An example how to use the tile server on client side, you find eg at qmapshack project:<br/>
-https://github.com/Maproom/qmapshack/wiki/DocBasicsMapDem#mapsforge-maps
+https://github.com/Maproom/qmapshack/wiki/DocBasicsMapDem#mapsforge-maps  
+Graphical user interface *Mapsforge-for-QMapShack* between MapsforgeSrv and QMapShack application:<br/>
+https://github.com/JFritzle/Mapsforge-for-QMapShack
 
 The ready2use folder is now located in the bin folder:<br/>
 git\mapsforgesrv\mapsforgesrv\bin<br/>
 Only one jar containing everything you need.
 
-	1. mapsforgesrv-fatjar.jar developed with java version 11, needs java 11 to run
-	2. mapsforgesrv4java8.jar developed with java version 8, should run on all java starting version 8
+	1. mapsforgesrv-fatjar.jar (branch "master") developed with java version 11, needs java 11 to run
+	2. mapsforgesrv4java8.jar (branch "java8") developed with java version 8, should run on all java starting version 8
 
 Whats different to the origin?
 
@@ -62,7 +64,7 @@ Branches:
 	
 Building the jar:
 
-	there are some gradle task. builing the jar is done by:
+	there are some gradle task. building the jar is done by:
 	"copyFatJar2jars_ready2use" builds the jar and copying it to "$buildDir/../bin/jars_ready2use/"
 
 -------------
