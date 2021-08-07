@@ -18,7 +18,7 @@ Graphical user interface *Mapsforge-for-QMapShack* between MapsforgeSrv and QMap
 https://github.com/JFritzle/Mapsforge-for-QMapShack
 
 Graphical user interface *Mapsforge-for-MyTourbook* between MapsforgeSrv and MyTourbook application:<br/>
-https://github.com/JFritzle/Mapsforge-for-MyTourbook
+https://github.com/JFritzle/Mapsforge-for-MyTourbook  
 
 The ready2use folder is now located in the bin folder:<br/>
 git\mapsforgesrv\mapsforgesrv\bin<br/>
