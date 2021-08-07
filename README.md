@@ -1,4 +1,5 @@
-when an old java 8 is installed, this branch is to be used for the development# mapsforgesrv
+# mapsforgesrv
+when an old java 8 is installed, this branch is to be used for the development
 
 ### mapsforgesrv cloned from the MOBAC project:
 http://mobac.sourceforge.net/
@@ -12,8 +13,12 @@ https://sourceforge.net/p/mobac/code/HEAD/tree/trunk/tools/MapsforgeSrv/
 
 An example how to use the tile server on client side, you find eg at qmapshack project:<br/>
 https://github.com/Maproom/qmapshack/wiki/DocBasicsMapDem#mapsforge-maps  
+
 Graphical user interface *Mapsforge-for-QMapShack* between MapsforgeSrv and QMapShack application:<br/>
 https://github.com/JFritzle/Mapsforge-for-QMapShack
+
+Graphical user interface *Mapsforge-for-MyTourbook* between MapsforgeSrv and MyTourbook application:<br/>
+https://github.com/JFritzle/Mapsforge-for-MyTourbook
 
 The ready2use folder is now located in the bin folder:<br/>
 git\mapsforgesrv\mapsforgesrv\bin<br/>
