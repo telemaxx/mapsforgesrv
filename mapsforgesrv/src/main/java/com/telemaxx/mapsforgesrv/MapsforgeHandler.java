@@ -23,6 +23,8 @@ import java.awt.image.DataBufferInt;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
@@ -94,6 +96,8 @@ public class MapsforgeHandler extends AbstractHandler {
 	protected int blackValue;	
 
 	private static final Pattern P = Pattern.compile("/(\\d+)/(\\d+)/(\\d+)\\.(.*)"); //$NON-NLS-1$
+	
+	protected final DateTimeFormatter formatDateTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
 	public MapsforgeHandler(String rendererName, List<File> mapFiles, File themeFile, String themeFileStyle, String[] themeFileOverlays, String preferredLanguage, int blackValue) throws FileNotFoundException {
 		super();
@@ -241,9 +245,9 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 		}
 
-		System.out.println("request: " + request); //$NON-NLS-1$
+		System.out.println(LocalDateTime.now().format(formatDateTime) + " " + request); //$NON-NLS-1$
+		
 		String path = request.getPathInfo();
-
 		int x, y, z;
 		String ext = "png"; //$NON-NLS-1$
 		Matcher m = P.matcher(path);
