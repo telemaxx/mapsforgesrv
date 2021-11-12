@@ -25,14 +25,14 @@ dependencies {
     api 'org.apache.commons:commons-math3:3.6.1'
 
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
-    implementation 'com.google.guava:guava:30.1.1-jre'
+    implementation 'com.google.guava:guava:31.0.1-jre'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.13.2'
     
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
-    implementation group: 'commons-cli', name: 'commons-cli', version: '1.4'
+    implementation group: 'commons-cli', name: 'commons-cli', version: '1.5.0'
 
   	implementation 'org.mapsforge:mapsforge-core:0.16.0'
 	implementation 'org.mapsforge:mapsforge-map:0.16.0'
@@ -42,14 +42,14 @@ dependencies {
 	implementation 'org.mapsforge:mapsforge-poi-awt:0.16.0'
 	implementation 'org.mapsforge:mapsforge-poi:0.16.0'
 	
-	implementation 'org.xerial:sqlite-jdbc:3.36.0.1'
+	implementation 'org.xerial:sqlite-jdbc:3.36.0.3'
 	
 	implementation 'net.sf.kxml:kxml2:2.3.0' 
     
     // Java 11+
     //implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '11.0.6'
     // Java 8
-    implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.43.v20210629'
+    implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.44.v20210927'
         
 	implementation 'com.formdev:svgSalamander:1.1.2.4'
 	
