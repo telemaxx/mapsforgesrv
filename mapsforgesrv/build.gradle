@@ -47,11 +47,11 @@ dependencies {
 	implementation 'net.sf.kxml:kxml2:2.3.0' 
     
     // Java 11+
-    //implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '11.0.6'
+    //implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '11.0.7'
     // Java 8
     implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.44.v20210927'
         
-	implementation 'com.formdev:svgSalamander:1.1.2.4'
+	implementation 'com.formdev:svgSalamander:1.1.3'
 	
 }
 
