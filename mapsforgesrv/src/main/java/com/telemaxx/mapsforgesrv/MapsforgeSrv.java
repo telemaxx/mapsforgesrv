@@ -19,6 +19,7 @@
  * 0.13.1: selectable overlays
  * 0.16.0: mapsforge 16
  * 0.16.1: contrast stretching (JFBeck)
+ * 0.16.2: Check for valid tile numbers (JFBeck)
  *******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -34,7 +35,7 @@ import org.eclipse.jetty.server.Server;
 public class MapsforgeSrv {
 
 	public static void main(String[] args) throws Exception {
-		final String VERSION = "0.16.1"; //starting with 0.13, the mapsforge version //$NON-NLS-1$
+		final String VERSION = "0.16.2"; //starting with 0.13, the mapsforge version //$NON-NLS-1$
 		System.out.println("MapsforgeSrv - a mapsforge tile server. " + "version: " + VERSION); //$NON-NLS-1$ //$NON-NLS-2$
 
 		String rendererName = null;
