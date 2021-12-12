@@ -93,7 +93,7 @@ public class MapsforgeHandler extends AbstractHandler {
 	protected DummyCache labelInfoCache = new DummyCache();
 	protected int blackValue;	
 
-	private static final Pattern P = Pattern.compile("/(\\d+)/(\\d+)/(\\d+)\\.(.*)"); //$NON-NLS-1$
+	private static final Pattern P = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)\\.(.*)"); //$NON-NLS-1$
 
 	protected final DateTimeFormatter formatDateTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 	
@@ -260,7 +260,15 @@ public class MapsforgeHandler extends AbstractHandler {
 			x = Integer.parseInt(request.getParameter("x")); //$NON-NLS-1$
 			y = Integer.parseInt(request.getParameter("y")); //$NON-NLS-1$
 			z = Integer.parseInt(request.getParameter("z")); //$NON-NLS-1$
+		}	
+		if (x<0 || x>=(1<<z)) {
+			System.out.println("ERROR: tile number x=" + x + " out of range!"); //$NON-NLS-1$
+		    return;
 		}
+		if (y<0 || y>=(1<<z)) {
+			System.out.println("ERROR: tile number y=" + y + " out of range!"); //$NON-NLS-1$
+		    return;
+		}		
 		float textScale = 1.0f;
 		try {
 			String tmp = request.getParameter("textScale"); //$NON-NLS-1$
