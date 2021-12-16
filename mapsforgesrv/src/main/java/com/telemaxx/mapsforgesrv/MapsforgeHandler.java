@@ -36,8 +36,6 @@ import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
-//import org.apache.logging.log4j.LogManager;
-//import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.mapsforge.core.graphics.Bitmap;
@@ -51,6 +49,11 @@ import org.mapsforge.map.layer.labels.TileBasedLabelStore;
 import org.mapsforge.map.layer.renderer.DatabaseRenderer;
 import org.mapsforge.map.layer.renderer.DirectRenderer;
 import org.mapsforge.map.layer.renderer.RendererJob;
+import org.mapsforge.map.layer.hills.MemoryCachingHgtReaderTileSource;
+import org.mapsforge.map.layer.hills.ShadingAlgorithm;
+import org.mapsforge.map.layer.hills.SimpleShadingAlgorithm;
+import org.mapsforge.map.layer.hills.DiffuseLightShadingAlgorithm;
+import org.mapsforge.map.layer.hills.HillsRenderConfig;
 import org.mapsforge.map.model.DisplayModel;
 import org.mapsforge.map.reader.MapFile;
 import org.mapsforge.map.rendertheme.ExternalRenderTheme;
@@ -75,8 +78,6 @@ import javax.servlet.http.HttpServletResponse;
 @SuppressWarnings("unused")
 public class MapsforgeHandler extends AbstractHandler {
 
-	//private static Logger LOG = LogManager.getLogger(MapsforgeHandler.class);
-
 	private final TreeSet<String> KNOWN_PARAMETER_NAMES = new TreeSet<>(
 			Arrays.asList(new String[] { "x", "y", "z", "textScale", "userScale", "transparent", "tileRenderSize" })); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 
@@ -86,6 +87,7 @@ public class MapsforgeHandler extends AbstractHandler {
 	protected final String[] themeFileOverlays;
 	protected final MultiMapDataStore multiMapDataStore;
 	protected final DisplayModel displayModel;
+	protected HillsRenderConfig hillsRenderConfig = null;
 	protected DatabaseRenderer databaseRenderer = null;
 	protected DirectRenderer directRenderer = null;
 	protected XmlRenderTheme xmlRenderTheme;
@@ -96,10 +98,11 @@ public class MapsforgeHandler extends AbstractHandler {
 	protected int blackValue;	
 
 	private static final Pattern P = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)\\.(.*)"); //$NON-NLS-1$
-	
-	protected final DateTimeFormatter formatDateTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+	private static final DateTimeFormatter FormatDateTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
-	public MapsforgeHandler(String rendererName, List<File> mapFiles, File themeFile, String themeFileStyle, String[] themeFileOverlays, String preferredLanguage, int blackValue) throws FileNotFoundException {
+	public MapsforgeHandler(String rendererName, List<File> mapFiles, File themeFile, String themeFileStyle, String[] themeFileOverlays,
+			String preferredLanguage, String hillShadingAlgorithm, double[] hillShadingArguments, File demFolder,
+			int blackValue) throws FileNotFoundException {
 		super();
 		this.mapFiles = mapFiles;
 		this.themeFile = themeFile;
@@ -124,10 +127,24 @@ public class MapsforgeHandler extends AbstractHandler {
 
 		displayModel = new DisplayModel();
 
+		if (hillShadingAlgorithm != null && demFolder != null) { // hillshading
+			ShadingAlgorithm shadingAlgorithm = null;
+			if (hillShadingAlgorithm.equals("simple")) {
+				shadingAlgorithm = new SimpleShadingAlgorithm(hillShadingArguments[0], hillShadingArguments[1]);
+			} else {
+				shadingAlgorithm = new DiffuseLightShadingAlgorithm((float)hillShadingArguments[0]);
+			}
+			MemoryCachingHgtReaderTileSource tileSource = new MemoryCachingHgtReaderTileSource(demFolder, shadingAlgorithm, graphicFactory);
+//			tileSource.setEnableInterpolationOverlap(true);		// More precise at tile edges but much slower, therefore commented out
+			tileSource.setEnableInterpolationOverlap(false);	// Less precise at tile edges but much faster, therefore hard-coded
+			hillsRenderConfig = new HillsRenderConfig(tileSource);
+			hillsRenderConfig.indexOnThread();
+		}
+		
 		if (rendererName.equals("direct")) {
-			directRenderer = new DirectRenderer(multiMapDataStore, graphicFactory, true, null);
+			directRenderer = new DirectRenderer(multiMapDataStore, graphicFactory, true, hillsRenderConfig);
 		} else {
-			databaseRenderer = new DatabaseRenderer(multiMapDataStore, graphicFactory, labelInfoCache, tileBasedLabelStore, true, true, null);
+			databaseRenderer = new DatabaseRenderer(multiMapDataStore, graphicFactory, labelInfoCache, tileBasedLabelStore, true, true, hillsRenderConfig);
 		}
 		
 		renderThemeFuture = new RenderThemeFuture(graphicFactory, xmlRenderTheme, displayModel);
@@ -245,7 +262,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 		}
 
-		System.out.println(LocalDateTime.now().format(formatDateTime) + " " + request); //$NON-NLS-1$
+		System.out.println(LocalDateTime.now().format(FormatDateTime) + " " + request); //$NON-NLS-1$
 		
 		String path = request.getPathInfo();
 		int x, y, z;
@@ -326,8 +343,7 @@ public class MapsforgeHandler extends AbstractHandler {
 		}
 		BufferedImage image = AwtGraphicFactory.getBitmap(tileBitmap);
 
-		
-		if (blackValue > 0) {
+		if (blackValue > 0) {		// contrast-stretching
 			// DataBuffer created by Mapsforge renderer is of type DataBufferInt, i.e. one int value 0xaarrggbb per pixel 
 			DataBufferInt dataBuffer = (DataBufferInt)image.getRaster().getDataBuffer();
 			int[] pixelArray = dataBuffer.getData();

@@ -20,6 +20,7 @@
  * 0.16.0: mapsforge 16
  * 0.16.1: contrast stretching (JFBeck)
  * 0.16.2: Check for valid tile numbers (JFBeck)
+ * 0.16.3: hillshading (JFBeck)
  *******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -28,6 +29,8 @@ import java.io.File;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.*;
 import org.eclipse.jetty.server.Server;
@@ -35,7 +38,7 @@ import org.eclipse.jetty.server.Server;
 public class MapsforgeSrv {
 
 	public static void main(String[] args) throws Exception {
-		final String VERSION = "0.16.2"; //starting with 0.13, the mapsforge version //$NON-NLS-1$
+		final String VERSION = "0.16.3"; //starting with 0.13, the mapsforge version //$NON-NLS-1$
 		System.out.println("MapsforgeSrv - a mapsforge tile server. " + "version: " + VERSION); //$NON-NLS-1$ //$NON-NLS-2$
 
 		String rendererName = null;
@@ -46,6 +49,8 @@ public class MapsforgeSrv {
 		String[] themeFileOverlays = null;
 		String preferredLanguage = null;
 		String contrastStretch = null;
+		String hillShadingOption = null;
+		String demFolderPath = null;
 		final int DEFAULTPORT = 8080; 
 		String portNumberString = "" + DEFAULTPORT; //$NON-NLS-1$
 
@@ -75,6 +80,18 @@ public class MapsforgeSrv {
 		languageArgument.setRequired(false);
 		options.addOption(languageArgument);
 
+		Option hillShadingArgument = new Option("hs", "hillshading", true, "simple or simple(angle) or diffuselight or diffuselight(linearity,scale), (default: no hillshading)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		hillShadingArgument.setRequired(false);
+		options.addOption(hillShadingArgument);
+		
+		Option demFolderArgument = new Option("d", "demfolder", true, "folder containing digital elevation model files (.hgt)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		demFolderArgument.setRequired(false);
+		options.addOption(demFolderArgument);
+
+		Option contrastArgument = new Option("cs", "contrast-stretch", true, "stretch contrast within range 0..254 (default: 0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		contrastArgument.setRequired(false);
+		options.addOption(contrastArgument);
+
 		Option portArgument = new Option("p", "port", true, "port, where the server is listening(default: " + DEFAULTPORT + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		portArgument.setRequired(false);
 		options.addOption(portArgument);
@@ -82,10 +99,6 @@ public class MapsforgeSrv {
 		Option interfaceArgument = new Option("if", "interface", true, "which interface listening [all,localhost] (default: localhost)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		interfaceArgument.setRequired(false);
 		options.addOption(interfaceArgument);
-
-		Option contrastArgument = new Option("cs", "contrast-stretch", true, "stretch contrast within range 0..254 (default: 0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		contrastArgument.setRequired(false);
-		options.addOption(contrastArgument);
 					
 		Option helpArgument = new Option("h", "help", false, "print this help text and exit"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		helpArgument.setRequired(false);
@@ -118,10 +131,10 @@ public class MapsforgeSrv {
 				portNumber = Integer.parseInt(portNumberString);
 				if (portNumber < 1024 || portNumber > 65535) {
 					portNumber = DEFAULTPORT;
-					System.out.println("portnumber not 1024-65535, exit"); //$NON-NLS-1$
+					System.out.println("ERROR: portnumber not 1024-65535!"); //$NON-NLS-1$
 					System.exit(1);
 				} else {
-					System.out.println("using port: " + portNumber); //$NON-NLS-1$
+					System.out.println("Using port: " + portNumber); //$NON-NLS-1$
 				}
 			} catch (NumberFormatException e){
 				portNumber = DEFAULTPORT;
@@ -176,7 +189,7 @@ public class MapsforgeSrv {
 		themeFileStyle = cmd.getOptionValue("style"); //$NON-NLS-1$
 		if (themeFileStyle != null) {
 			themeFileStyle = themeFileStyle.trim();
-			System.out.println("selected ThemeStyle: " + themeFileStyle); //$NON-NLS-1$
+			System.out.println("Selected ThemeStyle: " + themeFileStyle); //$NON-NLS-1$
 		}
 		
 		optionValue = cmd.getOptionValue("overlays"); //$NON-NLS-1$
@@ -184,13 +197,67 @@ public class MapsforgeSrv {
 			themeFileOverlays = optionValue.trim().split(","); //$NON-NLS-1$
 			for (int i = 0; i < themeFileOverlays.length; i++) {
 				themeFileOverlays[i] = themeFileOverlays[i].trim();
-				System.out.println("selected ThemeOverlay: " + themeFileOverlays[i]); //$NON-NLS-1$
+				System.out.println("Selected ThemeOverlay: " + themeFileOverlays[i]); //$NON-NLS-1$
 			}
 		}
 		
 		preferredLanguage = cmd.getOptionValue("language"); //$NON-NLS-1$
 		if (preferredLanguage != null) {
-			System.out.println("preferred map language set to: " + preferredLanguage); //$NON-NLS-1$
+			System.out.println("Preferred map language: " + preferredLanguage); //$NON-NLS-1$
+		}
+
+		String hillShadingAlgorithm = null;
+		double[] hillShadingArguments = null;
+		hillShadingOption = cmd.getOptionValue("hillshading"); //$NON-NLS-1$
+		if (hillShadingOption != null) {
+			hillShadingOption = hillShadingOption.trim();
+			Pattern P = Pattern.compile("(simple)(?:\\((\\d*\\.?\\d*),(\\d*\\.?\\d*)\\))?|(diffuselight)(?:\\((\\d*\\.?\\d*)\\))?");
+			Matcher m = P.matcher(hillShadingOption);
+			if (m.matches()) {
+				if (m.group(1) != null) {
+					hillShadingAlgorithm = new String(m.group(1));	// ShadingAlgorithm = simple
+					hillShadingArguments = new double[2];
+					if (m.group(2) != null) {
+						hillShadingArguments[0] = Double.parseDouble(m.group(2));
+						hillShadingArguments[1] = Double.parseDouble(m.group(3));
+					} else {										// default values
+						hillShadingArguments[0] = 0.1;
+						hillShadingArguments[1] = 0.666;
+					}
+					System.out.println("Hillshading: " + hillShadingAlgorithm + "(" + hillShadingArguments[0] + 
+							"," + hillShadingArguments[1] + ")"); //$NON-NLS-1$
+				} else {
+					hillShadingAlgorithm = new String(m.group(4));	// ShadingAlgorithm = diffuselight
+					hillShadingArguments = new double[1];
+					if (m.group(5) != null) {
+						hillShadingArguments[0] = Double.parseDouble(m.group(5));
+					} else {										// default value
+						hillShadingArguments[0] = 50.;
+					}
+					System.out.println("Hillshading: " + hillShadingAlgorithm + "(" + hillShadingArguments[0] + ")"); //$NON-NLS-1$
+				}
+			} else {
+				System.out.println("ERROR: hillshading " + hillShadingOption + " invalid!"); //$NON-NLS-1$
+				System.exit(1);
+			}
+		}
+		
+		demFolderPath = cmd.getOptionValue("demfolder"); //$NON-NLS-1$
+		if (demFolderPath != null) {
+			demFolderPath = demFolderPath.trim();
+		}
+		File demFolder = null;
+		if (demFolderPath != null) {	
+			demFolder = new File(demFolderPath);
+			System.out.println("DEM (digital elevation model) folder: " + demFolder); //$NON-NLS-1$
+			if (!demFolder.isDirectory()) {
+				System.err.println("ERROR: DEM folder does not exist!"); //$NON-NLS-1$
+				System.exit(1);
+			}
+			if (demFolder.listFiles().length == 0) {
+				System.err.println("ERROR: DEM folder is empty!"); //$NON-NLS-1$
+				System.exit(1);
+			}
 		}
 		
 		int blackValue = 0;
@@ -199,18 +266,19 @@ public class MapsforgeSrv {
 			try {
 				blackValue = Integer.parseInt(contrastStretch.trim());
 				if (blackValue < 0 || blackValue > 254) {
-					System.out.println("contrast-stretch not 0-254, exit"); //$NON-NLS-1$
+					System.out.println("ERROR: contrast-stretch not 0-254!"); //$NON-NLS-1$
 					System.exit(1);
 				} else {
-					System.out.println("contrast-stretch set to: " + blackValue); //$NON-NLS-1$
+					System.out.println("Contrast-stretch: " + blackValue); //$NON-NLS-1$
 				}
 			} catch (NumberFormatException e){
 				blackValue = 0;
-				System.out.println("couldnt parse contrast-stretch, using 0" + blackValue); //$NON-NLS-1$
+				System.out.println("couldnt parse contrast-stretch, using " + blackValue); //$NON-NLS-1$
 			}
 		}
 		
-		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(rendererName, mapFiles, themeFile, themeFileStyle, themeFileOverlays, preferredLanguage,blackValue);
+		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(rendererName, mapFiles, themeFile, themeFileStyle, themeFileOverlays,
+				preferredLanguage, hillShadingAlgorithm, hillShadingArguments, demFolder, blackValue);
 
 		Server server = null;
 		String listeningInterface = cmd.getOptionValue("interface"); //$NON-NLS-1$
