@@ -80,11 +80,15 @@ public class MapsforgeSrv {
 		languageArgument.setRequired(false);
 		options.addOption(languageArgument);
 
-		Option hillShadingArgument = new Option("hs", "hillshading", true, "simple or simple(angle) or diffuselight or diffuselight(linearity,scale), (default: no hillshading)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		hillShadingArgument.setRequired(false);
-		options.addOption(hillShadingArgument);
+		Option hillShadingAlgorithmArgument = new Option("hs", "hillshading-algorithm", true, "simple or simple(angle) or diffuselight or diffuselight(linearity,scale), (default: no hillshading)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		hillShadingAlgorithmArgument.setRequired(false);
+		options.addOption(hillShadingAlgorithmArgument);
+
+		Option hillShadingMagnitudeArgument = new Option("hm", "hillshading-magnitude", true, "scaling factor >= 0 (default: 1.)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		hillShadingMagnitudeArgument.setRequired(false);
+		options.addOption(hillShadingMagnitudeArgument);
 		
-		Option demFolderArgument = new Option("d", "demfolder", true, "folder containing digital elevation model files (.hgt)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		Option demFolderArgument = new Option("d", "demfolder", true, "folder containing .hgt digital elevation model files"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		demFolderArgument.setRequired(false);
 		options.addOption(demFolderArgument);
 
@@ -92,7 +96,7 @@ public class MapsforgeSrv {
 		contrastArgument.setRequired(false);
 		options.addOption(contrastArgument);
 
-		Option portArgument = new Option("p", "port", true, "port, where the server is listening(default: " + DEFAULTPORT + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		Option portArgument = new Option("p", "port", true, "port, where the server is listening (default: " + DEFAULTPORT + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		portArgument.setRequired(false);
 		options.addOption(portArgument);
 
@@ -208,7 +212,7 @@ public class MapsforgeSrv {
 
 		String hillShadingAlgorithm = null;
 		double[] hillShadingArguments = null;
-		hillShadingOption = cmd.getOptionValue("hillshading"); //$NON-NLS-1$
+		hillShadingOption = cmd.getOptionValue("hillshading-algorithm"); //$NON-NLS-1$
 		if (hillShadingOption != null) {
 			hillShadingOption = hillShadingOption.trim();
 			Pattern P = Pattern.compile("(simple)(?:\\((\\d*\\.?\\d*),(\\d*\\.?\\d*)\\))?|(diffuselight)(?:\\((\\d*\\.?\\d*)\\))?");
@@ -224,7 +228,7 @@ public class MapsforgeSrv {
 						hillShadingArguments[0] = 0.1;
 						hillShadingArguments[1] = 0.666;
 					}
-					System.out.println("Hillshading: " + hillShadingAlgorithm + "(" + hillShadingArguments[0] + 
+					System.out.println("Hillshading algorithm: " + hillShadingAlgorithm + "(" + hillShadingArguments[0] + 
 							"," + hillShadingArguments[1] + ")"); //$NON-NLS-1$
 				} else {
 					hillShadingAlgorithm = new String(m.group(4));	// ShadingAlgorithm = diffuselight
@@ -234,37 +238,51 @@ public class MapsforgeSrv {
 					} else {										// default value
 						hillShadingArguments[0] = 50.;
 					}
-					System.out.println("Hillshading: " + hillShadingAlgorithm + "(" + hillShadingArguments[0] + ")"); //$NON-NLS-1$
+					System.out.println("Hillshading algorithm: " + hillShadingAlgorithm + "(" + hillShadingArguments[0] + ")"); //$NON-NLS-1$
 				}
 			} else {
-				System.out.println("ERROR: hillshading " + hillShadingOption + " invalid!"); //$NON-NLS-1$
+				System.out.println("ERROR: hillshading algorithm '" + hillShadingOption + "' invalid!"); //$NON-NLS-1$
 				System.exit(1);
 			}
 		}
 		
+		double hillShadingMagnitude = 1.;
+		hillShadingOption = cmd.getOptionValue("hillshading-magnitude"); //$NON-NLS-1$
+		if (hillShadingOption != null) {
+			hillShadingOption = hillShadingOption.trim();
+			Pattern P = Pattern.compile("(\\d*\\.?\\d*)");
+			Matcher m = P.matcher(hillShadingOption);
+			if (m.matches()) {
+				hillShadingMagnitude = Double.parseDouble(m.group(1));
+				System.out.println("Hillshading magnitude: " + hillShadingMagnitude); //$NON-NLS-1$
+			} else {
+				System.out.println("ERROR: hillshading magnitude '" + hillShadingOption + "' invalid!"); //$NON-NLS-1$
+				System.exit(1);
+			}
+		}
+		
+		File demFolder = null;
 		demFolderPath = cmd.getOptionValue("demfolder"); //$NON-NLS-1$
 		if (demFolderPath != null) {
 			demFolderPath = demFolderPath.trim();
-		}
-		File demFolder = null;
-		if (demFolderPath != null) {	
 			demFolder = new File(demFolderPath);
-			System.out.println("DEM (digital elevation model) folder: " + demFolder); //$NON-NLS-1$
 			if (!demFolder.isDirectory()) {
-				System.err.println("ERROR: DEM folder does not exist!"); //$NON-NLS-1$
+				System.err.println("ERROR: DEM folder '" + demFolder + "' does not exist!"); //$NON-NLS-1$
 				System.exit(1);
-			}
-			if (demFolder.listFiles().length == 0) {
-				System.err.println("ERROR: DEM folder is empty!"); //$NON-NLS-1$
+			} else if (demFolder.listFiles().length == 0) {
+				System.err.println("ERROR: DEM folder '" + demFolder + "' is empty!"); //$NON-NLS-1$
 				System.exit(1);
+			} else {
+				System.out.println("DEM folder (digital elevation model): " + demFolder); //$NON-NLS-1$	
 			}
 		}
 		
 		int blackValue = 0;
 		contrastStretch = cmd.getOptionValue("contrast-stretch"); //$NON-NLS-1$
 		if (contrastStretch != null) {
+			contrastStretch = contrastStretch.trim();
 			try {
-				blackValue = Integer.parseInt(contrastStretch.trim());
+				blackValue = Integer.parseInt(contrastStretch);
 				if (blackValue < 0 || blackValue > 254) {
 					System.out.println("ERROR: contrast-stretch not 0-254!"); //$NON-NLS-1$
 					System.exit(1);
@@ -272,13 +290,13 @@ public class MapsforgeSrv {
 					System.out.println("Contrast-stretch: " + blackValue); //$NON-NLS-1$
 				}
 			} catch (NumberFormatException e){
-				blackValue = 0;
-				System.out.println("couldnt parse contrast-stretch, using " + blackValue); //$NON-NLS-1$
+				System.out.println("ERROR: contrast-stretch '" + contrastStretch + "' invalid!"); //$NON-NLS-1$
+				System.exit(1);
 			}
 		}
 		
 		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(rendererName, mapFiles, themeFile, themeFileStyle, themeFileOverlays,
-				preferredLanguage, hillShadingAlgorithm, hillShadingArguments, demFolder, blackValue);
+				preferredLanguage, hillShadingAlgorithm, hillShadingArguments, hillShadingMagnitude, demFolder, blackValue);
 
 		Server server = null;
 		String listeningInterface = cmd.getOptionValue("interface"); //$NON-NLS-1$

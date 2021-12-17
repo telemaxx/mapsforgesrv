@@ -101,8 +101,8 @@ public class MapsforgeHandler extends AbstractHandler {
 	private static final DateTimeFormatter FormatDateTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
 	public MapsforgeHandler(String rendererName, List<File> mapFiles, File themeFile, String themeFileStyle, String[] themeFileOverlays,
-			String preferredLanguage, String hillShadingAlgorithm, double[] hillShadingArguments, File demFolder,
-			int blackValue) throws FileNotFoundException {
+			String preferredLanguage, String hillShadingAlgorithm, double[] hillShadingArguments, double hillShadingMagnitude,
+			File demFolder, int blackValue) throws FileNotFoundException {
 		super();
 		this.mapFiles = mapFiles;
 		this.themeFile = themeFile;
@@ -138,6 +138,7 @@ public class MapsforgeHandler extends AbstractHandler {
 //			tileSource.setEnableInterpolationOverlap(true);		// More precise at tile edges but much slower, therefore commented out
 			tileSource.setEnableInterpolationOverlap(false);	// Less precise at tile edges but much faster, therefore hard-coded
 			hillsRenderConfig = new HillsRenderConfig(tileSource);
+			hillsRenderConfig.setMaginuteScaleFactor ((float)hillShadingMagnitude);
 			hillsRenderConfig.indexOnThread();
 		}
 		
