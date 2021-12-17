@@ -97,7 +97,9 @@ public class MapsforgeSrv {
 		options.addOption(contrastArgument);
 
 		Option portArgument = new Option("p", "port", true, "port, where the server is listening (default: " + DEFAULTPORT + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-
+		portArgument.setRequired(false);
+		options.addOption(portArgument);
+		
 		Option interfaceArgument = new Option("if", "interface", true, "which interface listening [all,localhost] (default: localhost)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		interfaceArgument.setRequired(false);
 		options.addOption(interfaceArgument);
