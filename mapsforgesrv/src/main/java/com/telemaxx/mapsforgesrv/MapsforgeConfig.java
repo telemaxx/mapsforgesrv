@@ -44,10 +44,10 @@ public class MapsforgeConfig {
 	private int maxQueueSize;
 	private int minThreads;
 	private int maxThreads;
-	private int idleTimeout;
+	private long idleTimeout;
 
 	private final static int DEFAULTSERVERPORT = 8080;
-	private final static String DEFAULTSERVERINTERFACE = "127.0.0.1";
+	private final static String DEFAULTSERVERINTERFACE = "localhost";
 	private final static int DEFAULTSERVERMAXQUEUESIZE = 256;
 	private final static int DEFAULTSERVERMINTHREADS = 0;
 	private final static int DEFAULTSERVERMAXTHREADS = 8;
@@ -69,8 +69,6 @@ public class MapsforgeConfig {
 	public final int SERVERACCEPTORS = 1;
 	public final int SERVERSELECTORS = 1;
 
-	public final String VERSION = "0.16.3"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
-
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeConfig.class);
 
 	public MapsforgeConfig(String[] args) {
@@ -80,7 +78,7 @@ public class MapsforgeConfig {
 				"If set, add Cache-Control header for served tiles. value in seconds, (default: 0 - disabled)"); //$NON-NLS-1$
 		cachecontrolArgument.setRequired(false);
 		options.addOption(cachecontrolArgument);
-		
+
 		Option queuesizeArgument = new Option("mxq", "maxqueuesize", true, //$NON-NLS-1$ //$NON-NLS-2$
 				"Maximum queue size for rendering jobs [waiting & running] (default: 256)"); //$NON-NLS-1$
 		queuesizeArgument.setRequired(false);
@@ -178,34 +176,34 @@ public class MapsforgeConfig {
 
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
-
+		
 		try {
 			configCmd = parser.parse(options, args);
-			String config = configCmd.getOptionValue("config");
-			if (config != null) {
-				FileInputStream in;
-				try {
-					in = new FileInputStream(config);
-					configFile = new Properties();
-					configFile.load(in);
-					in.close();
-				} catch (FileNotFoundException e) {
-					logger.error("ERROR: can't find config file '" + config + "'"); //$NON-NLS-1$
-					System.exit(1);
-				} catch (IOException e) {
-					logger.error("ERROR: can't parse config file '" + config + "'"); //$NON-NLS-1$
-					System.exit(1);
-				}
+			if (configCmd.hasOption("help")) { //$NON-NLS-1$
+				formatter.printHelp("mapsforgesrv", options); //$NON-NLS-1$
+				System.exit(0);
 			}
 		} catch (ParseException e) {
 			logger.error(e.getMessage());
 			formatter.printHelp("mapsforgesrv", options); //$NON-NLS-1$
 			System.exit(1);
 		}
-
-		if (configCmd.hasOption("help")) { //$NON-NLS-1$
-			formatter.printHelp("mapsforgesrv", options); //$NON-NLS-1$
-			System.exit(0);
+		
+		String config = configCmd.getOptionValue("config");
+		if (config != null) {
+			FileInputStream in;
+			try {
+				in = new FileInputStream(config);
+				configFile = new Properties();
+				configFile.load(in);
+				in.close();
+			} catch (FileNotFoundException e) {
+				logger.error("ERROR: can't find config file '" + config + "'"); //$NON-NLS-1$
+				System.exit(1);
+			} catch (IOException e) {
+				logger.error("ERROR: can't parse config file '" + config + "'"); //$NON-NLS-1$
+				System.exit(1);
+			}
 		}
 	}
 
@@ -244,7 +242,7 @@ public class MapsforgeConfig {
 				cacheControlString = cacheControlString.trim();
 				cacheControl = Long.parseLong(cacheControlString);
 				if (cacheControl < 0) {
-					logger.error("ERROR: cachecontrol '"+cacheControl+"' not positive: disabled"); //$NON-NLS-1$
+					logger.error("ERROR: cachecontrol '" + cacheControl + "' not positive: disabled"); //$NON-NLS-1$
 				} else {
 					logger.info("Browser cache control ttl: " + cacheControl); //$NON-NLS-1$
 				}
@@ -254,7 +252,7 @@ public class MapsforgeConfig {
 		} else {
 			logger.info("no browser cache control ttl given: disabled"); //$NON-NLS-1$
 		}
-		
+
 		maxQueueSize = DEFAULTSERVERMAXQUEUESIZE;
 		String maxQueueSizeString = retrieveConfigValue("maxqueuesize"); //$NON-NLS-1$
 		if (maxQueueSizeString != null) {
@@ -320,9 +318,9 @@ public class MapsforgeConfig {
 		if (idleTimeoutString != null) {
 			try {
 				idleTimeoutString = idleTimeoutString.trim();
-				idleTimeout = Integer.parseInt(idleTimeoutString);
-				if (idleTimeout < 1 || idleTimeout > 65535) {
-					logger.error("ERROR: idletimeout not 1-65535!"); //$NON-NLS-1$
+				idleTimeout = Long.parseLong(idleTimeoutString);
+				if (idleTimeout < 0) {
+					logger.error("ERROR: idletimeout not positive!"); //$NON-NLS-1$
 					System.exit(1);
 				} else {
 					logger.info("Connection idle timeout: " + idleTimeout); //$NON-NLS-1$
@@ -352,7 +350,8 @@ public class MapsforgeConfig {
 			serverConnectors = connectorsString.trim().split(","); //$NON-NLS-1$ //$NON-NLS-2$
 			for (String connector : serverConnectors) {
 				if (!Arrays.asList(AUTHORIZEDCONNECTORS).contains(connector)) {
-					logger.error("ERROR: server connector '" + connector + "' does not exist! " + Arrays.toString(AUTHORIZEDCONNECTORS)); //$NON-NLS-1$
+					logger.error("ERROR: server connector '" + connector + "' does not exist! " //$NON-NLS-1$
+							+ Arrays.toString(AUTHORIZEDCONNECTORS));
 					System.exit(1);
 				}
 			}
@@ -361,19 +360,25 @@ public class MapsforgeConfig {
 			serverConnectors = DEFAULTCONNECTORS;
 			logger.info("no server connectors given, using " + Arrays.toString(serverConnectors)); //$NON-NLS-1$
 		}
-		
-		String[] mapFilePaths = retrieveConfigValue("mapfiles").trim().split(","); //$NON-NLS-1$ //$NON-NLS-2$
-		mapFiles = new ArrayList<>();
-		for (String path : mapFilePaths) {
-			mapFiles.add(new File(path));
-		}
-		mapFiles.forEach(mapFile -> {
-			logger.info("Map file: " + mapFile); //$NON-NLS-1$
-			if (!mapFile.isFile()) {
-				logger.error("ERROR: Map file does not exist!"); //$NON-NLS-1$
-				System.exit(1);
+
+		String mapFilePathsString = retrieveConfigValue("mapfiles");
+		if (mapFilePathsString != null) {
+			String[] mapFilePaths = mapFilePathsString.trim().split(","); //$NON-NLS-1$ //$NON-NLS-2$
+			mapFiles = new ArrayList<>();
+			for (String path : mapFilePaths) {
+				mapFiles.add(new File(path));
 			}
-		});
+			mapFiles.forEach(mapFile -> {
+				logger.info("Map file: " + mapFile); //$NON-NLS-1$
+				if (!mapFile.isFile()) {
+					logger.error("ERROR: Map file does not exist!"); //$NON-NLS-1$
+					System.exit(1);
+				}
+			});
+		} else {
+			logger.error("ERROR: no mapfiles specified!"); //$NON-NLS-1$
+			System.exit(1);
+		}
 
 		String themeFilePath = retrieveConfigValue("themefile"); //$NON-NLS-1$
 		if (themeFilePath != null) {
@@ -559,7 +564,7 @@ public class MapsforgeConfig {
 	public int getMinThreads() {
 		return this.minThreads;
 	}
-	
+
 	public long getCacheControl() {
 		return this.cacheControl;
 	}
@@ -575,6 +580,7 @@ public class MapsforgeConfig {
 	public File getThemeFile() {
 		return this.themeFile;
 	}
+
 	public String[] getServerConnectors() {
 		return serverConnectors;
 	}
