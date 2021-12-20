@@ -75,7 +75,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public class MapsforgeHandler extends AbstractHandler {
-
+	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeHandler.class);
 
 	private final TreeSet<String> KNOWN_PARAMETER_NAMES = new TreeSet<>(Arrays.asList(
@@ -243,6 +243,17 @@ public class MapsforgeHandler extends AbstractHandler {
 			logger.info("the given style found: " + themeFileStyle); //$NON-NLS-1$
 		}
 	}
+	
+	private String logRequest(HttpServletRequest request, long startTime, String extmsg) {
+		String msg = request.getPathInfo() + "?" + request.getQueryString() + " @"
+				+ Math.round((System.nanoTime() - startTime) / 1000000) + "ms ["
+				+ this.pool.getIdleThreads() + " idle | " + (this.queue.size())
+				+ " waiting" + "]";
+		if(extmsg != null) {
+			return msg+" ! " + extmsg;
+		}
+		return msg;
+	}
 
 	@Override
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response){
@@ -394,13 +405,10 @@ public class MapsforgeHandler extends AbstractHandler {
 			response.setStatus(200);
 			response.setContentType("image/" + ext); //$NON-NLS-1$
 			if(mapsforgeConfig.getCacheControl() > 0) {
-				response.addHeader("Cache-Control", "max-age="+mapsforgeConfig.getCacheControl()); //$NON-NLS-1$ //$NON-NLS-2$
+				response.addHeader("Cache-Control", "public, max-age="+mapsforgeConfig.getCacheControl()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			ImageIO.write(image, ext, response.getOutputStream());
-			logger.info(request.getPathInfo() + "?" + request.getQueryString() + " @"
-					+ Math.round((System.nanoTime() - startTime) / 1000000) + "ms ["
-					+ (this.pool.getThreads() - this.pool.getIdleThreads()) + " working | " + (this.queue.size())
-					+ " waiting" + "]");
+			logger.info(logRequest(request, startTime, null));
 		} catch (Exception e) {
 			String extmsg = ExceptionUtils.getRootCauseMessage(e);
 			try {
@@ -408,10 +416,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			} catch (IOException e1) {
 				response.setStatus(500);
 			}
-			logger.error(request.getPathInfo() + "?" + request.getQueryString() + " @"
-					+ Math.round((System.nanoTime() - startTime) / 1000000) + "ms ["
-					+ (this.pool.getThreads() - this.pool.getIdleThreads()) + " working | " + (this.queue.size())
-					+ " waiting" + "] ! " + extmsg);
+			logger.error(logRequest(request, startTime, extmsg));
 		}
 	}
 
