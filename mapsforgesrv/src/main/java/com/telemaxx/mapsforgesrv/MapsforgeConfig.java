@@ -224,7 +224,6 @@ public class MapsforgeConfig {
 				// logger.info("portString" + portNumberString);
 				portNumber = Integer.parseInt(portNumberString);
 				if (portNumber < 1024 || portNumber > 65535) {
-					portNumber = DEFAULTSERVERPORT;
 					logger.error("ERROR: portnumber not 1024-65535!"); //$NON-NLS-1$
 					System.exit(1);
 				} else {
@@ -263,7 +262,6 @@ public class MapsforgeConfig {
 				maxQueueSizeString = maxQueueSizeString.trim();
 				maxQueueSize = Integer.parseInt(maxQueueSizeString);
 				if (maxQueueSize < 0 || maxQueueSize > 65535) {
-					maxQueueSize = DEFAULTSERVERMAXQUEUESIZE;
 					logger.error("ERROR: maxqueuesize not 0-65535!"); //$NON-NLS-1$
 					System.exit(1);
 				} else {
@@ -284,7 +282,6 @@ public class MapsforgeConfig {
 				minThreadsString = minThreadsString.trim();
 				minThreads = Integer.parseInt(minThreadsString);
 				if (minThreads < 0 || minThreads > 65535) {
-					minThreads = DEFAULTSERVERMINTHREADS;
 					logger.error("ERROR: minthread not 0-65535!"); //$NON-NLS-1$
 					System.exit(1);
 				} else {
@@ -305,7 +302,6 @@ public class MapsforgeConfig {
 				maxThreadsString = maxThreadsString.trim();
 				maxThreads = Integer.parseInt(maxThreadsString);
 				if (maxThreads < 1 || maxThreads > 65535) {
-					maxThreads = DEFAULTSERVERMAXTHREADS;
 					logger.error("ERROR: maxthread not 1-65535!"); //$NON-NLS-1$
 					System.exit(1);
 				} else {
@@ -326,7 +322,6 @@ public class MapsforgeConfig {
 				idleTimeoutString = idleTimeoutString.trim();
 				idleTimeout = Integer.parseInt(idleTimeoutString);
 				if (idleTimeout < 1 || idleTimeout > 65535) {
-					idleTimeout = DEFAULTSERVERIDELTIMEOUT;
 					logger.error("ERROR: idletimeout not 1-65535!"); //$NON-NLS-1$
 					System.exit(1);
 				} else {
