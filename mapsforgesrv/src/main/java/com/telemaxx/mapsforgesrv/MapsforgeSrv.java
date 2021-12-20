@@ -40,23 +40,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MapsforgeSrv {
+	
+	private final static String VERSION = "0.16.3"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 
-		final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
+	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 
 	private MapsforgeConfig mapsforgeConfig = null;
 	private ExecutorThreadPool pool = null;
 	private LinkedBlockingQueue<Runnable> queue = null;
-
-
+	
 	public MapsforgeSrv(String[] args) throws Exception {
+		logger.warn("MapsforgeSrv - a mapsforge tile server. " + "version: " + VERSION); //$NON-NLS-1$ //$NON-NLS-2$
+		logger.debug("Current dir [user.dir]: " + System.getProperty("user.dir"));
+
 		mapsforgeConfig = new MapsforgeConfig(args);
 		mapsforgeConfig.initConfig();
 		
-		logger.info("MapsforgeSrv - a mapsforge tile server. " + "version: " + mapsforgeConfig.VERSION); //$NON-NLS-1$ //$NON-NLS-2$
-		logger.info("Current dir: " + System.getProperty("user.dir"));
-
 		queue = new LinkedBlockingQueue<Runnable>(mapsforgeConfig.getMaxQueueSize());
 		pool = new ExecutorThreadPool(mapsforgeConfig.getMaxThreads(), mapsforgeConfig.getMinThreads(), queue);
+		pool.setIdleTimeout((int)mapsforgeConfig.getIdleTimeout());
 		pool.setName("queue");
 		Server server = new Server(pool);
 		HttpConfiguration httpConfig = new HttpConfiguration();
@@ -65,23 +67,24 @@ public class MapsforgeSrv {
 			HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
 			if (Arrays.asList(mapsforgeConfig.getServerConnectors()).contains("http11")){
 				connector.addConnectionFactory(http11);
+				logger.debug("+ add 'http11' connection factory");
 			}
 			if (!Arrays.asList(mapsforgeConfig.getServerConnectors()).contains("proxy")) {
 				ProxyConnectionFactory proxy = new ProxyConnectionFactory(http11.getProtocol());
 				connector.addConnectionFactory(proxy);
+				logger.debug("+ add 'proxy' connection factory");
 			}
 		}
 		if (Arrays.asList(mapsforgeConfig.getServerConnectors()).contains("h2c")) {
 			HTTP2CServerConnectionFactory h2c = new HTTP2CServerConnectionFactory(httpConfig);
 			connector.addConnectionFactory(h2c);
+			logger.debug("+ add 'h2c' connection factory");
 		}
 		connector.setAcceptQueueSize(mapsforgeConfig.SERVERACCEPTQUEUESIZE);
 		connector.setIdleTimeout(mapsforgeConfig.getIdleTimeout());
 		if (mapsforgeConfig.getListeningInterface().toLowerCase().equals("all")) { //$NON-NLS-1$
-			logger.info("listening on all interfaces, port:" + mapsforgeConfig.getPortNumber()); //$NON-NLS-1$
 			connector.setPort(mapsforgeConfig.getPortNumber());
 		} else if (mapsforgeConfig.getListeningInterface().toLowerCase().equals("localhost")) { //$NON-NLS-1$
-			logger.info("listening on localhost port:" + mapsforgeConfig.getPortNumber()); //$NON-NLS-1$
 			connector.setPort(mapsforgeConfig.getPortNumber());
 			connector.setHost("127.0.0.1");
 		} else {
@@ -99,6 +102,10 @@ public class MapsforgeSrv {
 			logger.error("Stopping server", e); //$NON-NLS-1$
 			System.exit(1);
 		}
+		logger.info("> server listening on '"+mapsforgeConfig.getListeningInterface().toLowerCase()+":" + mapsforgeConfig.getPortNumber()+"'"); //$NON-NLS-1$
+		logger.info("> server connector configured with accept queue size '"+connector.getAcceptQueueSize()+"', idle timeout '"+connector.getIdleTimeout()+"'");
+		logger.info("> job executor configured with threads min '"+pool.getMinThreads()+"', max '"+pool.getMaxThreads()+"', idle timeout '"+pool.getIdleTimeout()+"'");
+		logger.info("> job queue configured with max size '"+queue.remainingCapacity()+"'");
 		server.join();
 	}
 
