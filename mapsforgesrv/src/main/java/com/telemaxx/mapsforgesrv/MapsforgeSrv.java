@@ -80,11 +80,11 @@ public class MapsforgeSrv {
 		languageArgument.setRequired(false);
 		options.addOption(languageArgument);
 
-		Option hillShadingAlgorithmArgument = new Option("hs", "hillshading-algorithm", true, "simple or simple(angle) or diffuselight or diffuselight(linearity,scale), (default: no hillshading)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		Option hillShadingAlgorithmArgument = new Option("hs", "hillshading-algorithm", true, "simple or simple(linearity,scale) or diffuselight or diffuselight(angle), (default: no hillshading)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		hillShadingAlgorithmArgument.setRequired(false);
 		options.addOption(hillShadingAlgorithmArgument);
 
-		Option hillShadingMagnitudeArgument = new Option("hm", "hillshading-magnitude", true, "scaling factor >= 0 (default: 1.)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		Option hillShadingMagnitudeArgument = new Option("hm", "hillshading-magnitude", true, "gray value scaling factor >= 0 (default: 1.)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		hillShadingMagnitudeArgument.setRequired(false);
 		options.addOption(hillShadingMagnitudeArgument);
 		
@@ -215,7 +215,8 @@ public class MapsforgeSrv {
 		hillShadingOption = cmd.getOptionValue("hillshading-algorithm"); //$NON-NLS-1$
 		if (hillShadingOption != null) {
 			hillShadingOption = hillShadingOption.trim();
-			Pattern P = Pattern.compile("(simple)(?:\\((\\d*\\.?\\d*),(\\d*\\.?\\d*)\\))?|(diffuselight)(?:\\((\\d*\\.?\\d*)\\))?");
+			Pattern P = Pattern.compile(
+					"(simple)(?:\\((\\d+\\.?\\d*|\\d*\\.?\\d+),(\\d+\\.?\\d*|\\d*\\.?\\d+)\\))?|(diffuselight)(?:\\((\\d+\\.?\\d*|\\d*\\.?\\d+)\\))?");
 			Matcher m = P.matcher(hillShadingOption);
 			if (m.matches()) {
 				if (m.group(1) != null) {
@@ -250,7 +251,7 @@ public class MapsforgeSrv {
 		hillShadingOption = cmd.getOptionValue("hillshading-magnitude"); //$NON-NLS-1$
 		if (hillShadingOption != null) {
 			hillShadingOption = hillShadingOption.trim();
-			Pattern P = Pattern.compile("(\\d*\\.?\\d*)");
+			Pattern P = Pattern.compile("(\\d+\\.?\\d*|\\d*\\.?\\d+)");
 			Matcher m = P.matcher(hillShadingOption);
 			if (m.matches()) {
 				hillShadingMagnitude = Double.parseDouble(m.group(1));
