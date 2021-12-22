@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -75,14 +76,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public class MapsforgeHandler extends AbstractHandler {
-	
+
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeHandler.class);
 
 	private final TreeSet<String> KNOWN_PARAMETER_NAMES = new TreeSet<>(Arrays.asList(
 			new String[] { "x", "y", "z", "textScale", "userScale", "transparent", "tileRenderSize", "hillshading" })); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 
-	protected final File themeFile;
-	protected final String themeFileStyle;
 	protected final MultiMapDataStore multiMapDataStore;
 	protected final DisplayModel displayModel;
 	protected HillsRenderConfig hillsRenderConfig = null;
@@ -93,10 +92,15 @@ public class MapsforgeHandler extends AbstractHandler {
 	protected XmlRenderThemeStyleMenu renderThemeStyleMenu;
 	protected TileBasedLabelStore tileBasedLabelStore = new MyTileBasedLabelStore(1000);
 	protected DummyCache labelInfoCache = new DummyCache();
+
+	protected final File themeFile;
+	protected final String themeFileStyle;
 	protected int blackValue;
+
 	private ExecutorThreadPool pool;
 	private LinkedBlockingQueue<Runnable> queue;
 	private MapsforgeConfig mapsforgeConfig;
+	private ShadingAlgorithm shadingAlgorithm = null;
 
 	private static final Pattern P = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)\\.(.*)"); //$NON-NLS-1$
 
@@ -128,7 +132,6 @@ public class MapsforgeHandler extends AbstractHandler {
 		displayModel = new DisplayModel();
 
 		if (mapsforgeConfig.getHillShadingAlgorithm() != null && mapsforgeConfig.getDemFolder() != null) { // hillshading
-			ShadingAlgorithm shadingAlgorithm = null;
 			if (mapsforgeConfig.getHillShadingAlgorithm().equals("simple")) {
 				shadingAlgorithm = new SimpleShadingAlgorithm(mapsforgeConfig.getHillShadingArguments()[0],
 						mapsforgeConfig.getHillShadingArguments()[1]);
@@ -243,23 +246,27 @@ public class MapsforgeHandler extends AbstractHandler {
 			logger.info("the given style found: " + themeFileStyle); //$NON-NLS-1$
 		}
 	}
-	
-	private String logRequest(HttpServletRequest request, long startTime, String extmsg) {
-		String msg = request.getPathInfo() + "?" + request.getQueryString() + " @"
-				+ Math.round((System.nanoTime() - startTime) / 1000000) + "ms ["
-				+ this.pool.getIdleThreads() + " idle | " + (this.queue.size())
-				+ " waiting" + "]";
-		if(extmsg != null) {
-			return msg+" ! " + extmsg;
-		}
+
+	private String logRequest(HttpServletRequest request, long startTime, String extmsg, String engine) {
+		// request
+		String msg = request.getPathInfo() + "?" + request.getQueryString();
+		// response time;idle threads;queue size
+		msg += " [ms:" +Math.round((System.nanoTime() - startTime) / 1000000) + ";idle:"+this.pool.getIdleThreads()+ ";qs:" + (this.queue.size()) + "]";
+		// hillshading configuration
+		if (engine == "hs" && mapsforgeConfig.LOGHSREQDET) 
+			msg +=  " "+StringUtils.chop(shadingAlgorithm.toString())+", magnitude=" + mapsforgeConfig.getHillShadingMagnitude() + "}";
+		// exception
+		if (extmsg != null)
+			return msg + " ! " + extmsg;
 		return msg;
 	}
 
 	@Override
-	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response){
+	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) {
 		long startTime = System.nanoTime();
+		String engine = "std";
 		try {
-			
+
 			if (request.getPathInfo().equals("/favicon.ico")) { //$NON-NLS-1$
 				response.setStatus(404);
 				return;
@@ -366,7 +373,6 @@ public class MapsforgeHandler extends AbstractHandler {
 			} catch (Exception e) {
 			}
 
-			String engine = "std";
 			if (hillsRenderConfig != null && enable_hs)
 				engine = "hs";
 			synchronized (this) {
@@ -404,11 +410,11 @@ public class MapsforgeHandler extends AbstractHandler {
 			baseRequest.setHandled(true);
 			response.setStatus(200);
 			response.setContentType("image/" + ext); //$NON-NLS-1$
-			if(mapsforgeConfig.getCacheControl() > 0) {
-				response.addHeader("Cache-Control", "public, max-age="+mapsforgeConfig.getCacheControl()); //$NON-NLS-1$ //$NON-NLS-2$
+			if (mapsforgeConfig.getCacheControl() > 0) {
+				response.addHeader("Cache-Control", "public, max-age=" + mapsforgeConfig.getCacheControl()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			ImageIO.write(image, ext, response.getOutputStream());
-			logger.info(logRequest(request, startTime, null));
+			logger.info(logRequest(request, startTime, null, engine));
 		} catch (Exception e) {
 			String extmsg = ExceptionUtils.getRootCauseMessage(e);
 			try {
@@ -416,7 +422,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			} catch (IOException e1) {
 				response.setStatus(500);
 			}
-			logger.error(logRequest(request, startTime, extmsg));
+			logger.error(logRequest(request, startTime, extmsg, engine));
 		}
 	}
 
