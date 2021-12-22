@@ -47,19 +47,20 @@ public class MapsforgeConfig {
 	private long idleTimeout;
 
 	private final static int DEFAULTSERVERPORT = 8080;
-	private final static String DEFAULTSERVERINTERFACE = "localhost";
+	private final static String DEFAULTSERVERINTERFACE = "localhost"; //$NON-NLS-1$
 	private final static int DEFAULTSERVERMAXQUEUESIZE = 256;
 	private final static int DEFAULTSERVERMINTHREADS = 0;
 	private final static int DEFAULTSERVERMAXTHREADS = 8;
 	private final static int DEFAULTSERVERIDELTIMEOUT = 0;
-	private final static String[] AUTHORIZEDCONNECTORS = { "http11", "proxy", "h2c" };
-	private final static String[] DEFAULTCONNECTORS = { "http11" };
-
+	private final static String[] AUTHORIZEDCONNECTORS = { "http11", "proxy", "h2c" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	private final static String[] DEFAULTCONNECTORS = { "http11" }; //$NON-NLS-1$
 	/*
 	 * true: More precise at tile edges but much slower false: Less precise at tile
 	 * edges but much faster
 	 */
 	public final boolean HILLSHADINGENABLEINTERPOLATIONOVERLAP = false;
+	public final double[] HILLSHADINGSIMPLEDEFAULT = {0.1,0.666};
+	public final double HILLSHADINGDIFDUSELIGHTDEFAULT = 50;
 	public final String EXTENSIONDEFAULT = "png"; //$NON-NLS-1$
 	public final float TEXTSCALEDEFAULT = 1.0f;
 	public final float USERSCALEDEFAULT = 1.0f;
@@ -68,7 +69,9 @@ public class MapsforgeConfig {
 	public final int SERVERACCEPTQUEUESIZE = 128;
 	public final int SERVERACCEPTORS = 1;
 	public final int SERVERSELECTORS = 1;
-
+	
+	// log hillshading configuration detal for each request
+	public final boolean LOGHSREQDET = true;
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeConfig.class);
 
 	public MapsforgeConfig(String[] args) {
@@ -429,8 +432,8 @@ public class MapsforgeConfig {
 						hillShadingArguments[0] = Double.parseDouble(m.group(2));
 						hillShadingArguments[1] = Double.parseDouble(m.group(3));
 					} else { // default values
-						hillShadingArguments[0] = 0.1;
-						hillShadingArguments[1] = 0.666;
+						hillShadingArguments[0] = HILLSHADINGSIMPLEDEFAULT[0];
+						hillShadingArguments[1] = HILLSHADINGSIMPLEDEFAULT[1];
 					}
 					logger.info("Hillshading algorithm: " + hillShadingAlgorithm + "(" + hillShadingArguments[0] + "," //$NON-NLS-3$
 							+ hillShadingArguments[1] + ")");
@@ -440,7 +443,7 @@ public class MapsforgeConfig {
 					if (m.group(5) != null) {
 						hillShadingArguments[0] = Double.parseDouble(m.group(5));
 					} else { // default value
-						hillShadingArguments[0] = 50.;
+						hillShadingArguments[0] = HILLSHADINGDIFDUSELIGHTDEFAULT;
 					}
 					logger.info("Hillshading algorithm: " + hillShadingAlgorithm + "(" + hillShadingArguments[0] + ")"); //$NON-NLS-1$
 				}
