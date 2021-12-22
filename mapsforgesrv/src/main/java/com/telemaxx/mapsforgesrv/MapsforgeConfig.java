@@ -145,7 +145,7 @@ public class MapsforgeConfig {
 		options.addOption(hillShadingAlgorithmArgument);
 
 		Option hillShadingMagnitudeArgument = new Option("hm", "hillshading-magnitude", true, //$NON-NLS-1$ //$NON-NLS-2$
-				"scaling factor >= 0 (default: 1.)"); //$NON-NLS-1$
+				"gray value scaling factor >= 0 (default: 1.)"); //$NON-NLS-1$
 		hillShadingMagnitudeArgument.setRequired(false);
 		options.addOption(hillShadingMagnitudeArgument);
 
@@ -176,7 +176,6 @@ public class MapsforgeConfig {
 
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
-		
 		try {
 			configCmd = parser.parse(options, args);
 			if (configCmd.hasOption("help")) { //$NON-NLS-1$
@@ -188,7 +187,6 @@ public class MapsforgeConfig {
 			formatter.printHelp("mapsforgesrv", options); //$NON-NLS-1$
 			System.exit(1);
 		}
-		
 		String config = configCmd.getOptionValue("config");
 		if (config != null) {
 			FileInputStream in;
@@ -421,7 +419,7 @@ public class MapsforgeConfig {
 		if (hillShadingOption != null) {
 			hillShadingOption = hillShadingOption.trim();
 			Pattern P = Pattern.compile(
-					"(simple)(?:\\((\\d*\\.?\\d*),(\\d*\\.?\\d*)\\))?|(diffuselight)(?:\\((\\d*\\.?\\d*)\\))?");
+					"(simple)(?:\\((\\d+\\.?\\d*|\\d*\\.?\\d+),(\\d+\\.?\\d*|\\d*\\.?\\d+)\\))?|(diffuselight)(?:\\((\\d+\\.?\\d*|\\d*\\.?\\d+)\\))?");
 			Matcher m = P.matcher(hillShadingOption);
 			if (m.matches()) {
 				if (m.group(1) != null) {
@@ -456,7 +454,7 @@ public class MapsforgeConfig {
 		hillShadingOption = retrieveConfigValue("hillshading-magnitude"); //$NON-NLS-1$
 		if (hillShadingOption != null) {
 			hillShadingOption = hillShadingOption.trim();
-			Pattern P = Pattern.compile("(\\d*\\.?\\d*)");
+			Pattern P = Pattern.compile("(\\d+\\.?\\d*|\\d*\\.?\\d+)");
 			Matcher m = P.matcher(hillShadingOption);
 			if (m.matches()) {
 				hillShadingMagnitude = Double.parseDouble(m.group(1));
