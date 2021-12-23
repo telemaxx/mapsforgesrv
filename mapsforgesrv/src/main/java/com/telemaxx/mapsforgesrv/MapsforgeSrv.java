@@ -38,6 +38,7 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.util.thread.ExecutorThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
 	
@@ -110,6 +111,8 @@ public class MapsforgeSrv {
 	}
 
 	public static void main(String[] args) throws Exception {
+		SLF4JBridgeHandler.removeHandlersForRootLogger();
+		SLF4JBridgeHandler.install();
 		new MapsforgeSrv(args);
 	}
 }
