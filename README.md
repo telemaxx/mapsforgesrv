@@ -6,7 +6,7 @@ http://mobac.sourceforge.net/
 
 The MapsforgeSrv is a local webserver providing rendered mapsforge map tiles.  
 http://wiki.openstreetmap.org/wiki/Mapsforge<br/>
-The tiles are always rendered on the fly when requested
+The tiles are always rendered on the fly when requested.
 
 The description of this tool you find at the origin page:<br/>
 https://sourceforge.net/p/mobac/code/HEAD/tree/trunk/tools/MapsforgeSrv/
@@ -70,7 +70,7 @@ longest example:
 ```console
 java -jar mapsforgesrv/bin/jars_ready2use/mapsforgesrv4java8.jar -p 8080 -if all
      -m "path2mapfile1.map, path2mapfile2.map" -t path2themefile.xml -l en -r "direct" 
-     -s "elmt-hiking" -o elmt-mtbs_tracks,elmt-mtb_routes,elmt-mtb_c_routes"
+     -s "elmt-hiking" -o "elmt-mtbs_tracks,elmt-mtb_routes,elmt-mtb_c_routes"
      -cs 32 -hs simple(0.1,0.666) -hm 1.2 -d path2demfolder
 ```
 
