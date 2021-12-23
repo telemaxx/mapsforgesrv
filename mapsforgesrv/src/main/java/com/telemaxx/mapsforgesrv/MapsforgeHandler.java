@@ -107,6 +107,8 @@ public class MapsforgeHandler extends AbstractHandler {
 	public MapsforgeHandler(MapsforgeConfig mapsforgeConfig, ExecutorThreadPool pool,
 			LinkedBlockingQueue<Runnable> queue) throws FileNotFoundException {
 		super();
+		// https://stackoverflow.com/questions/10235728/convert-bufferedimage-into-byte-without-i-o
+		ImageIO.setUseCache(false);
 		this.mapsforgeConfig = mapsforgeConfig;
 		this.pool = pool;
 		this.queue = queue;
@@ -354,9 +356,8 @@ public class MapsforgeHandler extends AbstractHandler {
 			int tileRenderSize = mapsforgeConfig.TILERENDERSIZEDEFAULT;
 			try {
 				String tmp = request.getParameter("tileRenderSize"); //$NON-NLS-1$
-				if (tmp != null) {
+				if (tmp != null)
 					tileRenderSize = Integer.parseInt(tmp);
-				}
 			} catch (Exception e) {
 				throw new ServletException("Failed to parse \"tileRenderSize\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
@@ -369,8 +370,11 @@ public class MapsforgeHandler extends AbstractHandler {
 
 			boolean enable_hs = true;
 			try {
-				enable_hs = Integer.parseInt(request.getParameter("hillshading")) != 0; //$NON-NLS-1$
+				String tmp = request.getParameter("hillshading"); //$NON-NLS-1$
+				if (tmp != null)
+					enable_hs = Integer.parseInt(request.getParameter("hillshading")) != 0; //$NON-NLS-1$
 			} catch (Exception e) {
+				throw new ServletException("Failed to parse \"hillshading\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
 
 			if (hillsRenderConfig != null && enable_hs)
