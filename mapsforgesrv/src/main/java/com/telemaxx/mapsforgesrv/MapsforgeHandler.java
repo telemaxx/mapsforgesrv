@@ -104,6 +104,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			String preferredLanguage, String hillShadingAlgorithm, double[] hillShadingArguments, double hillShadingMagnitude,
 			File demFolder, int blackValue) throws FileNotFoundException {
 		super();
+		ImageIO.setUseCache(false);
 		this.mapFiles = mapFiles;
 		this.themeFile = themeFile;
 		this.themeFileStyle = themeFileStyle;
