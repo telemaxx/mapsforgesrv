@@ -21,6 +21,7 @@
  * 0.16.1: contrast stretching (JFBeck)
  * 0.16.2: Check for valid tile numbers (JFBeck)
  * 0.16.3: hillshading (JFBeck)
+ * 0.16.4: gamma correction (JFBeck)
  *******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -91,7 +92,11 @@ public class MapsforgeSrv {
 		Option demFolderArgument = new Option("d", "demfolder", true, "folder containing .hgt digital elevation model files"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		demFolderArgument.setRequired(false);
 		options.addOption(demFolderArgument);
-
+		
+		Option gammaArgument = new Option("gc", "gamma-correction", true, "gamma correction value > 0. (default: 1.)"); //$NON-NLS-1$
+		gammaArgument.setRequired(false);
+		options.addOption(gammaArgument);
+		
 		Option contrastArgument = new Option("cs", "contrast-stretch", true, "stretch contrast within range 0..254 (default: 0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		contrastArgument.setRequired(false);
 		options.addOption(contrastArgument);
@@ -242,7 +247,7 @@ public class MapsforgeSrv {
 					System.out.println("Hillshading algorithm: " + hillShadingAlgorithm + "(" + hillShadingArguments[0] + ")"); //$NON-NLS-1$
 				}
 			} else {
-				System.out.println("ERROR: hillshading algorithm '" + hillShadingOption + "' invalid!"); //$NON-NLS-1$
+				System.err.println("ERROR: hillshading algorithm '" + hillShadingOption + "' invalid!"); //$NON-NLS-1$
 				System.exit(1);
 			}
 		}
@@ -257,7 +262,7 @@ public class MapsforgeSrv {
 				hillShadingMagnitude = Double.parseDouble(m.group(1));
 				System.out.println("Hillshading magnitude: " + hillShadingMagnitude); //$NON-NLS-1$
 			} else {
-				System.out.println("ERROR: hillshading magnitude '" + hillShadingOption + "' invalid!"); //$NON-NLS-1$
+				System.err.println("ERROR: hillshading magnitude '" + hillShadingOption + "' invalid!"); //$NON-NLS-1$
 				System.exit(1);
 			}
 		}
@@ -278,6 +283,24 @@ public class MapsforgeSrv {
 			}
 		}
 		
+		double gammaValue = 1.;
+		String gammaValueString = cmd.getOptionValue("gamma-correction"); //$NON-NLS-1$
+		if (gammaValueString != null) {
+			gammaValueString = gammaValueString.trim();
+			try {
+				gammaValue = Double.parseDouble(gammaValueString);
+				if (gammaValue <= 0.) {
+					System.err.println("ERROR: gamma-correction not > 0.!"); //$NON-NLS-1$
+					System.exit(1);
+				} else {
+					System.out.println("Gamma correction: " + gammaValue); //$NON-NLS-1$
+				}
+			} catch (NumberFormatException e) {
+				System.err.println("ERROR: gamma-correction '" + gammaValueString + "' invalid!"); //$NON-NLS-1$
+				System.exit(1);
+			}
+		}
+		
 		int blackValue = 0;
 		contrastStretch = cmd.getOptionValue("contrast-stretch"); //$NON-NLS-1$
 		if (contrastStretch != null) {
@@ -285,19 +308,20 @@ public class MapsforgeSrv {
 			try {
 				blackValue = Integer.parseInt(contrastStretch);
 				if (blackValue < 0 || blackValue > 254) {
-					System.out.println("ERROR: contrast-stretch not 0-254!"); //$NON-NLS-1$
+					System.err.println("ERROR: contrast-stretch not 0-254!"); //$NON-NLS-1$
 					System.exit(1);
 				} else {
 					System.out.println("Contrast-stretch: " + blackValue); //$NON-NLS-1$
 				}
 			} catch (NumberFormatException e){
-				System.out.println("ERROR: contrast-stretch '" + contrastStretch + "' invalid!"); //$NON-NLS-1$
+				System.err.println("ERROR: contrast-stretch '" + contrastStretch + "' invalid!"); //$NON-NLS-1$
 				System.exit(1);
 			}
 		}
 		
 		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(rendererName, mapFiles, themeFile, themeFileStyle, themeFileOverlays,
-				preferredLanguage, hillShadingAlgorithm, hillShadingArguments, hillShadingMagnitude, demFolder, blackValue);
+				preferredLanguage, hillShadingAlgorithm, hillShadingArguments, hillShadingMagnitude, demFolder,
+				gammaValue, blackValue);
 
 		Server server = null;
 		String listeningInterface = cmd.getOptionValue("interface"); //$NON-NLS-1$
@@ -311,7 +335,7 @@ public class MapsforgeSrv {
 				System.out.println("listening on localhost port:" + portNumber); //$NON-NLS-1$
 				server = new Server(InetSocketAddress.createUnresolved("localhost", portNumber)); //$NON-NLS-1$
 			} else {
-				System.out.println("unkown Interface, only \"all\" or \"localhost\" , not " + listeningInterface ); //$NON-NLS-1$
+				System.err.println("unkown Interface, only \"all\" or \"localhost\" , not " + listeningInterface ); //$NON-NLS-1$
 				System.exit(1);	
 			}
 		} else {
@@ -323,8 +347,8 @@ public class MapsforgeSrv {
 		try {
 			server.start();
 		} catch (BindException e) {
-			System.out.println(e.getMessage());
-			System.out.println("Stopping server"); //$NON-NLS-1$
+			System.err.println(e.getMessage());
+			System.err.println("Stopping server"); //$NON-NLS-1$
 			System.exit(1);
 		}
 		server.join();
