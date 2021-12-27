@@ -41,7 +41,7 @@ Whats different to the origin?
     9. selectable overlays (optional): -o "elmt-mtbs_tracks,elmt-mtb_routes"
     10. selectable renderer (optional): -r [database,direct]
     11. selectable contrast-stretch (optional): -cs [0..254]
-    12. selectable gamma correction (optional): -gc factor
+    12. selectable gamma correction (optional): -gc value
     12. selectable hillshading algorithm (optional): -hs [simple,simple(linearity,scale),diffuselight,diffuselight(angle)]
     14. selectable hillshading magnitude (optional): -hm factor
     15. selectable DEM folder (optional): -d demfolder
