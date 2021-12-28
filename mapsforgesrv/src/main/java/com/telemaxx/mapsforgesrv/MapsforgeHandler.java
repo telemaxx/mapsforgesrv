@@ -95,20 +95,39 @@ public class MapsforgeHandler extends AbstractHandler {
 	protected XmlRenderThemeStyleMenu renderThemeStyleMenu;
 	protected TileBasedLabelStore tileBasedLabelStore = new MyTileBasedLabelStore(1000);
 	protected DummyCache labelInfoCache = new DummyCache();
-	protected int blackValue;	
+	protected double gammaValue;
+	protected int blackValue;
+	protected int[] colorLookupTable = null;
 
 	private static final Pattern P = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)\\.(.*)"); //$NON-NLS-1$
 	private static final DateTimeFormatter FormatDateTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
 	public MapsforgeHandler(String rendererName, List<File> mapFiles, File themeFile, String themeFileStyle, String[] themeFileOverlays,
 			String preferredLanguage, String hillShadingAlgorithm, double[] hillShadingArguments, double hillShadingMagnitude,
-			File demFolder, int blackValue) throws FileNotFoundException {
+			File demFolder, double gammaValue, int blackValue) throws FileNotFoundException {
 		super();
+		ImageIO.setUseCache(false);
 		this.mapFiles = mapFiles;
 		this.themeFile = themeFile;
 		this.themeFileStyle = themeFileStyle;
 		this.themeFileOverlays = themeFileOverlays;
+				
+		this.gammaValue = gammaValue;
 		this.blackValue = blackValue;
+		// first apply gamma correction and then contrast-stretching
+		if (gammaValue != 1. || blackValue != 0) {
+			colorLookupTable = new int[256];
+			double colorExponent = 1./gammaValue;
+			double stretchFactor = 255./(double)(255-blackValue);
+			int index = 256;
+			int value;
+			while (index-- > 0) {
+				value = index;
+				value = (int)Math.round(Math.pow(value/255.,colorExponent)*255.);
+				value = value > blackValue ? (int)Math.round((value-blackValue)*stretchFactor) : 0;
+				colorLookupTable[index] = value;
+			}
+		}
 		
 		GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
 		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
@@ -344,24 +363,19 @@ public class MapsforgeHandler extends AbstractHandler {
 		}
 		BufferedImage image = AwtGraphicFactory.getBitmap(tileBitmap);
 
-		if (blackValue > 0) {		// contrast-stretching
-			// DataBuffer created by Mapsforge renderer is of type DataBufferInt, i.e. one int value 0xaarrggbb per pixel 
-			DataBufferInt dataBuffer = (DataBufferInt)image.getRaster().getDataBuffer();
+		if (colorLookupTable != null) { // gamma correction and/or contrast-stretching
+			// DataBuffer created by Mapsforge renderer is of type DataBufferInt, i.e. one
+			// int value 0xaarrggbb per pixel
+			DataBufferInt dataBuffer = (DataBufferInt) image.getRaster().getDataBuffer();
 			int[] pixelArray = dataBuffer.getData();
-			int pixelCount = image.getWidth()*image.getHeight();
-			int pixelValue,alphaValue,redValue,greenValue,blueValue;
-			float stretchFactor = (float)255/(float)(255-blackValue);
+			int pixelCount = image.getWidth() * image.getHeight();
+			int pixelValue;
 			while (pixelCount-- > 0) {
 				pixelValue = pixelArray[pixelCount];
-				alphaValue = (pixelValue>>>24) & 0xff;
-				redValue   = (pixelValue>>>16) & 0xff;
-				greenValue = (pixelValue>>> 8) & 0xff;
-				blueValue  =  pixelValue       & 0xff;
-				redValue   = redValue   > blackValue ? Math.round((redValue  -blackValue)*stretchFactor) : 0;
-				greenValue = greenValue > blackValue ? Math.round((greenValue-blackValue)*stretchFactor) : 0;
-				blueValue  = blueValue  > blackValue ? Math.round((blueValue -blackValue)*stretchFactor) : 0;
-				pixelValue = (((((alphaValue<<8)|redValue)<<8)|greenValue)<<8)|blueValue;
-				pixelArray[pixelCount] = pixelValue;
+				pixelArray[pixelCount] = (pixelValue & 0xff000000)							// alphaValue
+									   | (colorLookupTable[(pixelValue>>>16) & 0xff]<<16)	// redValue
+									   | (colorLookupTable[(pixelValue>>> 8) & 0xff]<< 8)	// greenValue
+									   | (colorLookupTable[ pixelValue       & 0xff]);		// blueValue
 			}
 		}
 		
