@@ -21,6 +21,7 @@
  * 0.16.1: contrast stretching (JFBeck)
  * 0.16.2: Check for valid tile numbers (JFBeck)
  * 0.16.3: hillshading (JFBeck)
+ * 0.16.4: gamma correction (JFBeck)
  *******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -42,7 +43,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
 	
-	private final static String VERSION = "0.16.3"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	private final static String VERSION = "0.16.4"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 

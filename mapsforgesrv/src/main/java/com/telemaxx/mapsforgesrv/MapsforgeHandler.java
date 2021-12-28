@@ -101,6 +101,7 @@ public class MapsforgeHandler extends AbstractHandler {
 	private LinkedBlockingQueue<Runnable> queue;
 	private MapsforgeConfig mapsforgeConfig;
 	private ShadingAlgorithm shadingAlgorithm = null;
+	private int[] colorLookupTable = null;
 
 	private static final Pattern P = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)\\.(.*)"); //$NON-NLS-1$
 
@@ -115,6 +116,20 @@ public class MapsforgeHandler extends AbstractHandler {
 		this.themeFile = mapsforgeConfig.getThemeFile();
 		this.themeFileStyle = mapsforgeConfig.getThemeFileStyle();
 		this.blackValue = mapsforgeConfig.getBlackValue();
+		// first apply gamma correction and then contrast-stretching
+				if (mapsforgeConfig.getGammaValue() != 1. || blackValue != 0) {
+					colorLookupTable = new int[256];
+					double colorExponent = 1./mapsforgeConfig.getGammaValue();
+					double stretchFactor = 255./(double)(255-blackValue);
+					int index = 256;
+					int value;
+					while (index-- > 0) {
+						value = index;
+						value = (int)Math.round(Math.pow(value/255.,colorExponent)*255.);
+						value = value > blackValue ? (int)Math.round((value-blackValue)*stretchFactor) : 0;
+						colorLookupTable[index] = value;
+					}
+				}
 
 		GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
 		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
@@ -389,25 +404,19 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 			BufferedImage image = AwtGraphicFactory.getBitmap(tileBitmap);
 
-			if (blackValue > 0) { // contrast-stretching
+			if (colorLookupTable != null) { // gamma correction and/or contrast-stretching
 				// DataBuffer created by Mapsforge renderer is of type DataBufferInt, i.e. one
 				// int value 0xaarrggbb per pixel
 				DataBufferInt dataBuffer = (DataBufferInt) image.getRaster().getDataBuffer();
 				int[] pixelArray = dataBuffer.getData();
 				int pixelCount = image.getWidth() * image.getHeight();
-				int pixelValue, alphaValue, redValue, greenValue, blueValue;
-				float stretchFactor = (float) 255 / (float) (255 - blackValue);
+				int pixelValue;
 				while (pixelCount-- > 0) {
 					pixelValue = pixelArray[pixelCount];
-					alphaValue = (pixelValue >>> 24) & 0xff;
-					redValue = (pixelValue >>> 16) & 0xff;
-					greenValue = (pixelValue >>> 8) & 0xff;
-					blueValue = pixelValue & 0xff;
-					redValue = redValue > blackValue ? Math.round((redValue - blackValue) * stretchFactor) : 0;
-					greenValue = greenValue > blackValue ? Math.round((greenValue - blackValue) * stretchFactor) : 0;
-					blueValue = blueValue > blackValue ? Math.round((blueValue - blackValue) * stretchFactor) : 0;
-					pixelValue = (((((alphaValue << 8) | redValue) << 8) | greenValue) << 8) | blueValue;
-					pixelArray[pixelCount] = pixelValue;
+					pixelArray[pixelCount] = (pixelValue & 0xff000000)				// alphaValue
+							   | (colorLookupTable[(pixelValue>>>16) & 0xff]<<16)	// redValue
+							   | (colorLookupTable[(pixelValue>>> 8) & 0xff]<< 8)	// greenValue
+							   | (colorLookupTable[ pixelValue       & 0xff]);		// blueValue
 				}
 			}
 

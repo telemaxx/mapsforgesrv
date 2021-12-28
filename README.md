@@ -41,9 +41,10 @@ Whats different to the origin?
     9. selectable overlays (optional): -o "elmt-mtbs_tracks,elmt-mtb_routes"
     10. selectable renderer (optional): -r [database,direct]
     11. selectable contrast-stretch (optional): -cs [0..254]
-    12. selectable hillshading algorithm (optional): -hs [simple,simple(linearity,scale),diffuselight,diffuselight(angle)]
-    13. selectable hillshading magnitude (optional): -hm factor
-    14. selectable DEM folder (optional): -d demfolder
+    12. selectable gamma correction (optional): -gc value
+    13. selectable hillshading algorithm (optional): -hs [simple,simple(linearity,scale),diffuselight,diffuselight(angle)]
+    14. selectable hillshading magnitude (optional): -hm factor
+    15. selectable DEM folder (optional): -d demfolder
 	
 
 Command parameters:
@@ -58,12 +59,13 @@ Command parameters:
     7. -o  when using a themefile, enable only overlays of this comma-separated list. override enable attributes inside the themefile.
     8. -r  mapsforge renderer [database,direct] (default: database). sometimes "direct" giving better results
     9. -cs contrast-stretch. stretch contrast within range 0..254 (default: 0)
-    10. -hs hillshading-algorithm. algorithm and optional parameters to use for hillshading (default: no hillshading)
+    10. -gc gamma-correction. gamma correction value > 0. (default: 1.)
+    11. -hs hillshading-algorithm. algorithm and optional parameters to use for hillshading (default: no hillshading)
             Parameter defaults: linearity=0.1, scale=0.666, angle=50.
             Note: Hillshading requires to be enabled in themefile too!
-    11. -hm hillshading-magnitude. gray value scaling factor >= 0(default: 1.)
-    12. -d  demfolder. path to folder containing .hgt digital elevation model files (default: no demfolder)
-    13. -h  print the help text and terminate 
+    12. -hm hillshading-magnitude. gray value scaling factor >= 0(default: 1.)
+    13. -d  demfolder. path to folder containing .hgt digital elevation model files (default: no demfolder)
+    14. -h  print the help text and terminate 
     
 
 longest example:
@@ -71,7 +73,7 @@ longest example:
 java -jar mapsforgesrv/bin/jars_ready2use/mapsforgesrv4java8.jar -p 8080 -if all
      -m "path2mapfile1.map, path2mapfile2.map" -t path2themefile.xml -l en -r "direct" 
      -s "elmt-hiking" -o "elmt-mtbs_tracks,elmt-mtb_routes,elmt-mtb_c_routes"
-     -cs 32 -hs simple(0.1,0.666) -hm 1.2 -d path2demfolder
+     -cs 32 -gc 0.8 -hs simple(0.1,0.666) -hm 1.2 -d path2demfolder
 ```
 
 Branches:
@@ -90,5 +92,5 @@ Building the jar:
 - Thomas Th. @telemaxx: converted the mapserver server part in own git project with gradle nature.
 - @pingurus (fixing stylesheets error)
 - Bernd @bjmdev (multi map support)
-- @JFritzle (selectable theme style, overlays, renderer, contrast-stretch & hillshading)
+- @JFritzle (selectable theme style, overlays, renderer, contrast-stretch, hillshading & gamma correction)
 

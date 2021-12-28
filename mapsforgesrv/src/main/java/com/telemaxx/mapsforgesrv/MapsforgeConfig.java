@@ -45,6 +45,7 @@ public class MapsforgeConfig {
 	private int minThreads;
 	private int maxThreads;
 	private long idleTimeout;
+	private double gammaValue;
 
 	private final static int DEFAULTSERVERPORT = 8080;
 	private final static String DEFAULTSERVERINTERFACE = "localhost"; //$NON-NLS-1$
@@ -161,6 +162,10 @@ public class MapsforgeConfig {
 				"stretch contrast within range 0..254 (default: 0)"); //$NON-NLS-1$
 		contrastArgument.setRequired(false);
 		options.addOption(contrastArgument);
+		
+		Option gammaArgument = new Option("gc", "gamma-correction", true, "gamma correction value > 0. (default: 1.)"); //$NON-NLS-1$
+		gammaArgument.setRequired(false);
+		options.addOption(gammaArgument);
 
 		Option portArgument = new Option("p", "port", true, //$NON-NLS-1$ //$NON-NLS-2$
 				"port, where the server is listening (default: " + DEFAULTSERVERPORT + ")"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -483,6 +488,24 @@ public class MapsforgeConfig {
 			}
 		}
 
+		gammaValue = 1.;
+		String gammaValueString = retrieveConfigValue("gamma-correction"); //$NON-NLS-1$
+		if (gammaValueString != null) {
+			gammaValueString = gammaValueString.trim();
+			try {
+				gammaValue = Double.parseDouble(gammaValueString);
+				if (gammaValue <= 0.) {
+					logger.error("ERROR: gamma-correction not > 0.!"); //$NON-NLS-1$
+					System.exit(1);
+				} else {
+					logger.info("Gamma correction: " + gammaValue); //$NON-NLS-1$
+				}
+			} catch (NumberFormatException e) {
+				logger.error("ERROR: gamma-correction '" + gammaValueString + "' invalid!"); //$NON-NLS-1$
+				System.exit(1);
+			}
+		}
+		
 		blackValue = 0;
 		String contrastStretch = retrieveConfigValue("contrast-stretch"); //$NON-NLS-1$
 		if (contrastStretch != null) {
@@ -585,4 +608,9 @@ public class MapsforgeConfig {
 	public String[] getServerConnectors() {
 		return serverConnectors;
 	}
+	
+	public double getGammaValue() {
+		return gammaValue;
+	}
+
 }
