@@ -21,7 +21,6 @@ package com.telemaxx.mapsforgesrv;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -104,10 +103,12 @@ public class MapsforgeHandler extends AbstractHandler {
 	private int[] colorLookupTable = null;
 
 	private static final Pattern P = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)\\.(.*)"); //$NON-NLS-1$
+	private static BufferedImage BI_NOCONTENT;
 
 	public MapsforgeHandler(MapsforgeConfig mapsforgeConfig, ExecutorThreadPool pool,
-			LinkedBlockingQueue<Runnable> queue) throws FileNotFoundException {
+			LinkedBlockingQueue<Runnable> queue) throws IOException {
 		super();
+		BI_NOCONTENT = ImageIO.read(getClass().getClassLoader().getResourceAsStream(("assets/mapsforgesrv/no_content.png")));
 		// https://stackoverflow.com/questions/10235728/convert-bufferedimage-into-byte-without-i-o
 		ImageIO.setUseCache(false);
 		this.mapsforgeConfig = mapsforgeConfig;
@@ -117,19 +118,19 @@ public class MapsforgeHandler extends AbstractHandler {
 		this.themeFileStyle = mapsforgeConfig.getThemeFileStyle();
 		this.blackValue = mapsforgeConfig.getBlackValue();
 		// first apply gamma correction and then contrast-stretching
-				if (mapsforgeConfig.getGammaValue() != 1. || blackValue != 0) {
-					colorLookupTable = new int[256];
-					double colorExponent = 1./mapsforgeConfig.getGammaValue();
-					double stretchFactor = 255./(double)(255-blackValue);
-					int index = 256;
-					int value;
-					while (index-- > 0) {
-						value = index;
-						value = (int)Math.round(Math.pow(value/255.,colorExponent)*255.);
-						value = value > blackValue ? (int)Math.round((value-blackValue)*stretchFactor) : 0;
-						colorLookupTable[index] = value;
-					}
-				}
+		if (mapsforgeConfig.getGammaValue() != 1. || blackValue != 0) {
+			colorLookupTable = new int[256];
+			double colorExponent = 1. / mapsforgeConfig.getGammaValue();
+			double stretchFactor = 255. / (double) (255 - blackValue);
+			int index = 256;
+			int value;
+			while (index-- > 0) {
+				value = index;
+				value = (int) Math.round(Math.pow(value / 255., colorExponent) * 255.);
+				value = value > blackValue ? (int) Math.round((value - blackValue) * stretchFactor) : 0;
+				colorLookupTable[index] = value;
+			}
+		}
 
 		GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
 		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
@@ -264,17 +265,19 @@ public class MapsforgeHandler extends AbstractHandler {
 		}
 	}
 
-	private String logRequest(HttpServletRequest request, long startTime, String extmsg, String engine) {
+	private String logRequest(HttpServletRequest request, long startTime, Exception ex, String engine) {
 		// request
 		String msg = request.getPathInfo() + "?" + request.getQueryString();
 		// response time;idle threads;queue size
-		msg += " [ms:" +Math.round((System.nanoTime() - startTime) / 1000000) + ";idle:"+this.pool.getIdleThreads()+ ";qs:" + (this.queue.size()) + "]";
+		msg += " [ms:" + Math.round((System.nanoTime() - startTime) / 1000000) + ";idle:" + this.pool.getIdleThreads()
+				+ ";qs:" + (this.queue.size()) + "]";
 		// hillshading configuration
-		if (engine == "hs" && mapsforgeConfig.LOGHSREQDET) 
-			msg +=  " "+StringUtils.chop(shadingAlgorithm.toString())+", magnitude=" + mapsforgeConfig.getHillShadingMagnitude() + "}";
+		if (engine == "hs" && mapsforgeConfig.LOGHSREQDET)
+			msg += " " + StringUtils.chop(shadingAlgorithm.toString()) + ", magnitude="
+					+ mapsforgeConfig.getHillShadingMagnitude() + "}";
 		// exception
-		if (extmsg != null)
-			return msg + " ! " + extmsg;
+		if (ex != null)
+			return msg + " ! " + ex.getMessage() + System.lineSeparator() + ExceptionUtils.getStackTrace(ex);
 		return msg;
 	}
 
@@ -402,30 +405,35 @@ public class MapsforgeHandler extends AbstractHandler {
 					labelInfoCache.put(job, null);
 				}
 			}
-			BufferedImage image = AwtGraphicFactory.getBitmap(tileBitmap);
-
-			if (colorLookupTable != null) { // gamma correction and/or contrast-stretching
-				// DataBuffer created by Mapsforge renderer is of type DataBufferInt, i.e. one
-				// int value 0xaarrggbb per pixel
-				DataBufferInt dataBuffer = (DataBufferInt) image.getRaster().getDataBuffer();
-				int[] pixelArray = dataBuffer.getData();
-				int pixelCount = image.getWidth() * image.getHeight();
-				int pixelValue;
-				while (pixelCount-- > 0) {
-					pixelValue = pixelArray[pixelCount];
-					pixelArray[pixelCount] = (pixelValue & 0xff000000)				// alphaValue
-							   | (colorLookupTable[(pixelValue>>>16) & 0xff]<<16)	// redValue
-							   | (colorLookupTable[(pixelValue>>> 8) & 0xff]<< 8)	// greenValue
-							   | (colorLookupTable[ pixelValue       & 0xff]);		// blueValue
-				}
-			}
-
 			baseRequest.setHandled(true);
-			response.setStatus(200);
-			response.setContentType("image/" + ext); //$NON-NLS-1$
+			BufferedImage image;
+			if (tileBitmap != null) {
+				image = AwtGraphicFactory.getBitmap(tileBitmap);
+				if (colorLookupTable != null) { // gamma correction and/or contrast-stretching
+					// DataBuffer created by Mapsforge renderer is of type DataBufferInt, i.e. one
+					// int value 0xaarrggbb per pixel
+					DataBufferInt dataBuffer = (DataBufferInt) image.getRaster().getDataBuffer();
+					int[] pixelArray = dataBuffer.getData();
+					int pixelCount = image.getWidth() * image.getHeight();
+					int pixelValue;
+					while (pixelCount-- > 0) {
+						pixelValue = pixelArray[pixelCount];
+						pixelArray[pixelCount] = (pixelValue & 0xff000000) // alphaValue
+								| (colorLookupTable[(pixelValue >>> 16) & 0xff] << 16) // redValue
+								| (colorLookupTable[(pixelValue >>> 8) & 0xff] << 8) // greenValue
+								| (colorLookupTable[pixelValue & 0xff]); // blueValue
+					}
+				}
+				response.setStatus(200);			
+			} else {
+				// TODO temp
+				image = BI_NOCONTENT;
+				response.setStatus(404);
+			}
 			if (mapsforgeConfig.getCacheControl() > 0) {
 				response.addHeader("Cache-Control", "public, max-age=" + mapsforgeConfig.getCacheControl()); //$NON-NLS-1$ //$NON-NLS-2$
-			}
+			}	
+			response.setContentType("image/" + ext); //$NON-NLS-1$
 			ImageIO.write(image, ext, response.getOutputStream());
 			logger.info(logRequest(request, startTime, null, engine));
 		} catch (Exception e) {
@@ -435,7 +443,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			} catch (IOException e1) {
 				response.setStatus(500);
 			}
-			logger.error(logRequest(request, startTime, extmsg, engine));
+			logger.error(logRequest(request, startTime, e, engine));
 		}
 	}
 
