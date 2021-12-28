@@ -62,7 +62,7 @@ public class MapsforgeSrv {
 		options.addOption(rendererArgument);
 
 		Option mapfileArgument = new Option("m", "mapfiles", true, "comma-separated list of mapsforge map files (.map)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		mapfileArgument.setRequired(true);
+		mapfileArgument.setRequired(false);
 		options.addOption(mapfileArgument);
 
 		Option themefileArgument = new Option("t", "themefile", true, "mapsforge theme file(.xml), (default: the internal OSMARENDER)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -123,13 +123,21 @@ public class MapsforgeSrv {
 			System.out.println(e.getMessage());
 			formatter.printHelp("mapsforgesrv", options); //$NON-NLS-1$
 			System.exit(1);
-			//System.exit(0);
 		}
 
 		if(cmd.hasOption("help")) { //$NON-NLS-1$
 			formatter.printHelp("mapsforgesrv", options); //$NON-NLS-1$
 			System.exit(0);
 		}
+		
+        String[] requiredArgs = {"mapfiles"};
+        for (String arg: requiredArgs) {
+			if (cmd.getOptionValue(arg) == null) {
+				System.err.println("Missing required option: " + arg); //$NON-NLS-1$
+				formatter.printHelp("mapsforgesrv", options); //$NON-NLS-1$
+				System.exit(1);
+			}
+        }
 		
 		int portNumber = DEFAULTPORT;
 		portNumberString = cmd.getOptionValue("port"); //$NON-NLS-1$
