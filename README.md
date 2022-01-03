@@ -1,5 +1,4 @@
 # mapsforgesrv
-when an old java 8 is installed, this branch is to be used for the development
 
 ### mapsforgesrv cloned from the MOBAC project:
 http://mobac.sourceforge.net/
