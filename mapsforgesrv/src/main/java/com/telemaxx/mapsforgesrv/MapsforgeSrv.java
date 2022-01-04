@@ -53,7 +53,10 @@ public class MapsforgeSrv {
 	private LinkedBlockingQueue<Runnable> queue = null;
 	
 	public MapsforgeSrv(String[] args) throws Exception {
+		
+		/* IMPORTANT: the output of following line is used by other programs like guis. never change this syntax */
 		logger.info("MapsforgeSrv - a mapsforge tile server. " + "version: " + VERSION); //$NON-NLS-1$ //$NON-NLS-2$
+		
 		logger.debug("Current dir [user.dir]: " + System.getProperty("user.dir"));
 
 		mapsforgeConfig = new MapsforgeConfig(args);
