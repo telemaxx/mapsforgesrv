@@ -92,4 +92,5 @@ Building the jar:
 - @pingurus (fixing stylesheets error)
 - Bernd @bjmdev (multi map support)
 - @JFritzle (selectable theme style, overlays, renderer, contrast-stretch, hillshading & gamma correction)
+- @nono303 a lot of improvements/rework
 
