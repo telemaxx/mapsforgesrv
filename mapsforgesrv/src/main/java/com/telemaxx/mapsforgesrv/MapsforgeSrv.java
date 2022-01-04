@@ -45,7 +45,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 public class MapsforgeSrv {
 	
 	private final static String VERSION = "0.16.5"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
-
+	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 
 	private MapsforgeConfig mapsforgeConfig = null;
@@ -53,7 +53,7 @@ public class MapsforgeSrv {
 	private LinkedBlockingQueue<Runnable> queue = null;
 	
 	public MapsforgeSrv(String[] args) throws Exception {
-		logger.warn("MapsforgeSrv - a mapsforge tile server. " + "version: " + VERSION); //$NON-NLS-1$ //$NON-NLS-2$
+		logger.info("MapsforgeSrv - a mapsforge tile server. " + "version: " + VERSION); //$NON-NLS-1$ //$NON-NLS-2$
 		logger.debug("Current dir [user.dir]: " + System.getProperty("user.dir"));
 
 		mapsforgeConfig = new MapsforgeConfig(args);
