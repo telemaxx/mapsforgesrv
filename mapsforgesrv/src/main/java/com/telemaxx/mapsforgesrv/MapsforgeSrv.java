@@ -66,6 +66,8 @@ public class MapsforgeSrv {
 		pool.setIdleTimeout((int)mapsforgeConfig.getIdleTimeout());
 		pool.setName("queue");
 		Server server = new Server(pool);
+		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig, pool, queue);
+		server.setHandler(mapsforgeHandler);
 		HttpConfiguration httpConfig = new HttpConfiguration();
 		ServerConnector connector = new ServerConnector(server, mapsforgeConfig.SERVERACCEPTORS, mapsforgeConfig.SERVERSELECTORS);
 		if (Arrays.asList(mapsforgeConfig.getServerConnectors()).contains("http11") || Arrays.asList(mapsforgeConfig.getServerConnectors()).contains("proxy")) {
@@ -91,16 +93,14 @@ public class MapsforgeSrv {
 		if (mapsforgeConfig.getListeningInterface().toLowerCase().equals("localhost"))  //$NON-NLS-1$
 			connector.setHost("127.0.0.1");
 		server.addConnector(connector);
-
-		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig, pool, queue);
-		server.setHandler(mapsforgeHandler);
 		try {
+			logger.info("################ STARTING SERVER ################");
 			server.start();
 		} catch (BindException e) {
 			logger.error("Stopping server", e); //$NON-NLS-1$
 			System.exit(1);
 		}
-		logger.info("> server listening on '"+mapsforgeConfig.getListeningInterface().toLowerCase()+":" + mapsforgeConfig.getPortNumber()+"'"); //$NON-NLS-1$
+		logger.debug("> server listening on '"+mapsforgeConfig.getListeningInterface().toLowerCase()+":" + mapsforgeConfig.getPortNumber()+"'"); //$NON-NLS-1$
 		logger.info("> server connector configured with accept queue size '"+connector.getAcceptQueueSize()+"', idle timeout '"+connector.getIdleTimeout()+"'");
 		logger.info("> job executor configured with threads min '"+pool.getMinThreads()+"', max '"+pool.getMaxThreads()+"', idle timeout '"+pool.getIdleTimeout()+"'");
 		logger.info("> job queue configured with max size '"+queue.remainingCapacity()+"'");

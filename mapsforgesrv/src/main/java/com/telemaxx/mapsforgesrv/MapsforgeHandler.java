@@ -135,14 +135,16 @@ public class MapsforgeHandler extends AbstractHandler {
 		GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
 		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
 
+		logger.info("################### MAPS INFO ###################");
 		mapsforgeConfig.getMapFiles().forEach(mapFile -> {
 			MapFile map = new MapFile(mapFile, mapsforgeConfig.getPreferredLanguage());
 			String[] mapLanguages = map.getMapLanguages();
-			logger.info("Map file: " + mapFile + ", supported languages: ");
+			String msgMap = "'" + mapFile + "' supported languages: ";
+
 			if (mapLanguages != null) {
-				logger.info(String.join(",", mapLanguages));
+				logger.info(msgMap+"{"+String.join(",", mapLanguages)+"}");
 			} else {
-				logger.info("-");
+				logger.info(msgMap+"-");
 			}
 			multiMapDataStore.addMapDataStore(map, true, true);
 		});
@@ -197,6 +199,7 @@ public class MapsforgeHandler extends AbstractHandler {
 
 				XmlRenderThemeStyleLayer baseLayer = styleMenu.getLayer(id);
 				Set<String> result = baseLayer.getCategories();
+				logger.info("################# OVERLAY  INFO #################"); //$NON-NLS-1$
 				for (XmlRenderThemeStyleLayer overlay : baseLayer.getOverlays()) {
 					String overlayId = overlay.getId();
 					boolean overlayEnabled = false;
@@ -209,8 +212,8 @@ public class MapsforgeHandler extends AbstractHandler {
 								overlayEnabled = true;
 						}
 					}
-					logger.info("Overlay id=\"" + overlayId + "\" enabled=\"" + Boolean.toString(overlayEnabled)
-							+ "\" title=\"" + overlay.getTitle(mapsforgeConfig.getPreferredLanguage()) + "\"");
+					logger.info("'" + overlayId + "' enabled: " + Boolean.toString(overlayEnabled)
+							+ "\" title: '" + overlay.getTitle(mapsforgeConfig.getPreferredLanguage()) + "'");
 
 					if (overlayEnabled) {
 						result.addAll(overlay.getCategories());
@@ -228,7 +231,6 @@ public class MapsforgeHandler extends AbstractHandler {
 			xmlRenderTheme = new ExternalRenderTheme(themeFile, callBack);
 
 		}
-
 		updateRenderThemeFuture();
 	}
 
@@ -245,7 +247,7 @@ public class MapsforgeHandler extends AbstractHandler {
 		final MapsforgeStyleParser mapStyleParser = new MapsforgeStyleParser();
 		final List<Style> styles = mapStyleParser.readXML(themeFile.getAbsolutePath());
 		Boolean selectedStyleExists = false;
-		logger.info("####### Infos about the selected themefile #######"); //$NON-NLS-1$
+		logger.info("################ THEME FILE INFO ################"); //$NON-NLS-1$
 		logger.info("Default Style: " + mapStyleParser.getDefaultStyle()); //$NON-NLS-1$
 		for (final Style style : styles) {
 			logger.info("Stylename to use for \"-s\" option: " + "\"" + style.getXmlLayer() + "\"" + " --> " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -255,13 +257,12 @@ public class MapsforgeHandler extends AbstractHandler {
 				selectedStyleExists = true;
 			}
 		}
-		logger.info("####### Infos end ################################"); //$NON-NLS-1$
 		if (!selectedStyleExists && themeFileStyle != null) {
-			logger.error("the given style not found, existing. given style: " + themeFileStyle); //$NON-NLS-1$
+			logger.error("The defined style '"+themeFileStyle+"' not found: existing"); //$NON-NLS-1$
 			System.exit(2);
 		}
 		if (selectedStyleExists && themeFileStyle != null) {
-			logger.info("the given style found: " + themeFileStyle); //$NON-NLS-1$
+			logger.info("The defined style '"+themeFileStyle+"' found"); //$NON-NLS-1$
 		}
 	}
 
