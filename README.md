@@ -1,5 +1,4 @@
 # mapsforgesrv
-when an old java 8 is installed, this branch is to be used for the development
 
 ### mapsforgesrv cloned from the MOBAC project:
 http://mobac.sourceforge.net/
@@ -101,5 +100,4 @@ Building the jar:
 - @pingurus (fixing stylesheets error)
 - Bernd @bjmdev (multi map support)
 - @JFritzle (selectable theme style, overlays, renderer, contrast-stretch, hillshading & gamma correction)
-- @nono303 (configuration file, server & java2d optimization)
-
+- @nono303 a lot of improvements/rework
