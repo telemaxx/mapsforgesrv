@@ -151,7 +151,7 @@ public class MapsforgeConfig {
 
 		options.addOption(Option.builder("hs") //$NON-NLS-1$
 				.longOpt("hillshading-algorithm") //$NON-NLS-1$
-				.desc("Hillshading algorithm [simple,simple(linearity,scale),diffuselight,diffuselight(angle)] (default: no hillshading)") //$NON-NLS-1$
+				.desc("Hillshading algorithm and optional parameters [simple,simple(linearity,scale),diffuselight,diffuselight(angle)] (default: no hillshading)") //$NON-NLS-1$
 				.required(false).hasArg(true).build());
 
 		options.addOption(Option.builder("hm") //$NON-NLS-1$
@@ -176,7 +176,7 @@ public class MapsforgeConfig {
 
 		options.addOption(Option.builder("mxq") //$NON-NLS-1$
 				.longOpt("max-queuesize") //$NON-NLS-1$
-				.desc("Maximum queue size for rendering jobs [waiting & running] (default: 256)") //$NON-NLS-1$
+				.desc("Maximum queue size for waiting & running rendering jobs (default: 256)") //$NON-NLS-1$
 				.required(false).hasArg(true).build());
 
 		options.addOption(Option.builder("mxt") //$NON-NLS-1$
@@ -231,10 +231,10 @@ public class MapsforgeConfig {
 				configFile.load(in);
 				in.close();
 			} catch (FileNotFoundException e) {
-				logger.error("ERROR: can't find config file '" + config + "'"); //$NON-NLS-1$
+				logger.error("Can't find config file '" + config + "': exiting"); //$NON-NLS-1$
 				System.exit(1);
 			} catch (IOException e) {
-				logger.error("ERROR: can't parse config file '" + config + "'"); //$NON-NLS-1$
+				logger.error("Can't parse config file '" + config + "': exiting"); //$NON-NLS-1$
 				System.exit(1);
 			}
 		}
@@ -257,7 +257,7 @@ public class MapsforgeConfig {
 	}
 
 	private String parsePadMsg(String msg) {
-		return String.format("%1$" + PADMSG + "s", msg);
+		return String.format("%-" + PADMSG + "s", msg);
 	}
 
 	private Number parseNumber(Number defaultValue, String configValue, Number minValue, Number maxValue, String msgHeader) {
@@ -469,13 +469,12 @@ public class MapsforgeConfig {
 		hillShadingMagnitude = (double) parseNumber(DEFAULTHSMAGNITUDE, "hillshading-magnitude", 0., null, "Hillshading magnitude"); //$NON-NLS-1$ //$NON-NLS-2$
 		demFolder = parseFile("demfolder", "folder", true, "DEM", "undefined");
 		rendererName = parseString(DEFAULTRENDERER, "renderer", AUTHORIZEDRENDERER, "Renderer engine"); //$NON-NLS-1$ //$NON-NLS-2$
-		cacheControl = (long) parseNumber(DEFAULTCACHECONTROL, "cachecontrol", 0, null, "Browser cache ttl"); //$NON-NLS-1$ //$NON-NLS-2$
-		maxQueueSize = (int) parseNumber(DEFAULTSERVERMAXQUEUESIZE, "maxqueuesize", 0, null, "Server max queue size"); //$NON-NLS-1$ //$NON-NLS-2$
-		maxThreads = (int) parseNumber(DEFAULTSERVERMAXTHREADS, "maxthread", 0, null, "Server max thread(s)"); //$NON-NLS-1$ //$NON-NLS-2$
-		minThreads = (int) parseNumber(DEFAULTSERVERMINTHREADS, "minthread", 0, null, "Server min thread(s)"); //$NON-NLS-1$ //$NON-NLS-2$
-		idleTimeout = (long) parseNumber(DEFAULTSERVERIDELTIMEOUT, "idletimeout", 0, null, "Connection idle timeout"); //$NON-NLS-1$ //$NON-NLS-2$
+		cacheControl = (long) parseNumber(DEFAULTCACHECONTROL, "cache-control", 0, null, "Browser cache ttl"); //$NON-NLS-1$ //$NON-NLS-2$
+		maxQueueSize = (int) parseNumber(DEFAULTSERVERMAXQUEUESIZE, "max-queuesize", 0, null, "Server max queue size"); //$NON-NLS-1$ //$NON-NLS-2$
+		maxThreads = (int) parseNumber(DEFAULTSERVERMAXTHREADS, "max-thread", 0, null, "Server max thread(s)"); //$NON-NLS-1$ //$NON-NLS-2$
+		minThreads = (int) parseNumber(DEFAULTSERVERMINTHREADS, "min-thread", 0, null, "Server min thread(s)"); //$NON-NLS-1$ //$NON-NLS-2$
+		idleTimeout = (long) parseNumber(DEFAULTSERVERIDELTIMEOUT, "idle-timeout", 0, null, "Connection idle timeout"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseServerConnectors();
-		logger.info("################## CONFIG  END ##################");
 	}
 
 	private String retrieveConfigValue(String key) {
