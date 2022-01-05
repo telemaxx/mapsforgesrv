@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019, 2020 Thomas Theussing and Contributors
+ * Copyright 2019, 2020, 2022 Thomas Theussing and Contributors
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -18,7 +18,6 @@
 package com.telemaxx.mapsforgesrv;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,11 +28,13 @@ import java.util.Map;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.EndElement;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * reading Mapsforge theme. after making instance call readXML
@@ -57,6 +58,8 @@ public class MapsforgeStyleParser {
 	String defaultlanguage = ""; //$NON-NLS-1$
 	String defaultstyle = ""; //$NON-NLS-1$
 
+	
+	final static Logger logger = LoggerFactory.getLogger(MapsforgeStyleParser.class);
 	/**
 	 * just for test purposes
 	 * @param args
@@ -64,15 +67,15 @@ public class MapsforgeStyleParser {
 	public static void main(final String args[]) {
 		final MapsforgeStyleParser mapStyleParser = new MapsforgeStyleParser();
 		final List<Style> styles = mapStyleParser.readXML("C:\\Users\\top\\BTSync\\oruxmaps\\mapstyles\\ELV4\\Elevate.xml"); //$NON-NLS-1$
-		System.out.println("Stylecount: " + styles.size()); //$NON-NLS-1$
-		System.out.println("Defaultlanguage: " + mapStyleParser.getDefaultLanguage()); //$NON-NLS-1$
-		System.out.println("Defaultstyle:    " + mapStyleParser.getDefaultStyle()); //$NON-NLS-1$
-		//System.out.println("Defaultstylename de:" + styles.);
+		logger.info("Stylecount: " + styles.size()); //$NON-NLS-1$
+		logger.info("Defaultlanguage: " + mapStyleParser.getDefaultLanguage()); //$NON-NLS-1$
+		logger.info("Defaultstyle:    " + mapStyleParser.getDefaultStyle()); //$NON-NLS-1$
+		//logger.info("Defaultstylename de:" + styles.);
 		for (final Style style : styles) {
-			System.out.println(style);
-			System.out.println("local Name: " + style.getName(Locale.getDefault().getLanguage())); //$NON-NLS-1$
-			//System.out.println("local Name: " + style.getName("de_DE")); //$NON-NLS-1$ //$NON-NLS-2$
-			//System.out.println("localisation " + Locale.getDefault().getCountry());
+			logger.info(style.toString());
+			logger.info("local Name: " + style.getName(Locale.getDefault().getLanguage())); //$NON-NLS-1$
+			//logger.info("local Name: " + style.getName("de_DE")); //$NON-NLS-1$ //$NON-NLS-2$
+			//logger.info("localisation " + Locale.getDefault().getCountry());
 		}
 	}
 	
@@ -116,7 +119,7 @@ public class MapsforgeStyleParser {
 							}
 							if (sm_attribute.getName().toString().equals(DEFAULTSTYLE)) {
 								defaultstyle =  sm_attribute.getValue();
-								//System.out.println("default style: " + defaultstyle);
+								//logger.info("default style: " + defaultstyle);
 							}
 						}
 					}					
@@ -166,10 +169,8 @@ public class MapsforgeStyleParser {
 					}
 				}
 			}
-		} catch (final FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (final XMLStreamException e) {
-			e.printStackTrace();
+		} catch (final Exception e) {
+			logger.error(e.getMessage(),e);
 		}
 		return items;
 	} //end ReadConfig
@@ -230,7 +231,7 @@ class Style {
 	 * @param name
 	 */	
    public void setName(final String language, final String name) {
-   	//System.out.println("setname: " + language + " name: " + name);
+   	//logger.info("setname: " + language + " name: " + name);
 		this.name.put(language, name);
 	}
    
