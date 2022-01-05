@@ -213,7 +213,7 @@ public class MapsforgeHandler extends AbstractHandler {
 						}
 					}
 					logger.info("'" + overlayId + "' enabled: " + Boolean.toString(overlayEnabled)
-							+ " title: '" + overlay.getTitle(mapsforgeConfig.getPreferredLanguage()) + "'");
+							+ ", title: '" + overlay.getTitle(mapsforgeConfig.getPreferredLanguage()) + "'");
 
 					if (overlayEnabled) {
 						result.addAll(overlay.getCategories());
