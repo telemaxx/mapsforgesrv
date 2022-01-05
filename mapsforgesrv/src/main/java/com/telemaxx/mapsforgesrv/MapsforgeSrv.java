@@ -56,7 +56,6 @@ public class MapsforgeSrv {
 		logger.debug("Current dir [user.dir]: " + System.getProperty("user.dir"));
 
 		mapsforgeConfig = new MapsforgeConfig(args);
-		mapsforgeConfig.initConfig();
 		
 		queue = new LinkedBlockingQueue<Runnable>(mapsforgeConfig.getMaxQueueSize());
 		pool = new ExecutorThreadPool(mapsforgeConfig.getMaxThreads(), mapsforgeConfig.getMinThreads(), queue);
@@ -84,16 +83,9 @@ public class MapsforgeSrv {
 		}
 		connector.setAcceptQueueSize(mapsforgeConfig.SERVERACCEPTQUEUESIZE);
 		connector.setIdleTimeout(mapsforgeConfig.getIdleTimeout());
-		if (mapsforgeConfig.getListeningInterface().toLowerCase().equals("all")) { //$NON-NLS-1$
-			connector.setPort(mapsforgeConfig.getPortNumber());
-		} else if (mapsforgeConfig.getListeningInterface().toLowerCase().equals("localhost")) { //$NON-NLS-1$
-			connector.setPort(mapsforgeConfig.getPortNumber());
+		connector.setPort(mapsforgeConfig.getPortNumber());
+		if (mapsforgeConfig.getListeningInterface().toLowerCase().equals("localhost"))  //$NON-NLS-1$
 			connector.setHost("127.0.0.1");
-		} else {
-			logger.error("unkown Interface, only \"all\" or \"localhost\" , not " //$NON-NLS-1$
-					+ mapsforgeConfig.getListeningInterface());
-			System.exit(1);
-		}
 		server.addConnector(connector);
 
 		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig, pool, queue);
