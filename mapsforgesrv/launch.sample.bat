@@ -17,3 +17,6 @@ java.exe ^
 	-Dsun.java2d.render.bufferSize=65536 ^
 	-jar build\libs\mapsforgesrv-fatjar.jar ^
 -c config.sample.properties 2>&1
+REM 	-Dsun.java2d.opengl=false ^
+REM 	-Dsun.java2d.d3d=true ^
+REM		-Dsun.java2d.translaccel=true ^
