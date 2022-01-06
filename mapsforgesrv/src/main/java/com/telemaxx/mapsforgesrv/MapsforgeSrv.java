@@ -100,10 +100,11 @@ public class MapsforgeSrv {
 			logger.error("Stopping server", e); //$NON-NLS-1$
 			System.exit(1);
 		}
-		logger.debug("> server listening on '"+mapsforgeConfig.getListeningInterface().toLowerCase()+":" + mapsforgeConfig.getPortNumber()+"'"); //$NON-NLS-1$
-		logger.info("> server connector configured with accept queue size '"+connector.getAcceptQueueSize()+"', idle timeout '"+connector.getIdleTimeout()+"'");
-		logger.info("> job executor configured with threads min '"+pool.getMinThreads()+"', max '"+pool.getMaxThreads()+"', idle timeout '"+pool.getIdleTimeout()+"'");
-		logger.info("> job queue configured with max size '"+queue.remainingCapacity()+"'");
+		//logger.debug("> server listening on '"+mapsforgeConfig.getListeningInterface().toLowerCase()+":" + mapsforgeConfig.getPortNumber()+"'"); //$NON-NLS-1$
+		logger.info("server connector configured with accept queue size '"+connector.getAcceptQueueSize()+"', idle timeout '"+connector.getIdleTimeout()+"'");
+		logger.info("job executor configured with threads min '"+pool.getMinThreads()+"', max '"+pool.getMaxThreads()+"', idle timeout '"+pool.getIdleTimeout()+"'");
+		logger.info("job queue configured with max size '"+queue.remainingCapacity()+"'");
+		logger.info("server is up and listening on '"+mapsforgeConfig.getListeningInterface().toLowerCase()+":" + mapsforgeConfig.getPortNumber()+"'"); //$NON-NLS-1$
 		server.join();
 	}
 
