@@ -270,10 +270,11 @@ public class MapsforgeHandler extends AbstractHandler {
 		// request
 		String msg = request.getPathInfo() + "?" + request.getQueryString();
 		// response time;idle threads;queue size
-		msg += " [ms:" + Math.round((System.nanoTime() - startTime) / 1000000) + ";idle:" + this.pool.getIdleThreads()
+		if (mapsforgeConfig.LOGREQDET)
+			msg += " [ms:" + Math.round((System.nanoTime() - startTime) / 1000000) + ";idle:" + this.pool.getIdleThreads()
 				+ ";qs:" + (this.queue.size()) + "]";
 		// hillshading configuration
-		if (engine == "hs" && mapsforgeConfig.LOGHSREQDET)
+		if (engine == "hs" && mapsforgeConfig.LOGREQDETHS)
 			msg += " " + StringUtils.chop(shadingAlgorithm.toString()) + ", magnitude="
 					+ mapsforgeConfig.getHillShadingMagnitude() + "}";
 		// exception
@@ -332,11 +333,11 @@ public class MapsforgeHandler extends AbstractHandler {
 				z = Integer.parseInt(request.getParameter("z")); //$NON-NLS-1$
 			}
 			if (x < 0 || x >= (1 << z)) {
-				logger.info("ERROR: tile number x=" + x + " out of range!"); //$NON-NLS-1$
+				logger.error("Tile number x=" + x + " out of range!"); //$NON-NLS-1$
 				return;
 			}
 			if (y < 0 || y >= (1 << z)) {
-				logger.info("ERROR: tile number y=" + y + " out of range!"); //$NON-NLS-1$
+				logger.error("Tile number y=" + y + " out of range!"); //$NON-NLS-1$
 				return;
 			}
 			float textScale = mapsforgeConfig.TEXTSCALEDEFAULT;
