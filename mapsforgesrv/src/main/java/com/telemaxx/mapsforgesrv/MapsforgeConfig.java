@@ -92,6 +92,9 @@ public class MapsforgeConfig {
 	public boolean LOGHSREQDET = false;
 	private final static int PADMSG = 23;
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeConfig.class);
+	
+	private static final String FILE = "file"; //$NON-NLS-1$
+	private static final String FOLDER = "folder"; //$NON-NLS-1$
 
 	public MapsforgeConfig(String[] args) throws Exception {
 		initOptions(args);
@@ -260,23 +263,34 @@ public class MapsforgeConfig {
 		return String.format("%-" + PADMSG + "s", msg);
 	}
 
-	private Number parseNumber(Number defaultValue, String configValue, Number minValue, Number maxValue, String msgHeader) {
+	/*
+	 * excludeInRange: true (minValue < value > maxValue) accepted
+	 * excludeInRange: false (minValue <= value >= maxValue) accepted
+	 */
+	private Number parseNumber(Number defaultValue, String configValue, Number minValue, Number maxValue, String msgHeader, boolean excludeInRange) {
 		msgHeader = parsePadMsg(msgHeader);
 		Number target = defaultValue;
 		String configString = retrieveConfigValue(configValue); // $NON-NLS-1$
 		if (configString != null) {
 			try {
 				configString = configString.trim();
+				String operator;
 				if (defaultValue instanceof Long)
 					target = Long.parseLong(configString);
 				if (defaultValue instanceof Integer)
 					target = Integer.parseInt(configString);
 				if (defaultValue instanceof Double)
 					target = Double.parseDouble(configString);
-				if (minValue != null && target.doubleValue() < minValue.doubleValue()) {
-					parseError(msgHeader, "'" + target + "' < '" + minValue + "' ", defaultValue.toString());
+				if (minValue != null && (target.doubleValue() < minValue.doubleValue() || (excludeInRange && target.doubleValue() == minValue.doubleValue()))) {
+					operator = "' < '";
+					if(excludeInRange)
+						operator = "' <= '";
+					parseError(msgHeader, "'" + target + operator + minValue + "' ", defaultValue.toString());
 					target = defaultValue;
-				} else if (maxValue != null && target.doubleValue() > maxValue.doubleValue()) {
+				} else if (maxValue != null && (target.doubleValue() > maxValue.doubleValue() || (excludeInRange && target.doubleValue() == maxValue.doubleValue()))) {
+					operator = "' > '";
+					if(excludeInRange)
+						operator = "' >= '";
 					parseError(msgHeader, "'" + target + "' > '" + maxValue + "' ", defaultValue.toString());
 					target = defaultValue;
 				} else {
@@ -315,12 +329,12 @@ public class MapsforgeConfig {
 		String configString = retrieveConfigValue(configValue); // $NON-NLS-1$
 		if (configString != null) {
 			target = new File(configString.trim());
-			if (fileOrFolder == "file") {
+			if (fileOrFolder == FILE) {
 				if (!target.isFile()) {
 					target = null;
 					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' not a file", msgDefault);
 				}
-			} else if (fileOrFolder == "folder") {
+			} else if (fileOrFolder == FOLDER) {
 				if (!target.isDirectory()) {
 					target = null;
 					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' not a folder", msgDefault);
@@ -456,24 +470,24 @@ public class MapsforgeConfig {
 
 	private void initConfig() throws Exception {
 		logger.info("################## CONFIG INIT ##################");
-		portNumber = (int) parseNumber(DEFAULTSERVERPORT, "port", 1024, 65535, "Listening TCP port"); //$NON-NLS-1$ //$NON-NLS-2$
+		portNumber = (int) parseNumber(DEFAULTSERVERPORT, "port", 1024, 65535, "Listening TCP port",false); //$NON-NLS-1$ //$NON-NLS-2$
 		listeningInterface = parseString(DEFAULTSERVERINTERFACE, "interface", AUTHORIZEDSERVERINTERFACE, "Server interface"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseMapFiles();
-		themeFile = parseFile("themefile", "file", false, "Theme", "OSMARENDER");
+		themeFile = parseFile("themefile", FILE, false, "Theme", "OSMARENDER");
 		themeFileStyle = parseString(null, "style", null, "Theme style"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseThemeOverlays();
 		preferredLanguage = parseString(null, "language", null, "Preferred map language"); //$NON-NLS-1$ //$NON-NLS-2$
-		blackValue = (int) parseNumber(DEFAULTBLACK, "contrast-stretch", 0, 254, "Contrast stretch"); //$NON-NLS-1$ //$NON-NLS-2$
-		gammaValue = (double) parseNumber(DEFAULTGAMMA, "gamma-correction", 1., null, "Gamma correction"); //$NON-NLS-1$ //$NON-NLS-2$
+		blackValue = (int) parseNumber(DEFAULTBLACK, "contrast-stretch", 0, 254, "Contrast stretch",false); //$NON-NLS-1$ //$NON-NLS-2$
+		gammaValue = (double) parseNumber(DEFAULTGAMMA, "gamma-correction", 0., null, "Gamma correction",true); //$NON-NLS-1$ //$NON-NLS-2$
 		parseHillShading();
-		hillShadingMagnitude = (double) parseNumber(DEFAULTHSMAGNITUDE, "hillshading-magnitude", 0., null, "Hillshading magnitude"); //$NON-NLS-1$ //$NON-NLS-2$
-		demFolder = parseFile("demfolder", "folder", true, "DEM", "undefined");
+		hillShadingMagnitude = (double) parseNumber(DEFAULTHSMAGNITUDE, "hillshading-magnitude", 0., null, "Hillshading magnitude",false); //$NON-NLS-1$ //$NON-NLS-2$
+		demFolder = parseFile("demfolder", FOLDER, true, "DEM", "undefined");
 		rendererName = parseString(DEFAULTRENDERER, "renderer", AUTHORIZEDRENDERER, "Renderer engine"); //$NON-NLS-1$ //$NON-NLS-2$
-		cacheControl = (long) parseNumber(DEFAULTCACHECONTROL, "cache-control", 0, null, "Browser cache ttl"); //$NON-NLS-1$ //$NON-NLS-2$
-		maxQueueSize = (int) parseNumber(DEFAULTSERVERMAXQUEUESIZE, "max-queuesize", 0, null, "Server max queue size"); //$NON-NLS-1$ //$NON-NLS-2$
-		maxThreads = (int) parseNumber(DEFAULTSERVERMAXTHREADS, "max-thread", 0, null, "Server max thread(s)"); //$NON-NLS-1$ //$NON-NLS-2$
-		minThreads = (int) parseNumber(DEFAULTSERVERMINTHREADS, "min-thread", 0, null, "Server min thread(s)"); //$NON-NLS-1$ //$NON-NLS-2$
-		idleTimeout = (long) parseNumber(DEFAULTSERVERIDELTIMEOUT, "idle-timeout", 0, null, "Connection idle timeout"); //$NON-NLS-1$ //$NON-NLS-2$
+		cacheControl = (long) parseNumber(DEFAULTCACHECONTROL, "cache-control", 0, null, "Browser cache ttl",false); //$NON-NLS-1$ //$NON-NLS-2$
+		maxQueueSize = (int) parseNumber(DEFAULTSERVERMAXQUEUESIZE, "max-queuesize", 0, null, "Server max queue size",false); //$NON-NLS-1$ //$NON-NLS-2$
+		maxThreads = (int) parseNumber(DEFAULTSERVERMAXTHREADS, "max-thread", 1, null, "Server max thread(s)",false); //$NON-NLS-1$ //$NON-NLS-2$
+		minThreads = (int) parseNumber(DEFAULTSERVERMINTHREADS, "min-thread", 0, null, "Server min thread(s)",false); //$NON-NLS-1$ //$NON-NLS-2$
+		idleTimeout = (long) parseNumber(DEFAULTSERVERIDELTIMEOUT, "idle-timeout", 0, null, "Connection idle timeout",false); //$NON-NLS-1$ //$NON-NLS-2$
 		parseServerConnectors();
 	}
 
