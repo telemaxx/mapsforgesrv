@@ -18,10 +18,10 @@
  * 0.13: selectable style
  * 0.13.1: selectable overlays
  * 0.16.0: mapsforge 16
- * 0.16.1: contrast stretching (JFBeck)
- * 0.16.2: Check for valid tile numbers (JFBeck)
- * 0.16.3: hillshading (JFBeck)
- * 0.16.4: gamma correction (JFBeck)
+ * 0.16.1: contrast stretching (JFritzle)
+ * 0.16.2: Check for valid tile numbers (JFritzle)
+ * 0.16.3: hillshading (JFritzle)
+ * 0.16.4: gamma correction (JFritzle)
  * 0.16.5: a lot of improvements/rework (nono303)
  * 0.16.6: bugfix, when a parameter was not given, sometimes the default was not used (nono303)
  * 0.17.0: update mapsforge libs to latest 0.17.0 (nono303)
