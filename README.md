@@ -63,7 +63,7 @@ Command parameters:
 						Note: Hillshading requires to be enabled in themefile too!
 	11. -hm  [hillshading-magnitude]	Hillshading gray value scaling factor [>= 0] (default: 1))
 	12. -d   [demfolder]			Folder path containing digital elevation model files [.hgt] for hillshading (default: none)
-	13. -r   [renderer]			Mapsforge renderer mode [database,direct] (default: database)
+	13. -r   [renderer]			Mapsforge renderer algorithm [database,direct] (default: database)
 						Sometimes "direct" giving better results	
 	14. -cc  [cache-control]		If set, add Cache-Control header for served tiles. value in seconds, (default: 0 - disabled)
 	15. -mxq [max-queuesize]		Maximum queue size for waiting & running rendering jobs (default: 256)
