@@ -1,5 +1,4 @@
 # mapsforgesrv
-when an old java 8 is installed, this branch is to be used for the development
 
 ### mapsforgesrv cloned from the MOBAC project:
 http://mobac.sourceforge.net/
@@ -42,7 +41,7 @@ Whats different to the origin?
     10. selectable renderer (optional): -r [database,direct]
     11. selectable contrast-stretch (optional): -cs [0..254]
     12. selectable gamma correction (optional): -gc value
-    12. selectable hillshading algorithm (optional): -hs [simple,simple(linearity,scale),diffuselight,diffuselight(angle)]
+    13. selectable hillshading algorithm (optional): -hs [simple,simple(linearity,scale),diffuselight,diffuselight(angle)]
     14. selectable hillshading magnitude (optional): -hm factor
     15. selectable DEM folder (optional): -d demfolder
 	
@@ -93,4 +92,5 @@ Building the jar:
 - @pingurus (fixing stylesheets error)
 - Bernd @bjmdev (multi map support)
 - @JFritzle (selectable theme style, overlays, renderer, contrast-stretch, hillshading & gamma correction)
+- @nono303 a lot of improvements/rework
 
