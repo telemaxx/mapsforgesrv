@@ -268,7 +268,7 @@ public class MapsforgeConfig {
 	}
 
 	/*
-	 * excludeInRange: true  (minValue <  value <  maxValue) accepted
+	 * excludeInRange: true (minValue < value < maxValue) accepted
 	 * excludeInRange: false (minValue <= value <= maxValue) accepted
 	 */
 	private Number parseNumber(Number defaultValue, String configValue, Number minValue, Number maxValue, String msgHeader, boolean excludeInRange) {
