@@ -95,6 +95,7 @@ public class MapsforgeHandler extends AbstractHandler {
 	protected final File themeFile;
 	protected final String themeFileStyle;
 	protected int blackValue;
+	protected double gammaValue;
 
 	private ExecutorThreadPool pool;
 	private LinkedBlockingQueue<Runnable> queue;
@@ -117,18 +118,20 @@ public class MapsforgeHandler extends AbstractHandler {
 		this.themeFile = mapsforgeConfig.getThemeFile();
 		this.themeFileStyle = mapsforgeConfig.getThemeFileStyle();
 		this.blackValue = mapsforgeConfig.getBlackValue();
+		this.gammaValue = mapsforgeConfig.getGammaValue();
 		// first apply gamma correction and then contrast-stretching
-		if (mapsforgeConfig.getGammaValue() != 1. || blackValue != 0) {
+		if (gammaValue != 1. || blackValue != 0) {
 			colorLookupTable = new int[256];
-			double colorExponent = 1. / mapsforgeConfig.getGammaValue();
-			double stretchFactor = 255. / (double) (255 - blackValue);
+			double gammaExponent = 1. / gammaValue;
+			double blackNormalized = blackValue / 255.;
+			double stretchFactor = 1. / (1. - blackNormalized);
 			int index = 256;
-			int value;
+			double value;
 			while (index-- > 0) {
-				value = index;
-				value = (int) Math.round(Math.pow(value / 255., colorExponent) * 255.);
-				value = value > blackValue ? (int) Math.round((value - blackValue) * stretchFactor) : 0;
-				colorLookupTable[index] = value;
+				value = index / 255.;
+				value = Math.pow(value, gammaExponent);
+				value = value > blackNormalized ? ((value - blackNormalized) * stretchFactor) : 0.;
+				colorLookupTable[index] = (int) Math.round(value * 255.);
 			}
 		}
 
