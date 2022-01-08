@@ -173,7 +173,7 @@ public class MapsforgeConfig {
 
 		options.addOption(Option.builder("r") //$NON-NLS-1$
 				.longOpt("renderer") //$NON-NLS-1$
-				.desc("Mapsforge renderer mode [database,direct] (default: database)") //$NON-NLS-1$
+				.desc("Mapsforge renderer algorithm [database,direct] (default: database)") //$NON-NLS-1$
 				.required(false).hasArg(true).build());
 
 		options.addOption(Option.builder("cc") //$NON-NLS-1$
@@ -268,8 +268,8 @@ public class MapsforgeConfig {
 	}
 
 	/*
-	 * excludeInRange: true (minValue < value > maxValue) accepted
-	 * excludeInRange: false (minValue <= value >= maxValue) accepted
+	 * excludeInRange: true (minValue < value < maxValue) accepted
+	 * excludeInRange: false (minValue <= value <= maxValue) accepted
 	 */
 	private Number parseNumber(Number defaultValue, String configValue, Number minValue, Number maxValue, String msgHeader, boolean excludeInRange) {
 		msgHeader = parsePadMsg(msgHeader);
@@ -295,7 +295,7 @@ public class MapsforgeConfig {
 					operator = "' > '";
 					if(excludeInRange)
 						operator = "' >= '";
-					parseError(msgHeader, "'" + target + "' > '" + maxValue + "' ", defaultValue.toString());
+					parseError(msgHeader, "'" + target + operator + maxValue + "' ", defaultValue.toString());
 					target = defaultValue;
 				} else {
 					logger.info(msgHeader + ": defined [" + target + "]"); //$NON-NLS-1$
@@ -323,7 +323,7 @@ public class MapsforgeConfig {
 				logger.info(msgHeader + ": defined [" + target + "]"); //$NON-NLS-1$
 			}
 		} else {
-			logger.info(msgHeader + " default [" + target + "]"); //$NON-NLS-1$
+			logger.info(msgHeader + ": default [" + target + "]"); //$NON-NLS-1$
 		}
 		return target;
 	}
@@ -393,7 +393,7 @@ public class MapsforgeConfig {
 			mapFiles = new ArrayList<File>();
 			List<File> mapsErr = new ArrayList<File>();
 			for (String path : mapFilePaths) {
-				mapFiles.add(new File(path));
+				mapFiles.add(new File(path.trim()));
 			}
 			mapFiles.forEach(mapFile -> {
 				if (!mapFile.isFile())
@@ -486,7 +486,7 @@ public class MapsforgeConfig {
 		parseHillShading();
 		hillShadingMagnitude = (double) parseNumber(DEFAULTHSMAGNITUDE, "hillshading-magnitude", 0., null, "Hillshading magnitude",false); //$NON-NLS-1$ //$NON-NLS-2$
 		demFolder = parseFile("demfolder", FOLDER, true, "DEM", "undefined");
-		rendererName = parseString(DEFAULTRENDERER, "renderer", AUTHORIZEDRENDERER, "Renderer engine"); //$NON-NLS-1$ //$NON-NLS-2$
+		rendererName = parseString(DEFAULTRENDERER, "renderer", AUTHORIZEDRENDERER, "Renderer algorithm"); //$NON-NLS-1$ //$NON-NLS-2$
 		cacheControl = (long) parseNumber(DEFAULTCACHECONTROL, "cache-control", 0, null, "Browser cache ttl",false); //$NON-NLS-1$ //$NON-NLS-2$
 		maxQueueSize = (int) parseNumber(DEFAULTSERVERMAXQUEUESIZE, "max-queuesize", 0, null, "Server max queue size",false); //$NON-NLS-1$ //$NON-NLS-2$
 		maxThreads = (int) parseNumber(DEFAULTSERVERMAXTHREADS, "max-thread", 1, null, "Server max thread(s)",false); //$NON-NLS-1$ //$NON-NLS-2$
