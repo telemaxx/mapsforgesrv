@@ -4,15 +4,12 @@ SET ymdhis=%date:~-4,4%-%date:~-10,2%-%date:~-7,2%_%time:~0,2%-%time:~3,2%-%time
 SET ymdhis=%ymdhis: =0%
 java.exe ^
 	--patch-module java.desktop=libs\marlin-0.9.4.5-Unsafe-OpenJDK11.jar ^
-	-Xlog:gc:D:\mapsforgesrv\logs\gc.%ymdhis%.log:time,level,tags ^
 	-Xmx2G ^
 	-Xms2G ^
 	-Dsun.java2d.renderer.log=true ^
 	-Dsun.java2d.renderer.useLogger=true ^
-	-Dsun.java2d.opengl=True ^
 	-Dsun.java2d.accthreshold=0 ^
-	-Dsun.java2d.renderer.profile=speed ^
-	-Dsun.java2d.renderer.useThreadLocal=false ^
+	-Dsun.java2d.renderer.useThreadLocal=true ^
 	-Dsun.java2d.renderer.useFastMath=true ^
 	-Dsun.java2d.render.bufferSize=65536 ^
 	-jar build\libs\mapsforgesrv-fatjar.jar ^
@@ -20,3 +17,5 @@ java.exe ^
 REM 	-Dsun.java2d.opengl=false ^
 REM 	-Dsun.java2d.d3d=true ^
 REM		-Dsun.java2d.translaccel=true ^
+REM	-Dsun.java2d.renderer.profile=speed ^
+REM	-Xlog:gc:D:\mapsforgesrv\logs\gc.%ymdhis%.log:time,level,tags ^
