@@ -102,7 +102,7 @@ public class MapsforgeHandler extends AbstractHandler {
 	protected float userScale;
 	protected float textScale;
 	protected float symbolScale;
-	
+
 	private ExecutorThreadPool pool;
 	private LinkedBlockingQueue<Runnable> queue;
 	private MapsforgeConfig mapsforgeConfig;
@@ -142,12 +142,7 @@ public class MapsforgeHandler extends AbstractHandler {
 				colorLookupTable[index] = (int) Math.round(value * 255.);
 			}
 		}
-		
-		this.deviceScale = mapsforgeConfig.getDeviceScale();
-		this.userScale   = mapsforgeConfig.getUserScale();
-		this.textScale   = mapsforgeConfig.getTextScale();
-		this.symbolScale = mapsforgeConfig.getSymbolScale();
-		
+
 		GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
 		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
 
@@ -165,9 +160,15 @@ public class MapsforgeHandler extends AbstractHandler {
 			multiMapDataStore.addMapDataStore(map, true, true);
 		});
 
+		this.deviceScale = mapsforgeConfig.getDeviceScale();
+		this.userScale   = mapsforgeConfig.getUserScale();
+		this.textScale   = mapsforgeConfig.getTextScale();
+		this.symbolScale = mapsforgeConfig.getSymbolScale();
+		
 		DisplayModel.setDeviceScaleFactor(deviceScale);
 		DisplayModel.symbolScale = symbolScale;
 		displayModel = new DisplayModel();
+		displayModel.setUserScaleFactor(userScale);
 
 		if (mapsforgeConfig.getHillShadingAlgorithm() != null && mapsforgeConfig.getDemFolder() != null) { // hillshading
 			if (mapsforgeConfig.getHillShadingAlgorithm().equals("simple")) {
@@ -378,9 +379,8 @@ public class MapsforgeHandler extends AbstractHandler {
 			} catch (Exception e) {
 				throw new ServletException("Failed to parse \"userScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
-			if (requestedUserScale != userScale)
-				displayModel.setUserScaleFactor(requestedUserScale);
-			
+			displayModel.setUserScaleFactor(requestedUserScale);
+
 			boolean requestedTransparent = mapsforgeConfig.TRANSPARENTDEFAULT;
 			try {
 				String tmp = request.getParameter("transparent"); //$NON-NLS-1$
@@ -390,7 +390,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			} catch (Exception e) {
 				throw new ServletException("Failed to parse \"transparent\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
-			
+
 			int requestedTileRenderSize = mapsforgeConfig.TILERENDERSIZEDEFAULT;
 			try {
 				String tmp = request.getParameter("tileRenderSize"); //$NON-NLS-1$
@@ -399,7 +399,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			} catch (Exception e) {
 				throw new ServletException("Failed to parse \"tileRenderSize\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
-			
+
 			RendererJob job;
 			Bitmap tileBitmap;
 			Tile tile = new Tile(x, y, (byte) z, requestedTileRenderSize);
