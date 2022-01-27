@@ -49,6 +49,10 @@ public class MapsforgeConfig {
 	private int maxThreads;
 	private long idleTimeout;
 	private double gammaValue;
+	private float deviceScale;
+	private float userScale;
+	private float textScale;
+	private float symbolScale;
 
 	private final static long DEFAULTCACHECONTROL = 0;
 	private final static int DEFAULTSERVERPORT = 8080;
@@ -59,6 +63,10 @@ public class MapsforgeConfig {
 	private final static double DEFAULTGAMMA = 1.;
 	private final static double DEFAULTHSMAGNITUDE = 1.;
 	private final static int DEFAULTBLACK = 0;
+	private final static float DEFAULTDEVICESCALE = 1.0f;
+	private final static float DEFAULTUSERSCALE = 1.0f;
+	private final static float DEFAULTTEXTSCALE = 1.0f;
+	private final static float DEFAULTSYMBOLSCALE = 1.0f;
 	private final static String[] AUTHORIZEDCONNECTORS = { "http11", "proxy", "h2c" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	private final static String[] DEFAULTCONNECTORS = { AUTHORIZEDCONNECTORS[0] }; // $NON-NLS-1$
 	private final static String[] AUTHORIZEDRENDERER = { "database", "direct", }; //$NON-NLS-1$ //$NON-NLS-2$
@@ -67,15 +75,13 @@ public class MapsforgeConfig {
 	private final static String DEFAULTSERVERINTERFACE = AUTHORIZEDSERVERINTERFACE[0];
 
 	/*
-	 * true: More precise at tile edges but much slower 
-	 * false: Less precise at tile edges but much faster
+	 * enableInterpolationOverlap = true:  More precise at tile edges but much slower 
+	 * enableInterpolationOverlap = false: Less precise at tile edges but much faster
 	 */
 	public final boolean HILLSHADINGENABLEINTERPOLATIONOVERLAP = false;
 	public final double[] HILLSHADINGSIMPLEDEFAULT = { 0.1, 0.666 };
 	public final double HILLSHADINGDIFDUSELIGHTDEFAULT = 50;
 	public final String EXTENSIONDEFAULT = "png"; //$NON-NLS-1$
-	public final float TEXTSCALEDEFAULT = 1.0f;
-	public final float USERSCALEDEFAULT = 1.0f;
 	public final int TILERENDERSIZEDEFAULT = 256;
 	public final boolean TRANSPARENTDEFAULT = false;
 	public final int SERVERACCEPTQUEUESIZE = 128;
@@ -175,6 +181,26 @@ public class MapsforgeConfig {
 				.longOpt("renderer") //$NON-NLS-1$
 				.desc("Mapsforge renderer algorithm [database,direct] (default: database)") //$NON-NLS-1$
 				.required(false).hasArg(true).build());
+		
+		options.addOption(Option.builder("sfd") //$NON-NLS-1$
+				.longOpt("device-scale") //$NON-NLS-1$
+				.desc("Device scale factor [> 0] (default: 1)") //$NON-NLS-1$
+				.required(false).hasArg(true).build());
+		
+		options.addOption(Option.builder("sfu") //$NON-NLS-1$
+				.longOpt("user-scale") //$NON-NLS-1$
+				.desc("User scale factor [> 0] (default: 1)") //$NON-NLS-1$
+				.required(false).hasArg(true).build());
+		
+		options.addOption(Option.builder("sft") //$NON-NLS-1$
+				.longOpt("text-scale") //$NON-NLS-1$
+				.desc("Text scale factor [> 0] (default: 1)") //$NON-NLS-1$
+				.required(false).hasArg(true).build());
+		
+		options.addOption(Option.builder("sfs") //$NON-NLS-1$
+				.longOpt("symbol-scale") //$NON-NLS-1$
+				.desc("Symbol scale factor [> 0] (default: 1)") //$NON-NLS-1$
+				.required(false).hasArg(true).build());
 
 		options.addOption(Option.builder("cc") //$NON-NLS-1$
 				.longOpt("cache-control") //$NON-NLS-1$
@@ -268,7 +294,7 @@ public class MapsforgeConfig {
 	}
 
 	/*
-	 * excludeInRange: true (minValue < value < maxValue) accepted
+	 * excludeInRange: true  (minValue <  value <  maxValue) accepted
 	 * excludeInRange: false (minValue <= value <= maxValue) accepted
 	 */
 	private Number parseNumber(Number defaultValue, String configValue, Number minValue, Number maxValue, String msgHeader, boolean excludeInRange) {
@@ -281,10 +307,12 @@ public class MapsforgeConfig {
 				String operator;
 				if (defaultValue instanceof Long)
 					target = Long.parseLong(configString);
-				if (defaultValue instanceof Integer)
+				else if (defaultValue instanceof Integer)
 					target = Integer.parseInt(configString);
-				if (defaultValue instanceof Double)
+				else if (defaultValue instanceof Double)
 					target = Double.parseDouble(configString);
+				else if (defaultValue instanceof Float)
+					target = Float.parseFloat(configString);
 				if (minValue != null && (target.doubleValue() < minValue.doubleValue() || (excludeInRange && target.doubleValue() == minValue.doubleValue()))) {
 					operator = "' < '";
 					if(excludeInRange)
@@ -487,6 +515,10 @@ public class MapsforgeConfig {
 		hillShadingMagnitude = (double) parseNumber(DEFAULTHSMAGNITUDE, "hillshading-magnitude", 0., null, "Hillshading magnitude",false); //$NON-NLS-1$ //$NON-NLS-2$
 		demFolder = parseFile("demfolder", FOLDER, true, "DEM", "undefined");
 		rendererName = parseString(DEFAULTRENDERER, "renderer", AUTHORIZEDRENDERER, "Renderer algorithm"); //$NON-NLS-1$ //$NON-NLS-2$
+		deviceScale = (float) parseNumber(DEFAULTDEVICESCALE, "device-scale", 0., null, "Device scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		userScale = (float) parseNumber(DEFAULTUSERSCALE, "user-scale", 0., null, "User scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		textScale = (float) parseNumber(DEFAULTTEXTSCALE, "text-scale", 0., null, "Text scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		symbolScale = (float) parseNumber(DEFAULTSYMBOLSCALE, "symbol-scale", 0., null, "Symbol scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
 		cacheControl = (long) parseNumber(DEFAULTCACHECONTROL, "cache-control", 0, null, "Browser cache ttl",false); //$NON-NLS-1$ //$NON-NLS-2$
 		maxQueueSize = (int) parseNumber(DEFAULTSERVERMAXQUEUESIZE, "max-queuesize", 0, null, "Server max queue size",false); //$NON-NLS-1$ //$NON-NLS-2$
 		maxThreads = (int) parseNumber(DEFAULTSERVERMAXTHREADS, "max-thread", 1, null, "Server max thread(s)",false); //$NON-NLS-1$ //$NON-NLS-2$
@@ -580,10 +612,26 @@ public class MapsforgeConfig {
 	}
 
 	public String[] getServerConnectors() {
-		return serverConnectors;
+		return this.serverConnectors;
 	}
 
 	public double getGammaValue() {
-		return gammaValue;
+		return this.gammaValue;
+	}
+	
+	public float getDeviceScale() {
+		return this.deviceScale;
+	}
+	
+	public float getUserScale() {
+		return this.userScale;
+	}
+		
+	public float getTextScale() {
+		return this.textScale;
+	}
+	
+	public float getSymbolScale() {
+		return this.symbolScale;
 	}
 }
