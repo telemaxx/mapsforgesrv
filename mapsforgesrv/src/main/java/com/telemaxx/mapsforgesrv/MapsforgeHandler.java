@@ -143,11 +143,6 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 		}
 
-		this.deviceScale = mapsforgeConfig.getDeviceScale();
-		this.userScale   = mapsforgeConfig.getUserScale();
-		this.textScale   = mapsforgeConfig.getTextScale();
-		this.symbolScale = mapsforgeConfig.getSymbolScale();
-
 		GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
 		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
 
@@ -164,6 +159,11 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 			multiMapDataStore.addMapDataStore(map, true, true);
 		});
+
+		this.deviceScale = mapsforgeConfig.getDeviceScale();
+		this.userScale   = mapsforgeConfig.getUserScale();
+		this.textScale   = mapsforgeConfig.getTextScale();
+		this.symbolScale = mapsforgeConfig.getSymbolScale();
 
 		DisplayModel.setDeviceScaleFactor(deviceScale);
 		DisplayModel.symbolScale = symbolScale;
@@ -375,12 +375,11 @@ public class MapsforgeHandler extends AbstractHandler {
 				String tmp = request.getParameter("userScale"); //$NON-NLS-1$
 				if (tmp != null) {
 					requestedUserScale = Float.parseFloat(tmp);
-					if (requestedUserScale != displayModel.getUserScaleFactor())
-						displayModel.setUserScaleFactor(requestedUserScale);
 				}
 			} catch (Exception e) {
 				throw new ServletException("Failed to parse \"userScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
+			displayModel.setUserScaleFactor(requestedUserScale);
 
 			boolean requestedTransparent = mapsforgeConfig.TRANSPARENTDEFAULT;
 			try {
