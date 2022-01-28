@@ -370,6 +370,8 @@ public class MapsforgeHandler extends AbstractHandler {
 				throw new ServletException("Failed to parse \"textScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
 
+//			Calling "displayModel.setUserScaleFactor" within "handle" has no visible impact on rendering !!!
+/*
 			float requestedUserScale = userScale;
 			try {
 				String tmp = request.getParameter("userScale"); //$NON-NLS-1$
@@ -380,6 +382,7 @@ public class MapsforgeHandler extends AbstractHandler {
 				throw new ServletException("Failed to parse \"userScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
 			displayModel.setUserScaleFactor(requestedUserScale);
+*/
 
 			boolean requestedTransparent = mapsforgeConfig.TRANSPARENTDEFAULT;
 			try {
@@ -417,14 +420,14 @@ public class MapsforgeHandler extends AbstractHandler {
 
 			if (hillsRenderConfig != null && enable_hs)
 				engine = "hs";
-//			synchronized (this) {		// Thread synchronization disabled for performance reasons
+			synchronized (this) {		// Thread synchronization disabled for performance reasons
 				if (directRenderer != null) {
 					tileBitmap = (AwtTileBitmap) directRenderer.get(engine).executeJob(job);
 				} else {
 					tileBitmap = (AwtTileBitmap) databaseRenderer.get(engine).executeJob(job);
 					labelInfoCache.put(job, null);
 				}
-//			}
+			}
 			baseRequest.setHandled(true);
 			BufferedImage image;
 			if (tileBitmap != null) {
