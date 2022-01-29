@@ -44,6 +44,10 @@ Whats different to the origin?
 	13. selectable hillshading algorithm (optional): -hs [simple,simple(linearity,scale),diffuselight,diffuselight(angle)]
 	14. selectable hillshading magnitude (optional): -hm factor
 	15. selectable DEM folder (optional): -d demfolder
+	16. selectable device scale (optional): -sfd factor
+	17. selectable user scale (optional): -sfu factor
+	18. selectable text scale (optional): -sft factor
+	19. selectable symbol scale (optional): -sfs factor
 
 
 Command parameters:
@@ -65,17 +69,21 @@ Command parameters:
 	12. -d   [demfolder]			Folder path containing digital elevation model files [.hgt] for hillshading (default: none)
 	13. -r   [renderer]			Mapsforge renderer algorithm [database,direct] (default: database)
 						Sometimes "direct" giving better results	
-	14. -cc  [cache-control]		If set, add Cache-Control header for served tiles. value in seconds, (default: 0 - disabled)
-	15. -mxq [max-queuesize]		Maximum queue size for waiting & running rendering jobs (default: 256)
-	16. -mxt [max-thread]			Maximum concurrent threads for rendering job (default: 8)
-	17. -mit [min-thread]			Minimum pool size for rendering job (default: 0)
-	18. -idl [idle-timeout]			Maximum thread idle time in milliseconds (default: 0 - disabled)
-	19. -ct  [connectors]			Comma-separated list of enabled server connector protocol(s) [http11,proxy,h2c] (default: http11)
-	20. -c   [config]			Config file overriding cmd line parameters (default: none)
-	21. -h   [help]				Print the help text and exit 
+	14. -sfd [device-scale]			Device scale factor [> 0] (default: 1)
+	15. -sfu [user-scale]			User scale factor [> 0] (default: 1)
+	16. -sft [text-scale]			Text scale factor [> 0] (default: 1)
+	17. -sfs [symbol-scale]			Symbol scale factor [> 0] (default: 1)
+	18. -cc  [cache-control]		If set, add Cache-Control header for served tiles. value in seconds, (default: 0 - disabled)
+	19. -mxq [max-queuesize]		Maximum queue size for waiting & running rendering jobs (default: 256)
+	20. -mxt [max-thread]			Maximum concurrent threads for rendering job (default: 8)
+	21. -mit [min-thread]			Minimum pool size for rendering job (default: 0)
+	22. -idl [idle-timeout]			Maximum thread idle time in milliseconds (default: 0 - disabled)
+	23. -ct  [connectors]			Comma-separated list of enabled server connector protocol(s) [http11,proxy,h2c] (default: http11)
+	24. -c   [config]			Config file overriding cmd line parameters (default: none)
+	25. -h   [help]				Print the help text and exit 
 
 
-longest example:
+Example:
 ```console
 java -jar mapsforgesrv/bin/jars_ready2use/mapsforgesrv4java8.jar -p 8080 -if all
      -m "path2mapfile1.map, path2mapfile2.map" -t path2themefile.xml -l en -r "direct" 
@@ -99,5 +107,6 @@ Building the jar:
 - Thomas Th. @telemaxx: converted the mapserver server part in own git project with gradle nature.
 - @pingurus (fixing stylesheets error)
 - Bernd @bjmdev (multi map support)
-- @JFritzle (selectable theme style, overlays, renderer, contrast-stretch, hillshading & gamma correction)
+- @JFritzle (selectable theme style, overlays, renderer, contrast-stretch, hillshading, gamma correction,    
+  some rendering scale factors)
 - @nono303 a lot of improvements/rework

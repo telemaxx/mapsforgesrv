@@ -94,8 +94,14 @@ public class MapsforgeHandler extends AbstractHandler {
 
 	protected final File themeFile;
 	protected final String themeFileStyle;
+	
 	protected int blackValue;
 	protected double gammaValue;
+	
+	protected float deviceScale;
+	protected float userScale;
+	protected float textScale;
+	protected float symbolScale;
 
 	private ExecutorThreadPool pool;
 	private LinkedBlockingQueue<Runnable> queue;
@@ -115,8 +121,10 @@ public class MapsforgeHandler extends AbstractHandler {
 		this.mapsforgeConfig = mapsforgeConfig;
 		this.pool = pool;
 		this.queue = queue;
+		
 		this.themeFile = mapsforgeConfig.getThemeFile();
 		this.themeFileStyle = mapsforgeConfig.getThemeFileStyle();
+		
 		this.blackValue = mapsforgeConfig.getBlackValue();
 		this.gammaValue = mapsforgeConfig.getGammaValue();
 		// first apply gamma correction and then contrast-stretching
@@ -152,7 +160,15 @@ public class MapsforgeHandler extends AbstractHandler {
 			multiMapDataStore.addMapDataStore(map, true, true);
 		});
 
+		this.deviceScale = mapsforgeConfig.getDeviceScale();
+		this.userScale   = mapsforgeConfig.getUserScale();
+		this.textScale   = mapsforgeConfig.getTextScale();
+		this.symbolScale = mapsforgeConfig.getSymbolScale();
+		
+		DisplayModel.setDeviceScaleFactor(deviceScale);
+		DisplayModel.symbolScale = symbolScale;
 		displayModel = new DisplayModel();
+		displayModel.setUserScaleFactor(userScale);
 
 		if (mapsforgeConfig.getHillShadingAlgorithm() != null && mapsforgeConfig.getDemFolder() != null) { // hillshading
 			if (mapsforgeConfig.getHillShadingAlgorithm().equals("simple")) {
@@ -343,53 +359,55 @@ public class MapsforgeHandler extends AbstractHandler {
 				logger.error("Tile number y=" + y + " out of range!"); //$NON-NLS-1$
 				return;
 			}
-			float textScale = mapsforgeConfig.TEXTSCALEDEFAULT;
+			
+			float requestedTextScale = textScale;
 			try {
 				String tmp = request.getParameter("textScale"); //$NON-NLS-1$
 				if (tmp != null) {
-					textScale = Float.parseFloat(tmp);
-				} else {
-					textScale = 1.0f;
+					requestedTextScale = Float.parseFloat(tmp);
 				}
 			} catch (Exception e) {
 				throw new ServletException("Failed to parse \"textScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
 
-			float userScale = mapsforgeConfig.USERSCALEDEFAULT;
+//			Calling "displayModel.setUserScaleFactor" within "handle" has no visible impact on rendering !!!
+/*
+			float requestedUserScale = userScale;
 			try {
 				String tmp = request.getParameter("userScale"); //$NON-NLS-1$
 				if (tmp != null) {
-					userScale = Float.parseFloat(tmp);
+					requestedUserScale = Float.parseFloat(tmp);
 				}
 			} catch (Exception e) {
 				throw new ServletException("Failed to parse \"userScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
-			displayModel.setUserScaleFactor(userScale);
+			displayModel.setUserScaleFactor(requestedUserScale);
+*/
 
-			boolean transparent = mapsforgeConfig.TRANSPARENTDEFAULT;
+			boolean requestedTransparent = mapsforgeConfig.TRANSPARENTDEFAULT;
 			try {
 				String tmp = request.getParameter("transparent"); //$NON-NLS-1$
 				if (tmp != null) {
-					transparent = Boolean.parseBoolean(tmp);
+					requestedTransparent = Boolean.parseBoolean(tmp);
 				}
 			} catch (Exception e) {
 				throw new ServletException("Failed to parse \"transparent\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
 
-			int tileRenderSize = mapsforgeConfig.TILERENDERSIZEDEFAULT;
+			int requestedTileRenderSize = mapsforgeConfig.TILERENDERSIZEDEFAULT;
 			try {
 				String tmp = request.getParameter("tileRenderSize"); //$NON-NLS-1$
 				if (tmp != null)
-					tileRenderSize = Integer.parseInt(tmp);
+					requestedTileRenderSize = Integer.parseInt(tmp);
 			} catch (Exception e) {
 				throw new ServletException("Failed to parse \"tileRenderSize\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
 
 			RendererJob job;
 			Bitmap tileBitmap;
-			Tile tile = new Tile(x, y, (byte) z, tileRenderSize);
-			job = new RendererJob(tile, multiMapDataStore, renderThemeFuture, displayModel, textScale, transparent,
-					false);
+			Tile tile = new Tile(x, y, (byte) z, requestedTileRenderSize);
+			job = new RendererJob(tile, multiMapDataStore, renderThemeFuture, displayModel,
+					requestedTextScale, requestedTransparent, false);
 
 			boolean enable_hs = true;
 			try {
@@ -402,7 +420,7 @@ public class MapsforgeHandler extends AbstractHandler {
 
 			if (hillsRenderConfig != null && enable_hs)
 				engine = "hs";
-			synchronized (this) {
+			synchronized (this) {		// Thread synchronization disabled for performance reasons
 				if (directRenderer != null) {
 					tileBitmap = (AwtTileBitmap) directRenderer.get(engine).executeJob(job);
 				} else {

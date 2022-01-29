@@ -25,6 +25,7 @@
  * 0.16.5: a lot of improvements/rework (nono303)
  * 0.16.6: bugfix, when a parameter was not given, sometimes the default was not used (nono303)
  * 0.17.0: update mapsforge libs to latest 0.17.0 (nono303)
+ * 0.17.1: command line parameters device-scale, user-scale, text-scale, symbol-scale (JFritzle)
  *******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -46,7 +47,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
 	
-	private final static String VERSION = "0.17.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	private final static String VERSION = "0.17.1"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 
