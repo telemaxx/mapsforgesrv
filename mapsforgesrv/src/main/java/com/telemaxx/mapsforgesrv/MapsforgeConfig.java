@@ -432,7 +432,7 @@ public class MapsforgeConfig {
 				mapFiles.removeAll(mapsErr);
 				mapFilesSting = mapFiles.stream().map(File::getPath).collect(Collectors.joining(","));
 				String cnxNotAuth = "{" + mapsErr.stream().map(File::getPath).collect(Collectors.joining(",")) + "} not existing"; //$NON-NLS-2$ //$NON-NLS-3$
-				if (serverConnectors.length == 0) {
+				if (mapFilePaths.length == 0) {
 					parseError(msgHeader, cnxNotAuth, "{" + mapFilesSting + "}");
 				} else {
 					logger.info(msgHeader + ": defined [{" + mapFilesSting + "}] - warn " + cnxNotAuth); //$NON-NLS-1$
