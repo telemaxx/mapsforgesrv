@@ -4,13 +4,13 @@
 http://mobac.sourceforge.net/
 
 The MapsforgeSrv is a local webserver providing rendered mapsforge map tiles.  
-http://wiki.openstreetmap.org/wiki/Mapsforge<br/>
+http://wiki.openstreetmap.org/wiki/Mapsforge  
 The tiles are always rendered on the fly when requested.
 
-The description of this tool you find at the origin page:<br/>
+The description of this tool you find at the origin page:  
 https://sourceforge.net/p/mobac/code/HEAD/tree/trunk/tools/MapsforgeSrv/
 
-An example how to use the tile server on client side, you find eg at qmapshack project:<br/>
+An example how to use the tile server on client side, you find eg at qmapshack project:  
 https://github.com/Maproom/qmapshack/wiki/DocBasicsMapDem#mapsforge-maps  
 
 Graphical user interface *Mapsforge-for-QMapShack* between MapsforgeSrv and QMapShack application:  
@@ -108,5 +108,12 @@ Building the jar:
 - @pingurus (fixing stylesheets error)
 - Bernd @bjmdev (multi map support)
 - @JFritzle (selectable theme style, overlays, renderer, contrast-stretch, hillshading, gamma correction,    
-  some rendering scale factors)
+  some rendering scale factors, hillshading overlay with alpha transparency)
 - @nono303 a lot of improvements/rework
+
+### Licenses
+- MapsforgeSrv  
+MapsforgeSrv is licensed under the GNU General Public License v3.0. 
+- Built-in Mapsforge world map  
+All map data © OpenStreetMap contributors http://www.openstreetmap.org/copyright.   
+OpenStreetMap is open data, licensed under the Open Data Commons Open Database License (ODbL).

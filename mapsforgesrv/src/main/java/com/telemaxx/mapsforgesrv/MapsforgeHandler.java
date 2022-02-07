@@ -21,6 +21,13 @@ package com.telemaxx.mapsforgesrv;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.File;
+import java.io.InputStream;
+import java.nio.channels.FileChannel;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -61,6 +68,7 @@ import org.mapsforge.map.model.DisplayModel;
 import org.mapsforge.map.reader.MapFile;
 import org.mapsforge.map.rendertheme.ExternalRenderTheme;
 import org.mapsforge.map.rendertheme.InternalRenderTheme;
+import org.mapsforge.map.rendertheme.StreamRenderTheme;
 import org.mapsforge.map.rendertheme.XmlRenderTheme;
 import org.mapsforge.map.rendertheme.XmlRenderThemeMenuCallback;
 import org.mapsforge.map.rendertheme.XmlRenderThemeStyleLayer;
@@ -68,6 +76,8 @@ import org.mapsforge.map.rendertheme.XmlRenderThemeStyleMenu;
 import org.mapsforge.map.rendertheme.rule.RenderThemeFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -108,10 +118,11 @@ public class MapsforgeHandler extends AbstractHandler {
 	private MapsforgeConfig mapsforgeConfig;
 	private ShadingAlgorithm shadingAlgorithm = null;
 	private int[] colorLookupTable = null;
+	private boolean hillShadingOverlay = false;
 
 	private static final Pattern P = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)\\.(.*)"); //$NON-NLS-1$
 	private static BufferedImage BI_NOCONTENT;
-
+	
 	public MapsforgeHandler(MapsforgeConfig mapsforgeConfig, ExecutorThreadPool pool,
 			LinkedBlockingQueue<Runnable> queue) throws IOException {
 		super();
@@ -145,20 +156,35 @@ public class MapsforgeHandler extends AbstractHandler {
 
 		GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
 		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
-
-		logger.info("################### MAPS INFO ###################");
-		mapsforgeConfig.getMapFiles().forEach(mapFile -> {
-			MapFile map = new MapFile(mapFile, mapsforgeConfig.getPreferredLanguage());
-			String[] mapLanguages = map.getMapLanguages();
-			String msgMap = "'" + mapFile + "' supported languages: ";
-
-			if (mapLanguages != null) {
-				logger.info(msgMap+"{"+String.join(",", mapLanguages)+"}");
+		logger.info("################### MAPS INFO ###################"); 
+		if (mapsforgeConfig.getMapFiles().size() == 0) {
+			if (mapsforgeConfig.getHillShadingAlgorithm() != null && mapsforgeConfig.getDemFolder() != null) {
+				hillShadingOverlay = true;
+				logger.info("No map given: use built-in Mapsforge world map for hillshading overlay with alpha transparency");
 			} else {
-				logger.info(msgMap+"-");
+				logger.info("No map given: use built-in Mapsforge world map");
 			}
+			InputStream inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
+			FileSystem fileSystem = MemoryFileSystemBuilder.newEmpty().build();
+			Path rootPath = fileSystem.getPath("");
+			Path worldMap = rootPath.resolve("world.map");
+			Files.copy(inputStream, worldMap, StandardCopyOption.REPLACE_EXISTING);
+			FileChannel mapFileChannel = FileChannel.open(worldMap, StandardOpenOption.READ);
+			MapFile map = new MapFile(mapFileChannel);
 			multiMapDataStore.addMapDataStore(map, true, true);
-		});
+		} else {
+			mapsforgeConfig.getMapFiles().forEach(mapFile -> {
+				MapFile map = new MapFile(mapFile, mapsforgeConfig.getPreferredLanguage());
+				String[] mapLanguages = map.getMapLanguages();
+				String msgMap = "'" + mapFile + "' supported languages: ";
+				if (mapLanguages != null) {
+					logger.info(msgMap+"{"+String.join(",", mapLanguages)+"}");
+				} else {
+					logger.info(msgMap+"-");
+				}
+				multiMapDataStore.addMapDataStore(map, true, true);
+			});
+		}
 
 		this.deviceScale = mapsforgeConfig.getDeviceScale();
 		this.userScale   = mapsforgeConfig.getUserScale();
@@ -243,13 +269,17 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 
 		};
-		if (themeFile == null) {
+		
+		if (hillShadingOverlay) {
+			InputStream stream = getClass().getResourceAsStream("/assets/mapsforgesrv/hillshading.xml");
+			xmlRenderTheme = new StreamRenderTheme("", stream);
+		} else if (themeFile == null) {
 			xmlRenderTheme = InternalRenderTheme.OSMARENDER;
 		} else {
 			showStyleNames();
 			xmlRenderTheme = new ExternalRenderTheme(themeFile, callBack);
-
 		}
+		
 		updateRenderThemeFuture();
 	}
 
@@ -420,7 +450,7 @@ public class MapsforgeHandler extends AbstractHandler {
 
 			if (hillsRenderConfig != null && enable_hs)
 				engine = "hs";
-			synchronized (this) {		// Thread synchronization disabled for performance reasons
+			synchronized (this) {
 				if (directRenderer != null) {
 					tileBitmap = (AwtTileBitmap) directRenderer.get(engine).executeJob(job);
 				} else {
@@ -431,20 +461,44 @@ public class MapsforgeHandler extends AbstractHandler {
 			baseRequest.setHandled(true);
 			BufferedImage image;
 			if (tileBitmap != null) {
-				image = AwtGraphicFactory.getBitmap(tileBitmap);
-				if (colorLookupTable != null) { // gamma correction and/or contrast-stretching
-					// DataBuffer created by Mapsforge renderer is of type DataBufferInt, i.e. one
-					// int value 0xaarrggbb per pixel
-					DataBufferInt dataBuffer = (DataBufferInt) image.getRaster().getDataBuffer();
-					int[] pixelArray = dataBuffer.getData();
-					int pixelCount = image.getWidth() * image.getHeight();
-					int pixelValue;
+				image = AwtGraphicFactory.getBitmap(tileBitmap);  // image type is TYPE_INT_RGB
+				int imageWidth  = image.getWidth();
+				int imageHeight = image.getHeight();
+				// DataBuffer created by Mapsforge renderer is of type DataBufferInt,
+				// i.e. one int value 0xaarrggbb per pixel
+				DataBufferInt dataBuffer = (DataBufferInt) image.getRaster().getDataBuffer();
+				int[] pixelArray = dataBuffer.getData();
+				
+				if (hillShadingOverlay) { // transparent hillshading overlay	
+					int pixelValue,gray,dist,alpha;
+					int range = (int)(30*mapsforgeConfig.getHillShadingMagnitude()); // gray value range
+					if (range > 120) range = 120;	// maximum value range is 120
+					int base = 248-range; // obviously base gray value depending on hillshading magnitude
+					BufferedImage newImage = new BufferedImage (imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
+					DataBufferInt newDataBuffer = (DataBufferInt) newImage.getRaster().getDataBuffer();
+					int[] newPixelArray = newDataBuffer.getData();
+					int pixelCount = imageWidth * imageHeight;
 					while (pixelCount-- > 0) {
 						pixelValue = pixelArray[pixelCount];
-						pixelArray[pixelCount] = (pixelValue & 0xff000000) // alphaValue
-								| (colorLookupTable[(pixelValue >>> 16) & 0xff] << 16) // redValue
-								| (colorLookupTable[(pixelValue >>> 8) & 0xff] << 8) // greenValue
-								| (colorLookupTable[pixelValue & 0xff]); // blueValue
+						gray = pixelValue & 0xff;		// gray value of pixel = blue value of pixel
+						dist = gray-base;				// distance to base gray value
+						alpha = Math.abs(dist) * 2;		// alpha value is 2 * abs(distance) to base gray value
+						if (alpha > 255) alpha = 255;	// limit alpha to fully opaque
+						pixelValue = alpha << 24;		// black pixel with variable alpha transparency 			
+						if (dist > 0)					// present gray value lighter than base gray:
+							pixelValue |= 0x00ffffff;	// white pixel with variable alpha transparency
+						newPixelArray[pixelCount] = pixelValue;
+					}
+					image = newImage; // Replace original image of type TYPE_INT_RGB by image of type TYPE_INT_ARGB
+				} else if (colorLookupTable != null) { // gamma correction and/or contrast-stretching
+					int pixelValue;
+					int pixelCount = imageWidth * imageHeight;
+					while (pixelCount-- > 0) {
+						pixelValue = pixelArray[pixelCount];
+						pixelArray[pixelCount] = (pixelValue & 0xff000000) // alpha value
+								| (colorLookupTable[(pixelValue >>> 16) & 0xff] << 16) // red value
+								| (colorLookupTable[(pixelValue >>> 8) & 0xff] << 8) // green value
+								| (colorLookupTable[pixelValue & 0xff]); // blue value
 					}
 				}
 				response.setStatus(200);			
