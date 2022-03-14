@@ -79,8 +79,9 @@ Command parameters:
 	21. -mit [min-thread]			Minimum pool size for rendering job (default: 0)
 	22. -idl [idle-timeout]			Maximum thread idle time in milliseconds (default: 0 - disabled)
 	23. -ct  [connectors]			Comma-separated list of enabled server connector protocol(s) [http11,proxy,h2c] (default: http11)
-	24. -c   [config]			Config file overriding cmd line parameters (default: none)
-	25. -h   [help]				Print the help text and exit 
+	24. -tms [outofrange_tms]		Url pattern [ex. https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png] of an external TMS server used in redirect for out-of-range tiles (default: unset - disabled)
+	25. -c   [config]			Config file overriding cmd line parameters (default: none)
+	26. -h   [help]				Print the help text and exit 
 
 
 Example:

@@ -105,6 +105,8 @@ public class MapsforgeHandler extends AbstractHandler {
 	protected final File themeFile;
 	protected final String themeFileStyle;
 	
+	protected final String outOfRangeTms;
+	
 	protected int blackValue;
 	protected double gammaValue;
 	
@@ -135,6 +137,8 @@ public class MapsforgeHandler extends AbstractHandler {
 		
 		this.themeFile = mapsforgeConfig.getThemeFile();
 		this.themeFileStyle = mapsforgeConfig.getThemeFileStyle();
+		
+		this.outOfRangeTms = mapsforgeConfig.getOutOfRangeTms();
 		
 		this.blackValue = mapsforgeConfig.getBlackValue();
 		this.gammaValue = mapsforgeConfig.getGammaValue();
@@ -503,9 +507,16 @@ public class MapsforgeHandler extends AbstractHandler {
 				}
 				response.setStatus(200);			
 			} else {
-				// TODO temp
-				image = BI_NOCONTENT;
-				response.setStatus(404);
+				if(this.outOfRangeTms != null) {
+					response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
+					String redirecturl = this.outOfRangeTms.replace("{x}", x+"").replace("{y}", y+"").replace("{z}", z+"");
+					response.setHeader("Location", redirecturl);
+					logger.info("out-of-range redirect '"+redirecturl+"'");
+					return;
+				} else {
+					image = BI_NOCONTENT;
+					response.setStatus(404);
+				}
 			}
 			if (mapsforgeConfig.getCacheControl() > 0) {
 				response.addHeader("Cache-Control", "public, max-age=" + mapsforgeConfig.getCacheControl()); //$NON-NLS-1$ //$NON-NLS-2$
