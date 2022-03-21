@@ -345,7 +345,7 @@ public class MapsforgeHandler extends AbstractHandler {
 		try {
 
 			if (request.getPathInfo().equals("/favicon.ico")) { //$NON-NLS-1$
-				response.setStatus(404);
+				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 				return;
 			}
 
@@ -355,11 +355,11 @@ public class MapsforgeHandler extends AbstractHandler {
 					out.print("<html><body><h1>updatemapstyle</h1>OK</body></html>"); //$NON-NLS-1$
 					out.flush();
 				}
-				response.setStatus(200);
+				response.setStatus(HttpServletResponse.SC_OK);
 				return;
 			}
 
-			response.setStatus(500);
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 
 			if ((databaseRenderer == null && directRenderer == null) || xmlRenderTheme == null)
 				return;
@@ -507,7 +507,7 @@ public class MapsforgeHandler extends AbstractHandler {
 								| (colorLookupTable[pixelValue & 0xff]); // blue value
 					}
 				}
-				response.setStatus(200);			
+				response.setStatus(HttpServletResponse.SC_OK);			
 			} else {
 				if(this.outOfRangeTms != null) {
 					response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
@@ -517,7 +517,7 @@ public class MapsforgeHandler extends AbstractHandler {
 					return;
 				} else {
 					image = BI_NOCONTENT;
-					response.setStatus(404);
+					response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 				}
 			}
 			if (mapsforgeConfig.getCacheControl() > 0) {
@@ -531,7 +531,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			try {
 				response.sendError(500, extmsg);
 			} catch (IOException e1) {
-				response.setStatus(500);
+				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 			logger.error(logRequest(request, startTime, e, engine));
 		}
