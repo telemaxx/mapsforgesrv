@@ -48,7 +48,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
 	
-	private final static String VERSION = "0.17.2"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	private final static String VERSION = "0.17.3"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 
