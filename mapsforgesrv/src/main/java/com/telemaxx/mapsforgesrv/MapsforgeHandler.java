@@ -321,7 +321,9 @@ public class MapsforgeHandler extends AbstractHandler {
 
 	private String logRequest(HttpServletRequest request, long startTime, Exception ex, String engine) {
 		// request
-		String msg = request.getPathInfo() + "?" + request.getQueryString();
+		String msg = request.getPathInfo();
+		String query = request.getQueryString();
+		if (query != null) msg += "?" + query;
 		// response time;idle threads;queue size
 		if (mapsforgeConfig.LOGREQDET)
 			msg += " [ms:" + Math.round((System.nanoTime() - startTime) / 1000000) + ";idle:" + this.pool.getIdleThreads()
