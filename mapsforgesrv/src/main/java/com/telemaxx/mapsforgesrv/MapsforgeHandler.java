@@ -159,23 +159,15 @@ public class MapsforgeHandler extends AbstractHandler {
 		}
 
 		GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
-		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
+		
 		logger.info("################### MAPS INFO ###################"); 
+		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
+		boolean appendWorldMap = mapsforgeConfig.getAppendWorldMap();
 		if (mapsforgeConfig.getMapFiles().size() == 0) {
+			appendWorldMap = true;
 			if (mapsforgeConfig.getHillShadingAlgorithm() != null && mapsforgeConfig.getDemFolder() != null) {
 				hillShadingOverlay = true;
-				logger.info("No map given: use built-in Mapsforge world map for hillshading overlay with alpha transparency");
-			} else {
-				logger.info("No map given: use built-in Mapsforge world map");
 			}
-			InputStream inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
-			FileSystem fileSystem = MemoryFileSystemBuilder.newEmpty().build();
-			Path rootPath = fileSystem.getPath("");
-			Path worldMap = rootPath.resolve("world.map");
-			Files.copy(inputStream, worldMap, StandardCopyOption.REPLACE_EXISTING);
-			FileChannel mapFileChannel = FileChannel.open(worldMap, StandardOpenOption.READ);
-			MapFile map = new MapFile(mapFileChannel);
-			multiMapDataStore.addMapDataStore(map, true, true);
 		} else {
 			mapsforgeConfig.getMapFiles().forEach(mapFile -> {
 				MapFile map = new MapFile(mapFile, mapsforgeConfig.getPreferredLanguage());
@@ -188,6 +180,21 @@ public class MapsforgeHandler extends AbstractHandler {
 				}
 				multiMapDataStore.addMapDataStore(map, true, true);
 			});
+		}
+		// Append built-in world.map
+		if (appendWorldMap) {
+			InputStream inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
+			FileSystem fileSystem = MemoryFileSystemBuilder.newEmpty().build();
+			Path rootPath = fileSystem.getPath("");
+			Path worldMapPath = rootPath.resolve("world.map");
+			Files.copy(inputStream, worldMapPath, StandardCopyOption.REPLACE_EXISTING);
+			FileChannel mapFileChannel = FileChannel.open(worldMapPath, StandardOpenOption.READ);
+			MapFile map = new MapFile(mapFileChannel);
+			logger.info("'(built-in)" + System.getProperty("file.separator") + "world.map'");
+			multiMapDataStore.addMapDataStore(map, true, true);
+		}
+		if (hillShadingOverlay) {
+			logger.info("No map -> hillshading overlay with alpha transparency only!");
 		}
 
 		this.deviceScale = mapsforgeConfig.getDeviceScale();
@@ -439,30 +446,32 @@ public class MapsforgeHandler extends AbstractHandler {
 				throw new ServletException("Failed to parse \"tileRenderSize\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
 
-			RendererJob job;
-			Bitmap tileBitmap;
+			Bitmap tileBitmap = null;
 			Tile tile = new Tile(x, y, (byte) z, requestedTileRenderSize);
-			job = new RendererJob(tile, multiMapDataStore, renderThemeFuture, displayModel,
+			if (multiMapDataStore.supportsTile(tile)) {
+				RendererJob job = new RendererJob(tile, multiMapDataStore, renderThemeFuture, displayModel,
 					requestedTextScale, requestedTransparent, false);
 
-			boolean enable_hs = true;
-			try {
-				String tmp = request.getParameter("hillshading"); //$NON-NLS-1$
-				if (tmp != null)
-					enable_hs = Integer.parseInt(request.getParameter("hillshading")) != 0; //$NON-NLS-1$
-			} catch (Exception e) {
-				throw new ServletException("Failed to parse \"hillshading\" property: " + e.getMessage(), e); //$NON-NLS-1$
-			}
-
-			if (hillsRenderConfig != null && enable_hs)
-				engine = "hs";
-			synchronized (this) {
-				if (directRenderer != null) {
-					tileBitmap = (AwtTileBitmap) directRenderer.get(engine).executeJob(job);
-				} else {
-					tileBitmap = (AwtTileBitmap) databaseRenderer.get(engine).executeJob(job);
-					labelInfoCache.put(job, null);
+				boolean enable_hs = true;
+				try {
+					String tmp = request.getParameter("hillshading"); //$NON-NLS-1$
+					if (tmp != null)
+						enable_hs = Integer.parseInt(request.getParameter("hillshading")) != 0; //$NON-NLS-1$
+				} catch (Exception e) {
+					throw new ServletException("Failed to parse \"hillshading\" property: " + e.getMessage(), e); //$NON-NLS-1$
 				}
+
+				if (hillsRenderConfig != null && enable_hs)
+					engine = "hs";
+// Synchronizing threads has no visible effect -> disabled
+//				synchronized (this) {
+					if (directRenderer != null) {
+						tileBitmap = (AwtTileBitmap) directRenderer.get(engine).executeJob(job);
+					} else {
+						tileBitmap = (AwtTileBitmap) databaseRenderer.get(engine).executeJob(job);
+						labelInfoCache.put(job, null);
+					}
+//				}
 			}
 			baseRequest.setHandled(true);
 			BufferedImage image;
@@ -529,7 +538,7 @@ public class MapsforgeHandler extends AbstractHandler {
 		} catch (Exception e) {
 			String extmsg = ExceptionUtils.getRootCauseMessage(e);
 			try {
-				response.sendError(500, extmsg);
+				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, extmsg);
 			} catch (IOException e1) {
 				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
