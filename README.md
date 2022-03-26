@@ -80,17 +80,25 @@ Command parameters:
 	22. -idl [idle-timeout]			Maximum thread idle time in milliseconds (default: 0 - disabled)
 	23. -ct  [connectors]			Comma-separated list of enabled server connector protocol(s) [http11,proxy,h2c] (default: http11)
 	24. -tms [outofrange_tms]		Url pattern [ex. https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png] of an external TMS server used in redirect for out-of-range tiles (default: unset - disabled)
-	25. -c   [config]			Config file overriding cmd line parameters (default: none)
-	26. -h   [help]				Print the help text and exit 
+	25. -wm  [worldmap]			Append built-in world map (default: undefined)
+	26. -c   [config]			Config file overriding cmd line parameters (default: none)
+	27. -h   [help]				Print the help text and exit 
 
 
-Example:
+Example:  
 ```console
 java -jar mapsforgesrv/bin/jars_ready2use/mapsforgesrv4java8.jar -p 8080 -if all
      -m "path2mapfile1.map, path2mapfile2.map" -t path2themefile.xml -l en -r "direct" 
      -s "elmt-hiking" -o "elmt-mtbs_tracks,elmt-mtb_routes,elmt-mtb_c_routes"
      -cs 32 -gc 0.8 -hs simple(0.1,0.666) -hm 1.2 -d path2demfolder
 ```
+
+Example MapsforgeSrv working as hillshading only tile server:  
+```console
+java -jar mapsforgesrv/bin/jars_ready2use/mapsforgesrv4java8.jar -p 8081 -if all
+     -m "" -hs simple(0.1,0.666) -hm 1.2 -d path2demfolder
+```  
+Hillshading tiles with alpha transparency may be used as overlay for any map.
 
 Branches:
 

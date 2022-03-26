@@ -27,6 +27,8 @@
  * 0.17.0: update mapsforge libs to latest 0.17.0 (nono303)
  * 0.17.1: command line parameters device-scale, user-scale, text-scale, symbol-scale (JFritzle)
  * 0.17.2: hillshading overlay with alpha transparency (JFritzle)
+ * 0.17.3: outofrange_tms & maps by directory (nono303)
+ * 0.17.4: optionally append built-in world map (JFritzle)
  *******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -48,7 +50,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
 	
-	private final static String VERSION = "0.17.3"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	private final static String VERSION = "0.17.4"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 
