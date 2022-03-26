@@ -105,6 +105,8 @@ public class MapsforgeHandler extends AbstractHandler {
 	protected final File themeFile;
 	protected final String themeFileStyle;
 	
+	protected final String outOfRangeTms;
+	
 	protected int blackValue;
 	protected double gammaValue;
 	
@@ -136,6 +138,8 @@ public class MapsforgeHandler extends AbstractHandler {
 		this.themeFile = mapsforgeConfig.getThemeFile();
 		this.themeFileStyle = mapsforgeConfig.getThemeFileStyle();
 		
+		this.outOfRangeTms = mapsforgeConfig.getOutOfRangeTms();
+		
 		this.blackValue = mapsforgeConfig.getBlackValue();
 		this.gammaValue = mapsforgeConfig.getGammaValue();
 		// first apply gamma correction and then contrast-stretching
@@ -155,23 +159,15 @@ public class MapsforgeHandler extends AbstractHandler {
 		}
 
 		GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
-		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
+		
 		logger.info("################### MAPS INFO ###################"); 
+		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
+		boolean appendWorldMap = mapsforgeConfig.getAppendWorldMap();
 		if (mapsforgeConfig.getMapFiles().size() == 0) {
+			appendWorldMap = true;
 			if (mapsforgeConfig.getHillShadingAlgorithm() != null && mapsforgeConfig.getDemFolder() != null) {
 				hillShadingOverlay = true;
-				logger.info("No map given: use built-in Mapsforge world map for hillshading overlay with alpha transparency");
-			} else {
-				logger.info("No map given: use built-in Mapsforge world map");
 			}
-			InputStream inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
-			FileSystem fileSystem = MemoryFileSystemBuilder.newEmpty().build();
-			Path rootPath = fileSystem.getPath("");
-			Path worldMap = rootPath.resolve("world.map");
-			Files.copy(inputStream, worldMap, StandardCopyOption.REPLACE_EXISTING);
-			FileChannel mapFileChannel = FileChannel.open(worldMap, StandardOpenOption.READ);
-			MapFile map = new MapFile(mapFileChannel);
-			multiMapDataStore.addMapDataStore(map, true, true);
 		} else {
 			mapsforgeConfig.getMapFiles().forEach(mapFile -> {
 				MapFile map = new MapFile(mapFile, mapsforgeConfig.getPreferredLanguage());
@@ -184,6 +180,21 @@ public class MapsforgeHandler extends AbstractHandler {
 				}
 				multiMapDataStore.addMapDataStore(map, true, true);
 			});
+		}
+		// Append built-in world.map
+		if (appendWorldMap) {
+			InputStream inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
+			FileSystem fileSystem = MemoryFileSystemBuilder.newEmpty().build();
+			Path rootPath = fileSystem.getPath("");
+			Path worldMapPath = rootPath.resolve("world.map");
+			Files.copy(inputStream, worldMapPath, StandardCopyOption.REPLACE_EXISTING);
+			FileChannel mapFileChannel = FileChannel.open(worldMapPath, StandardOpenOption.READ);
+			MapFile map = new MapFile(mapFileChannel);
+			logger.info("'(built-in)" + System.getProperty("file.separator") + "world.map'");
+			multiMapDataStore.addMapDataStore(map, true, true);
+		}
+		if (hillShadingOverlay) {
+			logger.info("No map -> hillshading overlay with alpha transparency only!");
 		}
 
 		this.deviceScale = mapsforgeConfig.getDeviceScale();
@@ -317,7 +328,9 @@ public class MapsforgeHandler extends AbstractHandler {
 
 	private String logRequest(HttpServletRequest request, long startTime, Exception ex, String engine) {
 		// request
-		String msg = request.getPathInfo() + "?" + request.getQueryString();
+		String msg = request.getPathInfo();
+		String query = request.getQueryString();
+		if (query != null) msg += "?" + query;
 		// response time;idle threads;queue size
 		if (mapsforgeConfig.LOGREQDET)
 			msg += " [ms:" + Math.round((System.nanoTime() - startTime) / 1000000) + ";idle:" + this.pool.getIdleThreads()
@@ -339,7 +352,7 @@ public class MapsforgeHandler extends AbstractHandler {
 		try {
 
 			if (request.getPathInfo().equals("/favicon.ico")) { //$NON-NLS-1$
-				response.setStatus(404);
+				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 				return;
 			}
 
@@ -349,11 +362,11 @@ public class MapsforgeHandler extends AbstractHandler {
 					out.print("<html><body><h1>updatemapstyle</h1>OK</body></html>"); //$NON-NLS-1$
 					out.flush();
 				}
-				response.setStatus(200);
+				response.setStatus(HttpServletResponse.SC_OK);
 				return;
 			}
 
-			response.setStatus(500);
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 
 			if ((databaseRenderer == null && directRenderer == null) || xmlRenderTheme == null)
 				return;
@@ -433,30 +446,32 @@ public class MapsforgeHandler extends AbstractHandler {
 				throw new ServletException("Failed to parse \"tileRenderSize\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
 
-			RendererJob job;
-			Bitmap tileBitmap;
+			Bitmap tileBitmap = null;
 			Tile tile = new Tile(x, y, (byte) z, requestedTileRenderSize);
-			job = new RendererJob(tile, multiMapDataStore, renderThemeFuture, displayModel,
+			if (multiMapDataStore.supportsTile(tile)) {
+				RendererJob job = new RendererJob(tile, multiMapDataStore, renderThemeFuture, displayModel,
 					requestedTextScale, requestedTransparent, false);
 
-			boolean enable_hs = true;
-			try {
-				String tmp = request.getParameter("hillshading"); //$NON-NLS-1$
-				if (tmp != null)
-					enable_hs = Integer.parseInt(request.getParameter("hillshading")) != 0; //$NON-NLS-1$
-			} catch (Exception e) {
-				throw new ServletException("Failed to parse \"hillshading\" property: " + e.getMessage(), e); //$NON-NLS-1$
-			}
-
-			if (hillsRenderConfig != null && enable_hs)
-				engine = "hs";
-			synchronized (this) {
-				if (directRenderer != null) {
-					tileBitmap = (AwtTileBitmap) directRenderer.get(engine).executeJob(job);
-				} else {
-					tileBitmap = (AwtTileBitmap) databaseRenderer.get(engine).executeJob(job);
-					labelInfoCache.put(job, null);
+				boolean enable_hs = true;
+				try {
+					String tmp = request.getParameter("hillshading"); //$NON-NLS-1$
+					if (tmp != null)
+						enable_hs = Integer.parseInt(request.getParameter("hillshading")) != 0; //$NON-NLS-1$
+				} catch (Exception e) {
+					throw new ServletException("Failed to parse \"hillshading\" property: " + e.getMessage(), e); //$NON-NLS-1$
 				}
+
+				if (hillsRenderConfig != null && enable_hs)
+					engine = "hs";
+// Synchronizing threads has no visible effect -> disabled
+//				synchronized (this) {
+					if (directRenderer != null) {
+						tileBitmap = (AwtTileBitmap) directRenderer.get(engine).executeJob(job);
+					} else {
+						tileBitmap = (AwtTileBitmap) databaseRenderer.get(engine).executeJob(job);
+						labelInfoCache.put(job, null);
+					}
+//				}
 			}
 			baseRequest.setHandled(true);
 			BufferedImage image;
@@ -501,11 +516,18 @@ public class MapsforgeHandler extends AbstractHandler {
 								| (colorLookupTable[pixelValue & 0xff]); // blue value
 					}
 				}
-				response.setStatus(200);			
+				response.setStatus(HttpServletResponse.SC_OK);			
 			} else {
-				// TODO temp
-				image = BI_NOCONTENT;
-				response.setStatus(404);
+				if(this.outOfRangeTms != null) {
+					response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
+					String redirecturl = this.outOfRangeTms.replace("{x}", x+"").replace("{y}", y+"").replace("{z}", z+"");
+					response.setHeader("Location", redirecturl);
+					logger.info("out-of-range redirect '"+redirecturl+"'");
+					return;
+				} else {
+					image = BI_NOCONTENT;
+					response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+				}
 			}
 			if (mapsforgeConfig.getCacheControl() > 0) {
 				response.addHeader("Cache-Control", "public, max-age=" + mapsforgeConfig.getCacheControl()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -516,9 +538,9 @@ public class MapsforgeHandler extends AbstractHandler {
 		} catch (Exception e) {
 			String extmsg = ExceptionUtils.getRootCauseMessage(e);
 			try {
-				response.sendError(500, extmsg);
+				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, extmsg);
 			} catch (IOException e1) {
-				response.setStatus(500);
+				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 			logger.error(logRequest(request, startTime, e, engine));
 		}

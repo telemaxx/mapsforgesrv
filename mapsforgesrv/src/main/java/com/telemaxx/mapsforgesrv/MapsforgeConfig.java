@@ -3,6 +3,7 @@ package com.telemaxx.mapsforgesrv;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,6 +54,8 @@ public class MapsforgeConfig {
 	private float userScale;
 	private float textScale;
 	private float symbolScale;
+	private String outOfRangeTms = null;
+	private boolean appendWorldMap;
 
 	private final static long DEFAULTCACHECONTROL = 0;
 	private final static int DEFAULTSERVERPORT = 8080;
@@ -100,7 +103,7 @@ public class MapsforgeConfig {
 	// log hillshading configuration detail for each request
 	// ex. SimpleShadingAlgorithm{linearity=0.0, scale=1.0, magnitude=1.0}
 	public boolean LOGREQDETHS = false;
-	private final static int PADMSG = 23;
+	private final static int PADMSG = 26;
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeConfig.class);
 	
 	private static final String FILE = "file"; //$NON-NLS-1$
@@ -231,6 +234,16 @@ public class MapsforgeConfig {
 				.longOpt("connectors") //$NON-NLS-1$
 				.desc("Comma-separated list of enabled server connector protocol(s) [http11,proxy,h2c] (default: http11)") //$NON-NLS-1$
 				.required(false).hasArg(true).build());
+		
+		options.addOption(Option.builder("tms") //$NON-NLS-1$
+				.longOpt("outofrange_tms") //$NON-NLS-1$
+				.desc("Url pattern [ex. https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png] of an external TMS server used in redirect for out-of-range tiles (default: unset - disabled)") //$NON-NLS-1$
+				.required(false).hasArg(true).build());
+		
+		options.addOption(Option.builder("wm") //$NON-NLS-1$
+				.longOpt("worldmap") //$NON-NLS-1$
+				.desc("Append built-in mapsforge world map") //$NON-NLS-1$
+				.required(false).hasArg(false).build());
 
 		options.addOption(Option.builder("c") //$NON-NLS-1$
 				.longOpt("config") //$NON-NLS-1$
@@ -355,6 +368,22 @@ public class MapsforgeConfig {
 		}
 		return target;
 	}
+	
+	private boolean parseHasOption(String configValue, String msgHeader) {
+		msgHeader = parsePadMsg(msgHeader);
+		boolean target=false;
+		if (configFile != null) {
+			target = configFile.getProperty(configValue) != null;
+		} else {
+			target = configCmd.hasOption(configValue);
+		}
+		if (target) {
+			logger.info(msgHeader + ": defined"); //$NON-NLS-1$
+		} else {
+			logger.info(msgHeader + ": default [undefined]"); //$NON-NLS-1$
+		}
+		return target;
+	}
 
 	private File parseFile(String configValue, String fileOrFolder, boolean checkFolderNotEmpty, String msgHeader, String msgDefault) throws Exception {
 		File target = null;
@@ -421,25 +450,39 @@ public class MapsforgeConfig {
 			mapFiles = new ArrayList<File>();
 			List<File> mapsErr = new ArrayList<File>();
 			for (String path : mapFilePaths) {
-				mapFiles.add(new File(path.trim()));
+				File file = new File(path.trim());
+				if (file.exists()) {
+					if (file.isFile()) {
+						mapFiles.add(file);
+					} else if (file.isDirectory()) {
+						for (File mapfile : file.listFiles(new FilenameFilter() {
+							@Override
+							public boolean accept(File dir, String name) {
+								return name.endsWith(".map");
+							}
+						})) {
+							mapFiles.add(mapfile);
+						}
+					}
+				}
 			}
 			mapFiles.forEach(mapFile -> {
 				if (!mapFile.isFile())
 					mapsErr.add(mapFile);
 			});
-			String mapFilesSting;
+			String mapFilesString;
 			if (mapsErr.size() > 0) {
 				mapFiles.removeAll(mapsErr);
-				mapFilesSting = mapFiles.stream().map(File::getPath).collect(Collectors.joining(","));
+				mapFilesString = mapFiles.stream().map(File::getPath).collect(Collectors.joining(","));
 				String cnxNotAuth = "{" + mapsErr.stream().map(File::getPath).collect(Collectors.joining(",")) + "} not existing"; //$NON-NLS-2$ //$NON-NLS-3$
 				if (mapFilePaths.length == 0) {
-					parseError(msgHeader, cnxNotAuth, "{" + mapFilesSting + "}");
+					parseError(msgHeader, cnxNotAuth, "{" + mapFilesString + "}");
 				} else {
-					logger.info(msgHeader + ": defined [{" + mapFilesSting + "}] - warn " + cnxNotAuth); //$NON-NLS-1$
+					logger.info(msgHeader + ": defined [{" + mapFilesString + "}] - warn " + cnxNotAuth); //$NON-NLS-1$
 				}
 			} else {
-				mapFilesSting = mapFiles.stream().map(File::getPath).collect(Collectors.joining(","));
-				logger.info(msgHeader + ": defined [{" + mapFilesSting + "}]"); //$NON-NLS-1$
+				mapFilesString = mapFiles.stream().map(File::getPath).collect(Collectors.joining(","));
+				logger.info(msgHeader + ": defined [{" + mapFilesString + "}]"); //$NON-NLS-1$
 			}
 		} else {
 			logger.error(msgHeader + ": exiting - no file(s) specified"); //$NON-NLS-1$
@@ -520,6 +563,8 @@ public class MapsforgeConfig {
 		textScale = (float) parseNumber(DEFAULTTEXTSCALE, "text-scale", 0., null, "Text scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
 		symbolScale = (float) parseNumber(DEFAULTSYMBOLSCALE, "symbol-scale", 0., null, "Symbol scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
 		cacheControl = (long) parseNumber(DEFAULTCACHECONTROL, "cache-control", 0, null, "Browser cache ttl",false); //$NON-NLS-1$ //$NON-NLS-2$
+		outOfRangeTms = parseString(null, "outofrange_tms", null, "Out of range TMS url"); //$NON-NLS-1$ //$NON-NLS-2$
+		appendWorldMap = parseHasOption("worldmap", "Append built-in world map");
 		maxQueueSize = (int) parseNumber(DEFAULTSERVERMAXQUEUESIZE, "max-queuesize", 0, null, "Server max queue size",false); //$NON-NLS-1$ //$NON-NLS-2$
 		maxThreads = (int) parseNumber(DEFAULTSERVERMAXTHREADS, "max-thread", 1, null, "Server max thread(s)",false); //$NON-NLS-1$ //$NON-NLS-2$
 		minThreads = (int) parseNumber(DEFAULTSERVERMINTHREADS, "min-thread", 0, null, "Server min thread(s)",false); //$NON-NLS-1$ //$NON-NLS-2$
@@ -578,6 +623,10 @@ public class MapsforgeConfig {
 	public List<File> getMapFiles() {
 		return this.mapFiles;
 	}
+	
+	public boolean getAppendWorldMap() {
+		return this.appendWorldMap;
+	}
 
 	public int getMaxQueueSize() {
 		return this.maxQueueSize;
@@ -613,6 +662,10 @@ public class MapsforgeConfig {
 
 	public String[] getServerConnectors() {
 		return this.serverConnectors;
+	}
+	
+	public String getOutOfRangeTms() {
+		return this.outOfRangeTms;
 	}
 
 	public double getGammaValue() {
