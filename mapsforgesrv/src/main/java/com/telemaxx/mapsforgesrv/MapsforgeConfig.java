@@ -99,7 +99,7 @@ public class MapsforgeConfig {
 
 	// log response time thread state and queue size detail for each request
 	// ex. [ms:1820;idle:0;qs:92]
-	public boolean LOGREQDET = false;
+	public boolean LOGREQDET = true;
 	// log hillshading configuration detail for each request
 	// ex. SimpleShadingAlgorithm{linearity=0.0, scale=1.0, magnitude=1.0}
 	public boolean LOGREQDETHS = false;

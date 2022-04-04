@@ -5,7 +5,7 @@
     <param name="Target" value="System.out"/>
     <layout class="org.apache.log4j.PatternLayout">
     <!--param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p %c:%L@%t - %m%n" /-->
-    <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %m%n" />
+    <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %t@%c{1}:%L - %m%n" />
     </layout>
   </appender>
   <root>
