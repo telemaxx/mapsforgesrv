@@ -498,7 +498,6 @@ public class MapsforgeHandler extends AbstractHandler {
 						if (pixelValue == 0xfff8f8f8) {		// 'nodata' hillshading value
 							pixelValue = 0x00000000;		// fully transparent pixel
 						} else {
-							pixelValue = pixelArray[pixelCount];
 							gray = pixelValue & 0xff;		// gray value of pixel = blue value of pixel
 							dist = gray-base;				// distance to base gray value
 							alpha = Math.abs(dist) * 2;		// alpha value is 2 * abs(distance) to base gray value
