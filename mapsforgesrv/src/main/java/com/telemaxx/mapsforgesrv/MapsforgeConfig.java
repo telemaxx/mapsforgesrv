@@ -378,9 +378,9 @@ public class MapsforgeConfig {
 			target = configCmd.hasOption(configValue);
 		}
 		if (target) {
-			logger.info(msgHeader + ": defined"); //$NON-NLS-1$
+			logger.info(msgHeader + ": defined ["+String.valueOf(target)+"]"); //$NON-NLS-1$
 		} else {
-			logger.info(msgHeader + ": default [undefined]"); //$NON-NLS-1$
+			logger.info(msgHeader + ": default [false]"); //$NON-NLS-1$
 		}
 		return target;
 	}
