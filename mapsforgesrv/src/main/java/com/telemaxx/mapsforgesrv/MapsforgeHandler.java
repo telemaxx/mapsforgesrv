@@ -495,13 +495,17 @@ public class MapsforgeHandler extends AbstractHandler {
 					int pixelCount = imageWidth * imageHeight;
 					while (pixelCount-- > 0) {
 						pixelValue = pixelArray[pixelCount];
-						gray = pixelValue & 0xff;		// gray value of pixel = blue value of pixel
-						dist = gray-base;				// distance to base gray value
-						alpha = Math.abs(dist) * 2;		// alpha value is 2 * abs(distance) to base gray value
-						if (alpha > 255) alpha = 255;	// limit alpha to fully opaque
-						pixelValue = alpha << 24;		// black pixel with variable alpha transparency 			
-						if (dist > 0)					// present gray value lighter than base gray:
-							pixelValue |= 0x00ffffff;	// white pixel with variable alpha transparency
+						if (pixelValue == 0xfff8f8f8) {		// 'nodata' hillshading value
+							pixelValue = 0x00000000;		// fully transparent pixel
+						} else {
+							gray = pixelValue & 0xff;		// gray value of pixel = blue value of pixel
+							dist = gray-base;				// distance to base gray value
+							alpha = Math.abs(dist) * 2;		// alpha value is 2 * abs(distance) to base gray value
+							if (alpha > 255) alpha = 255;	// limit alpha to fully opaque
+							pixelValue = alpha << 24;		// black pixel with variable alpha transparency 			
+							if (dist > 0)					// present gray value lighter than base gray:
+								pixelValue |= 0x00ffffff;	// white pixel with variable alpha transparency
+						}
 						newPixelArray[pixelCount] = pixelValue;
 					}
 					image = newImage; // Replace original image of type TYPE_INT_RGB by image of type TYPE_INT_ARGB
