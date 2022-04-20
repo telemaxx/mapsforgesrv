@@ -10,7 +10,7 @@ repositories {
 
 dependencies {
     def mapsforgeVersion = '0.17.0'
-    def jettyVersion = '9.4.45.v20220203'
+    def jettyVersion = '9.4.46.v20220331'
     def slf4j = '2.0.0-alpha7'
 
     api "org.apache.commons:commons-math3:3.6.1"
