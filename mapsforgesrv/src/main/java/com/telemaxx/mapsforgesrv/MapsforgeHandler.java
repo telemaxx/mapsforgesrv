@@ -20,6 +20,7 @@ package com.telemaxx.mapsforgesrv;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
@@ -99,7 +100,7 @@ public class MapsforgeHandler extends AbstractHandler {
 	protected XmlRenderTheme xmlRenderTheme;
 	protected RenderThemeFuture renderThemeFuture;
 	protected XmlRenderThemeStyleMenu renderThemeStyleMenu;
-	protected TileBasedLabelStore tileBasedLabelStore = new MyTileBasedLabelStore(1000);
+	protected MyTileBasedLabelStore tileBasedLabelStore = new MyTileBasedLabelStore(1000);
 	protected DummyCache labelInfoCache = new DummyCache();
 
 	protected final File themeFile;
@@ -535,9 +536,14 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 			if (mapsforgeConfig.getCacheControl() > 0) {
 				response.addHeader("Cache-Control", "public, max-age=" + mapsforgeConfig.getCacheControl()); //$NON-NLS-1$ //$NON-NLS-2$
-			}	
+			}
 			response.setContentType("image/" + ext); //$NON-NLS-1$
-			ImageIO.write(image, ext, response.getOutputStream());
+			//ImageIO.write(image, ext, response.getOutputStream());
+			int bufferSize = 256 + 4*image.getWidth()*image.getHeight(); // Assume image data size <= bufferSize
+			MyResponseBufferOutputStream responseBufferStream = new MyResponseBufferOutputStream(bufferSize);
+			ImageIO.write(image, ext, responseBufferStream);
+			responseBufferStream.flush(response);
+			responseBufferStream.close();
 			logger.info(logRequest(request, startTime, null, engine));
 		} catch (Exception e) {
 			String extmsg = ExceptionUtils.getRootCauseMessage(e);
@@ -547,6 +553,18 @@ public class MapsforgeHandler extends AbstractHandler {
 				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 			logger.error(logRequest(request, startTime, e, engine));
+		}
+	}
+	
+	private static class MyResponseBufferOutputStream extends ByteArrayOutputStream {
+		public MyResponseBufferOutputStream(int bufferSize) {
+			buf = new byte[bufferSize];
+		}
+		public void flush (HttpServletResponse response) throws IOException {
+			response.setContentLength(count);
+			ServletOutputStream responseOutputStream = response.getOutputStream();
+			responseOutputStream.write(buf, 0, count);
+			responseOutputStream.flush();
 		}
 	}
 
