@@ -9,7 +9,7 @@ repositories {
 }
 
 dependencies {
-    def mapsforgeVersion = '0.17.0'
+    def mapsforgeVersion = '0.18.0'
     def jettyVersion = '11.0.9'
     def slf4j = '2.0.0-alpha7'
 
