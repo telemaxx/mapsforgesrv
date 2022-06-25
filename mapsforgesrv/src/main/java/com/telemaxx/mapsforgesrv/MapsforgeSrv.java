@@ -32,6 +32,7 @@
  * 0.17.5: map hillshading 'nodata' to fully transparent (JFritzle)
  *         improve parseHasOption logger (nono303)
  * 0.17.6: return exact contentLength with HTTP response (JFritzle)
+ * 0.18.0: mapsforge 18
  *******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -53,7 +54,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
 	
-	private final static String VERSION = "0.17.6"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	private final static String VERSION = "0.18.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 
