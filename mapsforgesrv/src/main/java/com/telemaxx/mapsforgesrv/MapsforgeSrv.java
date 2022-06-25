@@ -32,6 +32,7 @@
  * 0.17.5: map hillshading 'nodata' to fully transparent (JFritzle)
  *         improve parseHasOption logger (nono303)
  * 0.17.6: return exact contentLength with HTTP response (JFritzle)
+ * 0.18.0: mapsforge 18
  *******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
