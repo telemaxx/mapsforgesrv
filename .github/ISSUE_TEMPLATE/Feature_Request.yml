@@ -23,7 +23,7 @@ body:
       label: What is missing?
       description: Tell us youre ideas
       placeholder: Tell us what you like!
-      value: "A which happened!"
+      value: 
     validations:
       required: true
  
