@@ -78,6 +78,7 @@ import org.mapsforge.map.rendertheme.rule.RenderThemeFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+//import com.google.common.jimfs.Jimfs;
 import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
 
 import javax.servlet.ServletException;
@@ -121,6 +122,7 @@ public class MapsforgeHandler extends AbstractHandler {
 	private MapsforgeConfig mapsforgeConfig;
 	private ShadingAlgorithm shadingAlgorithm = null;
 	private int[] colorLookupTable = null;
+	private int[] grayLookupTable = null;
 	private boolean hillShadingOverlay = false;
 
 	private static final Pattern P = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)\\.(.*)"); //$NON-NLS-1$
@@ -185,6 +187,7 @@ public class MapsforgeHandler extends AbstractHandler {
 		// Append built-in world.map
 		if (appendWorldMap) {
 			InputStream inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
+//			FileSystem fileSystem = Jimfs.newFileSystem();
 			FileSystem fileSystem = MemoryFileSystemBuilder.newEmpty().build();
 			Path rootPath = fileSystem.getPath("");
 			Path worldMapPath = rootPath.resolve("world.map");
@@ -194,8 +197,25 @@ public class MapsforgeHandler extends AbstractHandler {
 			logger.info("'(built-in)" + System.getProperty("file.separator") + "world.map'");
 			multiMapDataStore.addMapDataStore(map, true, true);
 		}
+
 		if (hillShadingOverlay) {
 			logger.info("No map -> hillshading overlay with alpha transparency only!");
+			int pixelValue,gray,dist,alpha;
+			int range = (int)(30*mapsforgeConfig.getHillShadingMagnitude()); // gray value range
+			if (range > 120) range = 120;	// maximum value range is 120
+			int base = 248-range; // obviously base gray value depending on hillshading magnitude
+			grayLookupTable = new int[256];
+			int index = 256;
+			while (index-- > 0) {
+				gray = index;
+				dist = gray-base;				// distance to base gray value
+				alpha = Math.abs(dist) * 2;		// alpha value is 2 * abs(distance) to base gray value
+				if (alpha > 255) alpha = 255;	// limit alpha to fully opaque
+				pixelValue = alpha << 24;		// black pixel with variable alpha transparency 			
+				if (dist > 0)					// present gray value lighter than base gray:
+					pixelValue |= 0x00ffffff;	// white pixel with variable alpha transparency
+				grayLookupTable[index] = pixelValue;
+			}
 		}
 
 		this.deviceScale = mapsforgeConfig.getDeviceScale();
@@ -486,28 +506,18 @@ public class MapsforgeHandler extends AbstractHandler {
 				int[] pixelArray = dataBuffer.getData();
 				
 				if (hillShadingOverlay) { // transparent hillshading overlay	
-					int pixelValue,gray,dist,alpha;
-					int range = (int)(30*mapsforgeConfig.getHillShadingMagnitude()); // gray value range
-					if (range > 120) range = 120;	// maximum value range is 120
-					int base = 248-range; // obviously base gray value depending on hillshading magnitude
 					BufferedImage newImage = new BufferedImage (imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
 					DataBufferInt newDataBuffer = (DataBufferInt) newImage.getRaster().getDataBuffer();
 					int[] newPixelArray = newDataBuffer.getData();
+					int pixelValue;
 					int pixelCount = imageWidth * imageHeight;
 					while (pixelCount-- > 0) {
 						pixelValue = pixelArray[pixelCount];
-						if (pixelValue == 0xfff8f8f8) {		// 'nodata' hillshading value
-							pixelValue = 0x00000000;		// fully transparent pixel
-						} else {
-							gray = pixelValue & 0xff;		// gray value of pixel = blue value of pixel
-							dist = gray-base;				// distance to base gray value
-							alpha = Math.abs(dist) * 2;		// alpha value is 2 * abs(distance) to base gray value
-							if (alpha > 255) alpha = 255;	// limit alpha to fully opaque
-							pixelValue = alpha << 24;		// black pixel with variable alpha transparency 			
-							if (dist > 0)					// present gray value lighter than base gray:
-								pixelValue |= 0x00ffffff;	// white pixel with variable alpha transparency
+						if (pixelValue == 0xfff8f8f8) { // 'nodata' hillshading value
+							newPixelArray[pixelCount] = 0x00000000; // fully transparent pixel
+						} else { // gray value of pixel = blue value of pixel
+							newPixelArray[pixelCount] = grayLookupTable[pixelValue & 0xff];
 						}
-						newPixelArray[pixelCount] = pixelValue;
 					}
 					image = newImage; // Replace original image of type TYPE_INT_RGB by image of type TYPE_INT_ARGB
 				} else if (colorLookupTable != null) { // gamma correction and/or contrast-stretching
@@ -555,7 +565,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			logger.error(logRequest(request, startTime, e, engine));
 		}
 	}
-	
+
 	private static class MyResponseBufferOutputStream extends ByteArrayOutputStream {
 		public MyResponseBufferOutputStream(int bufferSize) {
 			buf = new byte[bufferSize];
