@@ -34,6 +34,7 @@
  * 0.17.6: return exact contentLength with HTTP response (JFritzle)
  * 0.18.0: mapsforge 18
  * 0.18.1: hillshading overlay gray values by lookup table (JFritzle)
+ *         increase zoom level range for hillshading overlay (JFritzle)
  *         update gradle and build.gradle dependencies to latest (JFritzle)
  *******************************************************************************/
 
