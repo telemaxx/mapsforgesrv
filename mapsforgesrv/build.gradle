@@ -10,8 +10,8 @@ repositories {
 
 dependencies {
     def mapsforgeVersion = '0.18.0'
-    def jettyVersion = '11.0.12'
-    def slf4j = '2.0.4'
+    def jettyVersion = '11.0.13'
+    def slf4j = '2.0.6'
 
     api "org.apache.commons:commons-math3:3.6.1"
     testImplementation "junit:junit:4.13.2"
