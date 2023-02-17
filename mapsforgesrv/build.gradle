@@ -31,12 +31,12 @@ dependencies {
     implementation "org.slf4j:jul-to-slf4j:${slf4j}"
     implementation "commons-cli:commons-cli:1.5.0"
     implementation "org.apache.commons:commons-lang3:3.12.0"
-    implementation "org.xerial:sqlite-jdbc:3.40.0.0"
+    implementation "org.xerial:sqlite-jdbc:3.40.1.0"
     implementation "net.sf.kxml:kxml2:2.3.0" 
     implementation "com.formdev:svgSalamander:1.1.4"
 
 //  implementation "com.google.jimfs:jimfs:1.2"
-    implementation "com.github.marschall:memoryfilesystem:2.4.0"
+    implementation "com.github.marschall:memoryfilesystem:2.5.0"
 }
 
 mainClassName = "com.telemaxx.mapsforgesrv.MapsforgeSrv"
