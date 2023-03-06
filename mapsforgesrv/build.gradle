@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'application'
-    id 'com.github.johnrengelman.shadow' version "7.1.2"
+    id 'com.github.johnrengelman.shadow' version "8.1.0"
 }
 
 repositories {
@@ -10,7 +10,7 @@ repositories {
 
 dependencies {
     def mapsforgeVersion = '0.18.0'
-    def jettyVersion = '11.0.13'
+    def jettyVersion = '11.0.14'
     def slf4j = '2.0.6'
 
     api "org.apache.commons:commons-math3:3.6.1"
@@ -31,7 +31,7 @@ dependencies {
     implementation "org.slf4j:jul-to-slf4j:${slf4j}"
     implementation "commons-cli:commons-cli:1.5.0"
     implementation "org.apache.commons:commons-lang3:3.12.0"
-    implementation "org.xerial:sqlite-jdbc:3.40.1.0"
+    implementation "org.xerial:sqlite-jdbc:3.41.0.0"
     implementation "net.sf.kxml:kxml2:2.3.0" 
     implementation "com.formdev:svgSalamander:1.1.4"
 
