@@ -2,41 +2,58 @@ plugins {
     id 'java-library'
     id 'application'
     id 'com.github.johnrengelman.shadow' version "8.1.1"
+    id 'nebula.lint' version "18.0.3"
 }
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    def mapsforgeVersion = '0.18.0'
-    def jettyVersion = '11.0.14'
-    def slf4j = '2.0.7'
+sourceSets {
+    main {
+        java {
+            srcDirs 'src/main'
+        }
+    }
+    test {
+        java {
+            srcDirs 'src/test'
+        }
+    }
+ }
 
-    api "org.apache.commons:commons-math3:3.6.1"
-    testImplementation "junit:junit:4.13.2"
+dependencies {
+    def mapsforgeVersion = '+'
+    def jettyVersion = '11.0.14'
+    def slf4j = '+'
+
+    // api "org.apache.commons:commons-math3:+"
+    testImplementation "junit:junit:+"
 
     implementation "org.mapsforge:mapsforge-core:${mapsforgeVersion}"
     implementation "org.mapsforge:mapsforge-map:${mapsforgeVersion}"
     implementation "org.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
     implementation "org.mapsforge:mapsforge-themes:${mapsforgeVersion}"
     implementation "org.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
-    implementation "org.mapsforge:mapsforge-poi-awt:${mapsforgeVersion}"
-    implementation "org.mapsforge:mapsforge-poi:${mapsforgeVersion}"
+    // implementation "org.mapsforge:mapsforge-poi-awt:${mapsforgeVersion}"
+    // implementation "org.mapsforge:mapsforge-poi:${mapsforgeVersion}"
 
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
     implementation "org.eclipse.jetty.http2:http2-server:${jettyVersion}"
+    implementation "org.eclipse.jetty:jetty-util:${jettyVersion}"
+    implementation "org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:+"
 
-    implementation "org.slf4j:slf4j-reload4j:${slf4j}"
+    runtimeOnly "org.slf4j:slf4j-reload4j:${slf4j}"
     implementation "org.slf4j:jul-to-slf4j:${slf4j}"
-    implementation "commons-cli:commons-cli:1.5.0"
-    implementation "org.apache.commons:commons-lang3:3.12.0"
-    implementation "org.xerial:sqlite-jdbc:3.41.2.1"
-    implementation "net.sf.kxml:kxml2:2.3.0" 
-    implementation "com.formdev:svgSalamander:1.1.4"
+    implementation "org.slf4j:slf4j-api:${slf4j}"
+    implementation "commons-cli:commons-cli:+"
+    implementation "org.apache.commons:commons-lang3:+"
+    runtimeOnly "org.xerial:sqlite-jdbc:+"
+    runtimeOnly "net.sf.kxml:kxml2:+" 
+    // implementation "com.formdev:svgSalamander:+"
 
-//  implementation "com.google.jimfs:jimfs:1.2"
-    implementation "com.github.marschall:memoryfilesystem:2.5.0"
+    // implementation "com.google.jimfs:jimfs:+"
+    implementation "com.github.marschall:memoryfilesystem:+"
 }
 
 mainClassName = "com.telemaxx.mapsforgesrv.MapsforgeSrv"
@@ -44,8 +61,6 @@ mainClassName = "com.telemaxx.mapsforgesrv.MapsforgeSrv"
 // https://github.com/johnrengelman/shadow
 shadowJar {
    archiveBaseName.set('mapsforgesrv-fatjar')
-   archiveClassifier.set('')
-   archiveVersion.set('')
    // https://github.com/johnrengelman/shadow/issues/341#issuecomment-445556737
    mergeServiceFiles {
         path = 'META-INF/services'
@@ -59,3 +74,5 @@ task copyFatJar2jars_ready2use(type: Copy, dependsOn: 'shadowJar') {
 	from file("$buildDir/libs/mapsforgesrv-fatjar.jar")
 	into file("$buildDir/../bin/jars_ready2use/")
 }
+
+gradleLint.rules = ['all-dependency']
