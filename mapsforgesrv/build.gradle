@@ -6,6 +6,9 @@ plugins {
 }
 
 repositories {
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
     mavenCentral()
 }
 
@@ -23,7 +26,7 @@ sourceSets {
  }
 
 dependencies {
-    def mapsforgeVersion = '+'
+    def mapsforgeVersion = 'master-SNAPSHOT'
     def jettyVersion = '11.0.14'
     def slf4j = '+'
 

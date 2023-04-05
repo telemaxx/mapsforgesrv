@@ -59,6 +59,7 @@ import org.mapsforge.map.datastore.MultiMapDataStore;
 import org.mapsforge.map.layer.hills.DiffuseLightShadingAlgorithm;
 import org.mapsforge.map.layer.hills.HillsRenderConfig;
 import org.mapsforge.map.layer.hills.MemoryCachingHgtReaderTileSource;
+import org.mapsforge.map.layer.hills.DemFolderFS;
 import org.mapsforge.map.layer.hills.ShadingAlgorithm;
 import org.mapsforge.map.layer.hills.SimpleShadingAlgorithm;
 import org.mapsforge.map.layer.labels.TileBasedLabelStore;
@@ -237,7 +238,7 @@ public class MapsforgeHandler extends AbstractHandler {
 						(float) mapsforgeConfig.getHillShadingArguments()[0]);
 			}
 			MemoryCachingHgtReaderTileSource tileSource = new MemoryCachingHgtReaderTileSource(
-					mapsforgeConfig.getDemFolder(), shadingAlgorithm, graphicFactory);
+					new DemFolderFS(mapsforgeConfig.getDemFolder()), shadingAlgorithm, graphicFactory);
 			tileSource.setEnableInterpolationOverlap(mapsforgeConfig.HILLSHADINGENABLEINTERPOLATIONOVERLAP);
 			hillsRenderConfig = new HillsRenderConfig(tileSource);
 			hillsRenderConfig.setMaginuteScaleFactor((float) mapsforgeConfig.getHillShadingMagnitude());
