@@ -36,7 +36,15 @@
  * 0.18.1: hillshading overlay gray values by lookup table (JFritzle)
  *         increase zoom level range for hillshading overlay (JFritzle)
  *         update gradle and build.gradle dependencies to latest (JFritzle)
- *******************************************************************************/
+ * 0.19.0: mapsforge 19
+ *         update gradle and build.gradle dependencies to latest (JFritzle)
+ *         show Java runtime version (JFritzle)
+ *         maximum hillshading magnitude = 4 (JFritzle)
+ *         terminate server on HTTP request "/terminate" (JFritzle)
+ *         - only from loopback addresses
+ *         - and only when accepted
+ *         set maximum line length of "help" to 132 characters (JFritzle)
+ ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
 
@@ -57,7 +65,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
 	
-	private final static String VERSION = "0.18.1"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	private final static String VERSION = "0.19.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 
@@ -70,6 +78,8 @@ public class MapsforgeSrv {
 		/* IMPORTANT: the output of following line is used by other programs like guis. never change this syntax */
 		logger.info("MapsforgeSrv - a mapsforge tile server. " + "version: " + VERSION); //$NON-NLS-1$ //$NON-NLS-2$
 		
+		logger.info("Java runtime version: " + System.getProperty("java.version")); //$NON-NLS-1$
+
 		logger.debug("Current dir [user.dir]: " + System.getProperty("user.dir"));
 
 		mapsforgeConfig = new MapsforgeConfig(args);
@@ -127,3 +137,4 @@ public class MapsforgeSrv {
 		new MapsforgeSrv(args);
 	}
 }
+
