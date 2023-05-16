@@ -56,6 +56,7 @@ import org.mapsforge.core.model.Tile;
 import org.mapsforge.map.awt.graphics.AwtGraphicFactory;
 import org.mapsforge.map.awt.graphics.AwtTileBitmap;
 import org.mapsforge.map.datastore.MultiMapDataStore;
+import org.mapsforge.map.layer.hills.DemFolderFS;
 import org.mapsforge.map.layer.hills.DiffuseLightShadingAlgorithm;
 import org.mapsforge.map.layer.hills.HillsRenderConfig;
 import org.mapsforge.map.layer.hills.MemoryCachingHgtReaderTileSource;
@@ -236,8 +237,9 @@ public class MapsforgeHandler extends AbstractHandler {
 				shadingAlgorithm = new DiffuseLightShadingAlgorithm(
 						(float) mapsforgeConfig.getHillShadingArguments()[0]);
 			}
+			DemFolderFS demFolder = new DemFolderFS(mapsforgeConfig.getDemFolder());
 			MemoryCachingHgtReaderTileSource tileSource = new MemoryCachingHgtReaderTileSource(
-					mapsforgeConfig.getDemFolder(), shadingAlgorithm, graphicFactory);
+					demFolder, shadingAlgorithm, graphicFactory);
 			tileSource.setEnableInterpolationOverlap(mapsforgeConfig.HILLSHADINGENABLEINTERPOLATIONOVERLAP);
 			hillsRenderConfig = new HillsRenderConfig(tileSource);
 			hillsRenderConfig.setMaginuteScaleFactor((float) mapsforgeConfig.getHillShadingMagnitude());
@@ -371,6 +373,18 @@ public class MapsforgeHandler extends AbstractHandler {
 		long startTime = System.nanoTime();
 		String engine = "std";
 		try {
+			
+			if (request.getPathInfo().equals("/terminate")) { //$NON-NLS-1$
+				// Accept terminate request from loopback addresses only!
+				if (baseRequest.getHttpChannel().getRemoteAddress().getAddress().isLoopbackAddress()
+						&& mapsforgeConfig.getAcceptTerminate()) {
+					response.setStatus(HttpServletResponse.SC_OK);
+					System.exit(1);
+				} else {
+					response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				}
+				return;
+			}
 
 			if (request.getPathInfo().equals("/favicon.ico")) { //$NON-NLS-1$
 				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
