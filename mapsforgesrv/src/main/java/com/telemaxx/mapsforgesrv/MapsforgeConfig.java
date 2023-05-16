@@ -56,6 +56,7 @@ public class MapsforgeConfig {
 	private float symbolScale;
 	private String outOfRangeTms = null;
 	private boolean appendWorldMap;
+	private boolean acceptTerminate;
 
 	private final static long DEFAULTCACHECONTROL = 0;
 	private final static int DEFAULTSERVERPORT = 8080;
@@ -172,7 +173,7 @@ public class MapsforgeConfig {
 
 		options.addOption(Option.builder("hm") //$NON-NLS-1$
 				.longOpt("hillshading-magnitude") //$NON-NLS-1$
-				.desc("Hillshading gray value scaling factor [>= 0] (default: 1)") //$NON-NLS-1$
+				.desc("Hillshading gray value scaling factor [0..4] (default: 1)") //$NON-NLS-1$
 				.required(false).hasArg(true).build());
 
 		options.addOption(Option.builder("d") //$NON-NLS-1$
@@ -184,7 +185,7 @@ public class MapsforgeConfig {
 				.longOpt("renderer") //$NON-NLS-1$
 				.desc("Mapsforge renderer algorithm [database,direct] (default: database)") //$NON-NLS-1$
 				.required(false).hasArg(true).build());
-		
+
 		options.addOption(Option.builder("sfd") //$NON-NLS-1$
 				.longOpt("device-scale") //$NON-NLS-1$
 				.desc("Device scale factor [> 0] (default: 1)") //$NON-NLS-1$
@@ -244,6 +245,11 @@ public class MapsforgeConfig {
 				.longOpt("worldmap") //$NON-NLS-1$
 				.desc("Append built-in mapsforge world map") //$NON-NLS-1$
 				.required(false).hasArg(false).build());
+		
+		options.addOption(Option.builder("term") //$NON-NLS-1$
+				.longOpt("terminate") //$NON-NLS-1$
+				.desc("Accept server terminate request") //$NON-NLS-1$
+				.required(false).hasArg(false).build());
 
 		options.addOption(Option.builder("c") //$NON-NLS-1$
 				.longOpt("config") //$NON-NLS-1$
@@ -257,6 +263,7 @@ public class MapsforgeConfig {
 
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
+		formatter.setWidth(132);
 		try {
 			configCmd = parser.parse(options, args);
 			if (configCmd.hasOption("help")) { //$NON-NLS-1$
@@ -555,7 +562,7 @@ public class MapsforgeConfig {
 		blackValue = (int) parseNumber(DEFAULTBLACK, "contrast-stretch", 0, 254, "Contrast stretch",false); //$NON-NLS-1$ //$NON-NLS-2$
 		gammaValue = (double) parseNumber(DEFAULTGAMMA, "gamma-correction", 0., null, "Gamma correction",true); //$NON-NLS-1$ //$NON-NLS-2$
 		parseHillShading();
-		hillShadingMagnitude = (double) parseNumber(DEFAULTHSMAGNITUDE, "hillshading-magnitude", 0., null, "Hillshading magnitude",false); //$NON-NLS-1$ //$NON-NLS-2$
+		hillShadingMagnitude = (double) parseNumber(DEFAULTHSMAGNITUDE, "hillshading-magnitude", 0., 4., "Hillshading magnitude",false); //$NON-NLS-1$ //$NON-NLS-2$
 		demFolder = parseFile("demfolder", FOLDER, true, "DEM", "undefined");
 		rendererName = parseString(DEFAULTRENDERER, "renderer", AUTHORIZEDRENDERER, "Renderer algorithm"); //$NON-NLS-1$ //$NON-NLS-2$
 		deviceScale = (float) parseNumber(DEFAULTDEVICESCALE, "device-scale", 0., null, "Device scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
@@ -569,6 +576,7 @@ public class MapsforgeConfig {
 		maxThreads = (int) parseNumber(DEFAULTSERVERMAXTHREADS, "max-thread", 1, null, "Server max thread(s)",false); //$NON-NLS-1$ //$NON-NLS-2$
 		minThreads = (int) parseNumber(DEFAULTSERVERMINTHREADS, "min-thread", 0, null, "Server min thread(s)",false); //$NON-NLS-1$ //$NON-NLS-2$
 		idleTimeout = (long) parseNumber(DEFAULTSERVERIDELTIMEOUT, "idle-timeout", 0, null, "Connection idle timeout",false); //$NON-NLS-1$ //$NON-NLS-2$
+		acceptTerminate = parseHasOption("terminate", "Accept terminate request");
 		parseServerConnectors();
 	}
 
@@ -626,6 +634,10 @@ public class MapsforgeConfig {
 	
 	public boolean getAppendWorldMap() {
 		return this.appendWorldMap;
+	}
+	
+	public boolean getAcceptTerminate() {
+		return this.acceptTerminate;
 	}
 
 	public int getMaxQueueSize() {
