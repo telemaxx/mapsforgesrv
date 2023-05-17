@@ -72,6 +72,11 @@ shadowJar {
    }
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
 task copyFatJar2jars_ready2use(type: Copy, dependsOn: 'shadowJar') {
 	group 'distribution'
 	description 'Copy the fatJar to bin/jars_ready2use/'
