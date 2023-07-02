@@ -60,7 +60,9 @@ dependencies {
     implementation "com.github.marschall:memoryfilesystem:+"
 }
 
-mainClassName = "com.telemaxx.mapsforgesrv.MapsforgeSrv"
+application {
+	mainClass.set("com.telemaxx.mapsforgesrv.MapsforgeSrv")
+}
 
 // https://github.com/johnrengelman/shadow
 shadowJar {
