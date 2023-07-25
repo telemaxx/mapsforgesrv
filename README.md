@@ -126,5 +126,3 @@ MapsforgeSrv is licensed under the GNU General Public License v3.0.
 - Built-in Mapsforge world map  
 All map data © OpenStreetMap contributors http://www.openstreetmap.org/copyright.   
 OpenStreetMap is open data, licensed under the Open Data Commons Open Database License (ODbL).
-- Included Marlin renderer engine   
-[Marlin](https://github.com/bourgesl/marlin-renderer) is a fork from OpenJDK 8 and therefore licensed under the GNU General Public License, version 2, with the Classpath Exception.

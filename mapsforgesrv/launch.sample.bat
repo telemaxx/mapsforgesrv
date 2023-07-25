@@ -5,8 +5,8 @@ SET ymdhis=%ymdhis: =0%
 java.exe ^
 	-Xmx2G ^
 	-Xms2G ^
-	-Xbootclasspath/p:=libs\marlin-0.9.4.7-Unsafe-sun-java2d.jar ^
-	-Xbootclasspath/p:=libs\marlin-0.9.4.7-Unsafe.jar ^
+	-Xbootclasspath/p:=libs\marlin-0.9.4.5-Unsafe-sun-java2d.jar ^
+	-Xbootclasspath/p:=libs\marlin-0.9.4.5-Unsafe.jar ^
 	-Dsun.java2d.renderer=sun.java2d.marlin.DMarlinRenderingEngine ^
 	-Dsun.java2d.renderer.log=true ^
 	-Dsun.java2d.renderer.useLogger=true ^
