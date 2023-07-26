@@ -44,7 +44,7 @@
  *         - only from loopback addresses
  *         - and only when accepted
  *         set maximum line length of "help" to 132 characters (JFritzle)
- * 0.19.1: replace Marlin renderer version 0.9.4.5 by version 0.9.4.7
+ * 0.19.1: raise version to 0.19.1
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
