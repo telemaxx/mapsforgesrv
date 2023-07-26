@@ -44,6 +44,7 @@
  *         - only from loopback addresses
  *         - and only when accepted
  *         set maximum line length of "help" to 132 characters (JFritzle)
+ * 0.19.1: replace Marlin renderer version 0.9.4.5 by version 0.9.4.7
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -65,7 +66,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
 	
-	private final static String VERSION = "0.19.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	private final static String VERSION = "0.19.1"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 
