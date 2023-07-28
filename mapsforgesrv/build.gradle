@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'application'
     id 'com.github.johnrengelman.shadow' version "8.1.1"
-    id 'nebula.lint' version "18.0.3"
+    id 'nebula.lint' version "18.1.0"
 }
 
 repositories {
@@ -26,12 +26,12 @@ sourceSets {
  }
 
 dependencies {
-    // def mapsforgeVersion = 'master-SNAPSHOT'
+//  def mapsforgeVersion = 'master-SNAPSHOT'
     def mapsforgeVersion = '+'
     def jettyVersion = '11.0.15'
     def slf4j = '+'
 
-    // api "org.apache.commons:commons-math3:+"
+//  api "org.apache.commons:commons-math3:+"
     testImplementation "junit:junit:+"
 
     implementation "org.mapsforge:mapsforge-core:${mapsforgeVersion}"
@@ -39,8 +39,8 @@ dependencies {
     implementation "org.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
     implementation "org.mapsforge:mapsforge-themes:${mapsforgeVersion}"
     implementation "org.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
-    // implementation "org.mapsforge:mapsforge-poi-awt:${mapsforgeVersion}"
-    // implementation "org.mapsforge:mapsforge-poi:${mapsforgeVersion}"
+//  implementation "org.mapsforge:mapsforge-poi-awt:${mapsforgeVersion}"
+//  implementation "org.mapsforge:mapsforge-poi:${mapsforgeVersion}"
 
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
     implementation "org.eclipse.jetty.http2:http2-server:${jettyVersion}"
@@ -54,14 +54,14 @@ dependencies {
     implementation "org.apache.commons:commons-lang3:+"
     runtimeOnly "org.xerial:sqlite-jdbc:+"
     runtimeOnly "net.sf.kxml:kxml2:+" 
-    // implementation "com.formdev:svgSalamander:+"
+//  implementation "com.formdev:svgSalamander:+"
 
-    // implementation "com.google.jimfs:jimfs:+"
+//  implementation "com.google.jimfs:jimfs:+"
     implementation "com.github.marschall:memoryfilesystem:+"
 }
 
 application {
-	mainClass.set("com.telemaxx.mapsforgesrv.MapsforgeSrv")
+    mainClass.set("com.telemaxx.mapsforgesrv.MapsforgeSrv")
 }
 
 // https://github.com/johnrengelman/shadow
@@ -80,10 +80,10 @@ java {
 }
 
 task copyFatJar2jars_ready2use(type: Copy, dependsOn: 'shadowJar') {
-	group 'distribution'
-	description 'Copy the fatJar to bin/jars_ready2use/'
-	from file("$buildDir/libs/mapsforgesrv-fatjar.jar")
-	into file("$buildDir/../bin/jars_ready2use/")
+    group 'distribution'
+    description 'Copy the fatJar to bin/jars_ready2use/'
+    from file("$buildDir/libs/mapsforgesrv-fatjar.jar")
+    into file("$buildDir/../bin/jars_ready2use/")
 }
 
 gradleLint.rules = ['all-dependency']
