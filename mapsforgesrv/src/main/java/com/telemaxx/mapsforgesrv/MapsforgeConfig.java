@@ -411,7 +411,7 @@ public class MapsforgeConfig {
 					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' empty folder", msgDefault);
 				}
 			} else {
-				throw new Exception("fileOrFolder '" + fileOrFolder + "' not in [file|foler]"); //$NON-NLS-1$ //$NON-NLS-2$
+				throw new Exception("fileOrFolder '" + fileOrFolder + "' not in [file|folder]"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			if (target != null)
 				logger.info(parsePadMsg(msgHeader + " " + fileOrFolder) + ": defined [" + target.getPath() + "]"); //$NON-NLS-1$
@@ -448,6 +448,7 @@ public class MapsforgeConfig {
 			logger.info(msgHeader + ": default [{" + String.join(",", DEFAULTCONNECTORS) + "}]"); //$NON-NLS-1$
 		}
 	}
+
 
 	private void parseMapFiles() {
 		String msgHeader = parsePadMsg("Map file(s)"); //$NON-NLS-1$
@@ -494,6 +495,24 @@ public class MapsforgeConfig {
 		} else {
 			logger.error(msgHeader + ": exiting - no file(s) specified"); //$NON-NLS-1$
 			System.exit(1);
+		}
+	}
+
+	private void parseThemeFile() throws Exception {
+		String configValue = "themefile";
+		String configString = retrieveConfigValue(configValue);
+		String msgHeader = "Theme";
+		if (configString == null) {
+			themeFile = new File("OSMARENDER");
+			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": default [OSMARENDER]"); //$NON-NLS-1$
+		} else if (configString.trim().equals("OSMARENDER")) {
+			themeFile = new File("OSMARENDER");
+			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": defined [OSMARENDER]"); //$NON-NLS-1$
+		} else if (configString.trim().equals("DEFAULT")) {
+			themeFile = new File("DEFAULT");
+			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": defined [DEFAULT]"); //$NON-NLS-1$
+		} else {
+			themeFile = parseFile(configValue, FILE, false, msgHeader, "OSMARENDER");
 		}
 	}
 
@@ -555,7 +574,7 @@ public class MapsforgeConfig {
 		portNumber = (int) parseNumber(DEFAULTSERVERPORT, "port", 1024, 65535, "Listening TCP port",false); //$NON-NLS-1$ //$NON-NLS-2$
 		listeningInterface = parseString(DEFAULTSERVERINTERFACE, "interface", AUTHORIZEDSERVERINTERFACE, "Server interface"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseMapFiles();
-		themeFile = parseFile("themefile", FILE, false, "Theme", "OSMARENDER");
+		parseThemeFile();
 		themeFileStyle = parseString(null, "style", null, "Theme style"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseThemeOverlays();
 		preferredLanguage = parseString(null, "language", null, "Preferred map language"); //$NON-NLS-1$ //$NON-NLS-2$
