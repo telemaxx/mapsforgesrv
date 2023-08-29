@@ -44,7 +44,12 @@
  *         - only from loopback addresses
  *         - and only when accepted
  *         set maximum line length of "help" to 132 characters (JFritzle)
- * 0.19.1: raise version to 0.19.1      
+ * 0.19.1: raise version to 0.19.1  
+ * 0.20.0: mapsforge 0.20.0
+ *         raise version to 0.20.0
+ *         force sending responses at invalid/unhandled server requests
+ *         ignore "IllegalStateException" at terminate server request due to threading
+ *         accept internal theme "DEFAULT" or "OSMARENDER" for "themefile" value
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -66,7 +71,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
 	
-	private final static String VERSION = "0.19.1"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	private final static String VERSION = "0.20.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 
