@@ -449,7 +449,6 @@ public class MapsforgeConfig {
 		}
 	}
 
-
 	private void parseMapFiles() {
 		String msgHeader = parsePadMsg("Map file(s)"); //$NON-NLS-1$
 		String mapFilePathsString = retrieveConfigValue("mapfiles"); //$NON-NLS-1$
