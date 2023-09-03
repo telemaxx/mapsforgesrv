@@ -125,6 +125,7 @@ public class MapsforgeHandler extends AbstractHandler {
 	private int[] colorLookupTable = null;
 	private int[] grayLookupTable = null;
 	private boolean hillShadingOverlay = false;
+ 	private static boolean stopped = false;
 
 	private static final Pattern P = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)\\.(.*)"); //$NON-NLS-1$
 	private static BufferedImage BI_NOCONTENT;
@@ -307,11 +308,18 @@ public class MapsforgeHandler extends AbstractHandler {
 		if (hillShadingOverlay) {
 			InputStream stream = getClass().getResourceAsStream("/assets/mapsforgesrv/hillshading.xml");
 			xmlRenderTheme = new StreamRenderTheme("", stream);
-		} else if (themeFile == null) {
+		} else if (themeFile == null || themeFile.getPath().equals("OSMARENDER")) {
 			xmlRenderTheme = InternalRenderTheme.OSMARENDER;
+		} else if (themeFile.getPath().equals("DEFAULT")) {
+			xmlRenderTheme = InternalRenderTheme.DEFAULT;
 		} else {
+			try {
+				xmlRenderTheme = new ExternalRenderTheme(themeFile, callBack);
+			} catch (Exception e) {
+				logger.error("The defined theme file '"+themeFile+"' does not exist or cannot be read: exiting"); //$NON-NLS-1$
+				System.exit(2);
+			}
 			showStyleNames();
-			xmlRenderTheme = new ExternalRenderTheme(themeFile, callBack);
 		}
 		
 		updateRenderThemeFuture();
@@ -341,7 +349,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 		}
 		if (!selectedStyleExists && themeFileStyle != null) {
-			logger.error("The defined style '"+themeFileStyle+"' not found: existing"); //$NON-NLS-1$
+			logger.error("The defined style '"+themeFileStyle+"' not found: exiting"); //$NON-NLS-1$
 			System.exit(2);
 		}
 		if (selectedStyleExists && themeFileStyle != null) {
@@ -372,39 +380,36 @@ public class MapsforgeHandler extends AbstractHandler {
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) {
 		long startTime = System.nanoTime();
 		String engine = "std";
+		String path = request.getPathInfo();
 		try {
 			
-			if (request.getPathInfo().equals("/terminate")) { //$NON-NLS-1$
+			if (path.equals("/terminate")) { //$NON-NLS-1$
 				// Accept terminate request from loopback addresses only!
 				if (baseRequest.getHttpChannel().getRemoteAddress().getAddress().isLoopbackAddress()
 						&& mapsforgeConfig.getAcceptTerminate()) {
-					response.setStatus(HttpServletResponse.SC_OK);
-					System.exit(1);
+					response.sendError(HttpServletResponse.SC_OK);
+ 					stopped = true;
+					System.exit(0);
 				} else {
-					response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+					response.sendError(HttpServletResponse.SC_FORBIDDEN);
 				}
 				return;
 			}
 
-			if (request.getPathInfo().equals("/favicon.ico")) { //$NON-NLS-1$
-				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			if (path.equals("/favicon.ico")) { //$NON-NLS-1$
+				response.sendError(HttpServletResponse.SC_NOT_FOUND);
 				return;
 			}
 
-			if (request.getPathInfo().equals("/updatemapstyle")) { //$NON-NLS-1$
+			if (path.equals("/updatemapstyle")) { //$NON-NLS-1$
 				updateRenderThemeFuture();
 				try (ServletOutputStream out = response.getOutputStream();) {
 					out.print("<html><body><h1>updatemapstyle</h1>OK</body></html>"); //$NON-NLS-1$
 					out.flush();
 				}
-				response.setStatus(HttpServletResponse.SC_OK);
+				response.sendError(HttpServletResponse.SC_OK);
 				return;
 			}
-
-			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-
-			if ((databaseRenderer == null && directRenderer == null) || xmlRenderTheme == null)
-				return;
 
 			Enumeration<String> paramNames = request.getParameterNames();
 			while (paramNames.hasMoreElements()) {
@@ -413,8 +418,6 @@ public class MapsforgeHandler extends AbstractHandler {
 					throw new ServletException("Unsupported query parameter: " + name); //$NON-NLS-1$
 				}
 			}
-
-			String path = request.getPathInfo();
 
 			int x, y, z;
 			String ext = mapsforgeConfig.EXTENSIONDEFAULT; // $NON-NLS-1$
@@ -431,10 +434,12 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 			if (x < 0 || x >= (1 << z)) {
 				logger.error("Tile number x=" + x + " out of range!"); //$NON-NLS-1$
+				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				return;
 			}
 			if (y < 0 || y >= (1 << z)) {
 				logger.error("Tile number y=" + y + " out of range!"); //$NON-NLS-1$
+				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				return;
 			}
 			
@@ -551,6 +556,7 @@ public class MapsforgeHandler extends AbstractHandler {
 					response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
 					String redirecturl = this.outOfRangeTms.replace("{x}", x+"").replace("{y}", y+"").replace("{z}", z+"");
 					response.setHeader("Location", redirecturl);
+					response.flushBuffer();
 					logger.info("out-of-range redirect '"+redirecturl+"'");
 					return;
 				} else {
@@ -570,6 +576,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			responseBufferStream.close();
 			logger.info(logRequest(request, startTime, null, engine));
 		} catch (Exception e) {
+ 			if (stopped) return;
 			String extmsg = ExceptionUtils.getRootCauseMessage(e);
 			try {
 				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, extmsg);
