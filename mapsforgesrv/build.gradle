@@ -28,7 +28,7 @@ sourceSets {
 dependencies {
 //  def mapsforgeVersion = 'master-SNAPSHOT'
     def mapsforgeVersion = '+'
-    def jettyVersion = '11.0.15'
+    def jettyVersion = '11.0.16'
     def slf4j = '+'
 
 //  api "org.apache.commons:commons-math3:+"
