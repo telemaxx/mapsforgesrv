@@ -26,7 +26,6 @@ sourceSets {
  }
 
 dependencies {
-//  def mapsforgeVersion = 'master-SNAPSHOT'
     def mapsforgeVersion = '+'
     def jettyVersion = '11.0.20'
     def slf4j = '+'
@@ -37,7 +36,7 @@ dependencies {
     implementation "org.mapsforge:mapsforge-core:${mapsforgeVersion}"
     implementation "org.mapsforge:mapsforge-map:${mapsforgeVersion}"
     implementation "org.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
-    implementation "org.mapsforge:mapsforge-themes:${mapsforgeVersion}"
+    runtimeOnly "org.mapsforge:mapsforge-themes:${mapsforgeVersion}"
     implementation "org.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
 //  implementation "org.mapsforge:mapsforge-poi-awt:${mapsforgeVersion}"
 //  implementation "org.mapsforge:mapsforge-poi:${mapsforgeVersion}"
