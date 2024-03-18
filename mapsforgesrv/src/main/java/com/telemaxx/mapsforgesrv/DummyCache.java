@@ -9,7 +9,11 @@ import org.mapsforge.map.model.common.Observer;
 
 public class DummyCache implements TileCache {
 
-	HashSet<Integer> set = new HashSet<>(10000);
+	private HashSet<Integer> set;
+
+	public DummyCache(int capacity) {
+		this.set = new HashSet<>(capacity);
+	}
 
 	@Override
 	public void put(Job job, TileBitmap tile) {

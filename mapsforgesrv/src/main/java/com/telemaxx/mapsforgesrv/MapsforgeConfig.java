@@ -54,6 +54,7 @@ public class MapsforgeConfig {
 	private float userScale;
 	private float textScale;
 	private float symbolScale;
+	private float lineScale;
 	private String outOfRangeTms = null;
 	private boolean appendWorldMap;
 	private boolean acceptTerminate;
@@ -71,6 +72,7 @@ public class MapsforgeConfig {
 	private final static float DEFAULTUSERSCALE = 1.0f;
 	private final static float DEFAULTTEXTSCALE = 1.0f;
 	private final static float DEFAULTSYMBOLSCALE = 1.0f;
+	private final static float DEFAULTLINESCALE = 1.0f;
 	private final static String[] AUTHORIZEDCONNECTORS = { "http11", "proxy", "h2c" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	private final static String[] DEFAULTCONNECTORS = { AUTHORIZEDCONNECTORS[0] }; // $NON-NLS-1$
 	private final static String[] AUTHORIZEDRENDERER = { "database", "direct", }; //$NON-NLS-1$ //$NON-NLS-2$
@@ -204,6 +206,11 @@ public class MapsforgeConfig {
 		options.addOption(Option.builder("sfs") //$NON-NLS-1$
 				.longOpt("symbol-scale") //$NON-NLS-1$
 				.desc("Symbol scale factor [> 0] (default: 1)") //$NON-NLS-1$
+				.required(false).hasArg(true).build());
+
+		options.addOption(Option.builder("sfl") //$NON-NLS-1$
+				.longOpt("line-scale") //$NON-NLS-1$
+				.desc("Line scale factor [> 0] (default: 1)") //$NON-NLS-1$
 				.required(false).hasArg(true).build());
 
 		options.addOption(Option.builder("cc") //$NON-NLS-1$
@@ -587,6 +594,7 @@ public class MapsforgeConfig {
 		userScale = (float) parseNumber(DEFAULTUSERSCALE, "user-scale", 0., null, "User scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
 		textScale = (float) parseNumber(DEFAULTTEXTSCALE, "text-scale", 0., null, "Text scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
 		symbolScale = (float) parseNumber(DEFAULTSYMBOLSCALE, "symbol-scale", 0., null, "Symbol scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		lineScale = (float) parseNumber(DEFAULTLINESCALE, "line-scale", 0., null, "Line scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
 		cacheControl = (long) parseNumber(DEFAULTCACHECONTROL, "cache-control", 0, null, "Browser cache ttl",false); //$NON-NLS-1$ //$NON-NLS-2$
 		outOfRangeTms = parseString(null, "outofrange_tms", null, "Out of range TMS url"); //$NON-NLS-1$ //$NON-NLS-2$
 		appendWorldMap = parseHasOption("worldmap", "Append built-in world map");
@@ -716,5 +724,9 @@ public class MapsforgeConfig {
 	
 	public float getSymbolScale() {
 		return this.symbolScale;
+	}
+
+	public float getLineScale() {
+		return this.lineScale;
 	}
 }

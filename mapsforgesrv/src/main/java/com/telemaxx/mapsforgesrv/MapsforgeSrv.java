@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright 2016 r_x
- * Copyright 2019, 2021, 2022, 2023 Thomas Theussing and Contributors
+ * Copyright 2019, 2021, 2022, 2023, 2024 Thomas Theussing and Contributors
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -50,6 +50,12 @@
  *         force sending responses at invalid/unhandled server requests
  *         ignore "IllegalStateException" at terminate server request due to threading
  *         accept internal theme "DEFAULT" or "OSMARENDER" for "themefile" value
+ * 0.21.0: mapsforge 0.21.0
+ *         raise version to 0.21.0
+ *         set stop http server at JVM shutdown behaviour (on HTTP request "/terminate") 
+ *         command line parameter line-scale
+ *         re-enable HTTP request property "userScale"
+ *         some code optimizations
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -71,7 +77,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
 	
-	private final static String VERSION = "0.20.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	private final static String VERSION = "0.21.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 
@@ -97,6 +103,7 @@ public class MapsforgeSrv {
 		Server server = new Server(pool);
 		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig, pool, queue);
 		server.setHandler(mapsforgeHandler);
+		server.setStopAtShutdown(true);
 		HttpConfiguration httpConfig = new HttpConfiguration();
 		ServerConnector connector = new ServerConnector(server, mapsforgeConfig.SERVERACCEPTORS, mapsforgeConfig.SERVERSELECTORS);
 		if (Arrays.asList(mapsforgeConfig.getServerConnectors()).contains("http11") || Arrays.asList(mapsforgeConfig.getServerConnectors()).contains("proxy")) {

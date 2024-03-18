@@ -48,6 +48,7 @@ Whats different to the origin?
 	17. selectable user scale (optional): -sfu factor
 	18. selectable text scale (optional): -sft factor
 	19. selectable symbol scale (optional): -sfs factor
+	20. selectable line scale (optional): -sfl factor
 
 
 Command parameters:
@@ -73,16 +74,17 @@ Command parameters:
 	15. -sfu [user-scale]			User scale factor [> 0] (default: 1)
 	16. -sft [text-scale]			Text scale factor [> 0] (default: 1)
 	17. -sfs [symbol-scale]			Symbol scale factor [> 0] (default: 1)
-	18. -cc  [cache-control]		If set, add Cache-Control header for served tiles. value in seconds, (default: 0 - disabled)
-	19. -mxq [max-queuesize]		Maximum queue size for waiting & running rendering jobs (default: 256)
-	20. -mxt [max-thread]			Maximum concurrent threads for rendering job (default: 8)
-	21. -mit [min-thread]			Minimum pool size for rendering job (default: 0)
-	22. -idl [idle-timeout]			Maximum thread idle time in milliseconds (default: 0 - disabled)
-	23. -ct  [connectors]			Comma-separated list of enabled server connector protocol(s) [http11,proxy,h2c] (default: http11)
-	24. -tms [outofrange_tms]		Url pattern [ex. https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png] of an external TMS server used in redirect for out-of-range tiles (default: unset - disabled)
-	25. -wm  [worldmap]			Append built-in world map (default: undefined)
-	26. -c   [config]			Config file overriding cmd line parameters (default: none)
-	27. -h   [help]				Print the help text and exit 
+	18. -sfl [line-scale]			Line scale factor [> 0] (default: 1)
+	19. -cc  [cache-control]		If set, add Cache-Control header for served tiles. value in seconds, (default: 0 - disabled)
+	20. -mxq [max-queuesize]		Maximum queue size for waiting & running rendering jobs (default: 256)
+	21. -mxt [max-thread]			Maximum concurrent threads for rendering job (default: 8)
+	22. -mit [min-thread]			Minimum pool size for rendering job (default: 0)
+	23. -idl [idle-timeout]			Maximum thread idle time in milliseconds (default: 0 - disabled)
+	24. -ct  [connectors]			Comma-separated list of enabled server connector protocol(s) [http11,proxy,h2c] (default: http11)
+	25. -tms [outofrange_tms]		Url pattern [ex. https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png] of an external TMS server used in redirect for out-of-range tiles (default: unset - disabled)
+	26. -wm  [worldmap]			Append built-in world map (default: undefined)
+	27. -c   [config]			Config file overriding cmd line parameters (default: none)
+	28. -h   [help]				Print the help text and exit 
 
 
 Example:  

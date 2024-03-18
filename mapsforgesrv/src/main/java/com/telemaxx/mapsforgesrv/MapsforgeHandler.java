@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Str, Fifth Floor, Boston, MA 02110, USA
- * 
+ *
  *******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -49,13 +49,12 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.util.thread.ExecutorThreadPool;
-import org.mapsforge.core.graphics.Bitmap;
 import org.mapsforge.core.graphics.GraphicFactory;
-import org.mapsforge.core.mapelements.MapElementContainer;
+import org.mapsforge.core.graphics.TileBitmap;
 import org.mapsforge.core.model.Tile;
 import org.mapsforge.map.awt.graphics.AwtGraphicFactory;
-import org.mapsforge.map.awt.graphics.AwtTileBitmap;
 import org.mapsforge.map.datastore.MultiMapDataStore;
+import org.mapsforge.map.layer.cache.TileCache;
 import org.mapsforge.map.layer.hills.DemFolderFS;
 import org.mapsforge.map.layer.hills.DiffuseLightShadingAlgorithm;
 import org.mapsforge.map.layer.hills.HillsRenderConfig;
@@ -69,12 +68,11 @@ import org.mapsforge.map.layer.renderer.RendererJob;
 import org.mapsforge.map.model.DisplayModel;
 import org.mapsforge.map.reader.MapFile;
 import org.mapsforge.map.rendertheme.ExternalRenderTheme;
-import org.mapsforge.map.rendertheme.InternalRenderTheme;
-import org.mapsforge.map.rendertheme.StreamRenderTheme;
 import org.mapsforge.map.rendertheme.XmlRenderTheme;
 import org.mapsforge.map.rendertheme.XmlRenderThemeMenuCallback;
 import org.mapsforge.map.rendertheme.XmlRenderThemeStyleLayer;
 import org.mapsforge.map.rendertheme.XmlRenderThemeStyleMenu;
+import org.mapsforge.map.rendertheme.XmlThemeResourceProvider;
 import org.mapsforge.map.rendertheme.rule.RenderThemeFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,76 +94,57 @@ public class MapsforgeHandler extends AbstractHandler {
 
 	protected final MultiMapDataStore multiMapDataStore;
 	protected final DisplayModel displayModel;
+	protected final GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
 	protected HillsRenderConfig hillsRenderConfig = null;
 	protected Map<String, DatabaseRenderer> databaseRenderer = null;
 	protected Map<String, DirectRenderer> directRenderer = null;
 	protected XmlRenderTheme xmlRenderTheme;
 	protected RenderThemeFuture renderThemeFuture;
 	protected XmlRenderThemeStyleMenu renderThemeStyleMenu;
-	protected MyTileBasedLabelStore tileBasedLabelStore = new MyTileBasedLabelStore(1000);
-	protected DummyCache labelInfoCache = new DummyCache();
+	protected final TileBasedLabelStore labelStore;
+	protected final TileCache tileCache;
+	protected final boolean renderLabels;
+	protected final boolean cacheLabels;
 
 	protected final File themeFile;
 	protected final String themeFileStyle;
-	
+
 	protected final String outOfRangeTms;
-	
-	protected int blackValue;
-	protected double gammaValue;
-	
-	protected float deviceScale;
-	protected float userScale;
-	protected float textScale;
-	protected float symbolScale;
+
+	private float deviceScale;
+	private float userScale;
+	private float textScale;
+	private float symbolScale;
+	private float lineScale;
 
 	private ExecutorThreadPool pool;
 	private LinkedBlockingQueue<Runnable> queue;
 	private MapsforgeConfig mapsforgeConfig;
 	private ShadingAlgorithm shadingAlgorithm = null;
 	private int[] colorLookupTable = null;
-	private int[] grayLookupTable = null;
 	private boolean hillShadingOverlay = false;
- 	private static boolean stopped = false;
+	private static boolean stopped = false;
 
 	private static final Pattern P = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)\\.(.*)"); //$NON-NLS-1$
 	private static BufferedImage BI_NOCONTENT;
-	
+
 	public MapsforgeHandler(MapsforgeConfig mapsforgeConfig, ExecutorThreadPool pool,
 			LinkedBlockingQueue<Runnable> queue) throws IOException {
 		super();
-		BI_NOCONTENT = ImageIO.read(getClass().getClassLoader().getResourceAsStream(("assets/mapsforgesrv/no_content.png")));
 		// https://stackoverflow.com/questions/10235728/convert-bufferedimage-into-byte-without-i-o
 		ImageIO.setUseCache(false);
+		BI_NOCONTENT = ImageIO.read(getClass().getClassLoader().getResourceAsStream("assets/mapsforgesrv/no_content.png"));
+
 		this.mapsforgeConfig = mapsforgeConfig;
 		this.pool = pool;
 		this.queue = queue;
-		
-		this.themeFile = mapsforgeConfig.getThemeFile();
-		this.themeFileStyle = mapsforgeConfig.getThemeFileStyle();
-		
-		this.outOfRangeTms = mapsforgeConfig.getOutOfRangeTms();
-		
-		this.blackValue = mapsforgeConfig.getBlackValue();
-		this.gammaValue = mapsforgeConfig.getGammaValue();
-		// first apply gamma correction and then contrast-stretching
-		if (gammaValue != 1. || blackValue != 0) {
-			colorLookupTable = new int[256];
-			double gammaExponent = 1. / gammaValue;
-			double blackNormalized = blackValue / 255.;
-			double stretchFactor = 1. / (1. - blackNormalized);
-			int index = 256;
-			double value;
-			while (index-- > 0) {
-				value = index / 255.;
-				value = Math.pow(value, gammaExponent);
-				value = value > blackNormalized ? ((value - blackNormalized) * stretchFactor) : 0.;
-				colorLookupTable[index] = (int) Math.round(value * 255.);
-			}
-		}
 
-		GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
-		
-		logger.info("################### MAPS INFO ###################"); 
+		themeFile = mapsforgeConfig.getThemeFile();
+		themeFileStyle = mapsforgeConfig.getThemeFileStyle();
+
+		outOfRangeTms = mapsforgeConfig.getOutOfRangeTms();
+
+		logger.info("################### MAPS INFO ###################");
 		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
 		boolean appendWorldMap = mapsforgeConfig.getAppendWorldMap();
 		if (mapsforgeConfig.getMapFiles().size() == 0) {
@@ -202,31 +181,60 @@ public class MapsforgeHandler extends AbstractHandler {
 
 		if (hillShadingOverlay) {
 			logger.info("No map -> hillshading overlay with alpha transparency only!");
+			tileCache = null;
+			labelStore = null;
+			renderLabels = false;
+			cacheLabels = false;
+			colorLookupTable = new int[256];
 			int pixelValue,gray,dist,alpha;
 			int range = (int)(30*mapsforgeConfig.getHillShadingMagnitude()); // gray value range
 			if (range > 120) range = 120;	// maximum value range is 120
 			int base = 248-range; // obviously base gray value depending on hillshading magnitude
-			grayLookupTable = new int[256];
 			int index = 256;
 			while (index-- > 0) {
 				gray = index;
 				dist = gray-base;				// distance to base gray value
 				alpha = Math.abs(dist) * 2;		// alpha value is 2 * abs(distance) to base gray value
 				if (alpha > 255) alpha = 255;	// limit alpha to fully opaque
-				pixelValue = alpha << 24;		// black pixel with variable alpha transparency 			
+				pixelValue = alpha << 24;		// black pixel with variable alpha transparency
 				if (dist > 0)					// present gray value lighter than base gray:
 					pixelValue |= 0x00ffffff;	// white pixel with variable alpha transparency
-				grayLookupTable[index] = pixelValue;
+				colorLookupTable[index] = pixelValue;
+			}
+		} else {
+			tileCache = new DummyCache(1024);
+			labelStore = new TileBasedLabelStore(1024);
+			renderLabels = true;
+			cacheLabels = true;
+			int blackValue = mapsforgeConfig.getBlackValue();
+			double gammaValue = mapsforgeConfig.getGammaValue();
+			// first apply gamma correction and then contrast-stretching
+			if (gammaValue != 1. || blackValue != 0) {
+				colorLookupTable = new int[256];
+				double gammaExponent = 1. / gammaValue;
+				double blackNormalized = blackValue / 255.;
+				double stretchFactor = 1. / (1. - blackNormalized);
+				int index = 256;
+				double value;
+				while (index-- > 0) {
+					value = index / 255.;
+					value = Math.pow(value, gammaExponent);
+					value = value > blackNormalized ? ((value - blackNormalized) * stretchFactor) : 0.;
+					colorLookupTable[index] = (int) Math.round(value * 255.);
+				}
 			}
 		}
 
-		this.deviceScale = mapsforgeConfig.getDeviceScale();
-		this.userScale   = mapsforgeConfig.getUserScale();
-		this.textScale   = mapsforgeConfig.getTextScale();
-		this.symbolScale = mapsforgeConfig.getSymbolScale();
-		
+		deviceScale = mapsforgeConfig.getDeviceScale();
+		userScale   = mapsforgeConfig.getUserScale();
+		textScale   = mapsforgeConfig.getTextScale();
+		symbolScale = mapsforgeConfig.getSymbolScale();
+		lineScale   = mapsforgeConfig.getLineScale();
+
 		DisplayModel.setDeviceScaleFactor(deviceScale);
+		DisplayModel.textScale = textScale;
 		DisplayModel.symbolScale = symbolScale;
+		DisplayModel.lineScale = lineScale;
 		displayModel = new DisplayModel();
 		displayModel.setUserScaleFactor(userScale);
 
@@ -251,18 +259,17 @@ public class MapsforgeHandler extends AbstractHandler {
 			directRenderer = new HashMap<String, DirectRenderer>();
 			if (hillsRenderConfig != null)
 				directRenderer.put("hs",
-						new DirectRenderer(multiMapDataStore, graphicFactory, true, hillsRenderConfig));
-			directRenderer.put("std", new DirectRenderer(multiMapDataStore, graphicFactory, true, null));
+						new DirectRenderer(multiMapDataStore, graphicFactory, renderLabels, hillsRenderConfig));
+			directRenderer.put("std", new DirectRenderer(multiMapDataStore, graphicFactory, renderLabels, null));
 		} else {
 			databaseRenderer = new HashMap<String, DatabaseRenderer>();
 			if (hillsRenderConfig != null)
-				databaseRenderer.put("hs", new DatabaseRenderer(multiMapDataStore, graphicFactory, labelInfoCache,
-						tileBasedLabelStore, true, true, hillsRenderConfig));
-			databaseRenderer.put("std", new DatabaseRenderer(multiMapDataStore, graphicFactory, labelInfoCache,
-					tileBasedLabelStore, true, true, null));
+				databaseRenderer.put("hs", new DatabaseRenderer(multiMapDataStore, graphicFactory, tileCache,
+						labelStore, renderLabels, cacheLabels, hillsRenderConfig));
+			databaseRenderer.put("std", new DatabaseRenderer(multiMapDataStore, graphicFactory, tileCache,
+					labelStore, renderLabels, cacheLabels, null));
 		}
 
-		renderThemeFuture = new RenderThemeFuture(graphicFactory, xmlRenderTheme, displayModel);
 		XmlRenderThemeMenuCallback callBack = new XmlRenderThemeMenuCallback() {
 
 			@Override
@@ -304,14 +311,13 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 
 		};
-		
+
 		if (hillShadingOverlay) {
-			InputStream stream = getClass().getResourceAsStream("/assets/mapsforgesrv/hillshading.xml");
-			xmlRenderTheme = new StreamRenderTheme("", stream);
+			xmlRenderTheme = MyInternalRenderTheme.HILLSHADING;
 		} else if (themeFile == null || themeFile.getPath().equals("OSMARENDER")) {
-			xmlRenderTheme = InternalRenderTheme.OSMARENDER;
+			xmlRenderTheme = MyInternalRenderTheme.OSMARENDER;
 		} else if (themeFile.getPath().equals("DEFAULT")) {
-			xmlRenderTheme = InternalRenderTheme.DEFAULT;
+			xmlRenderTheme = MyInternalRenderTheme.DEFAULT;
 		} else {
 			try {
 				xmlRenderTheme = new ExternalRenderTheme(themeFile, callBack);
@@ -321,12 +327,12 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 			showStyleNames();
 		}
-		
+
 		updateRenderThemeFuture();
 	}
 
 	protected void updateRenderThemeFuture() {
-		renderThemeFuture = new RenderThemeFuture(AwtGraphicFactory.INSTANCE, xmlRenderTheme, displayModel);
+		renderThemeFuture = new RenderThemeFuture(graphicFactory, xmlRenderTheme, displayModel);
 		new Thread(renderThemeFuture).start();
 	}
 
@@ -378,17 +384,19 @@ public class MapsforgeHandler extends AbstractHandler {
 
 	@Override
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) {
+		baseRequest.setHandled(true);
 		long startTime = System.nanoTime();
 		String engine = "std";
 		String path = request.getPathInfo();
 		try {
-			
+
 			if (path.equals("/terminate")) { //$NON-NLS-1$
 				// Accept terminate request from loopback addresses only!
 				if (baseRequest.getHttpChannel().getRemoteAddress().getAddress().isLoopbackAddress()
 						&& mapsforgeConfig.getAcceptTerminate()) {
 					response.sendError(HttpServletResponse.SC_OK);
- 					stopped = true;
+					response.setContentLength(0);
+					stopped = true;
 					System.exit(0);
 				} else {
 					response.sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -442,19 +450,19 @@ public class MapsforgeHandler extends AbstractHandler {
 				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				return;
 			}
-			
-			float requestedTextScale = textScale;
+
+			float requestedTextScale = 1.0f; // Original text scaling comes from config value
 			try {
 				String tmp = request.getParameter("textScale"); //$NON-NLS-1$
 				if (tmp != null) {
-					requestedTextScale = Float.parseFloat(tmp);
+//					Override text scaling from config value by text scaling from HTTP request
+//					Final text scaling = textScale * requestedTextScale
+					requestedTextScale = Float.parseFloat(tmp)/textScale;
 				}
 			} catch (Exception e) {
 				throw new ServletException("Failed to parse \"textScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
 
-//			Calling "displayModel.setUserScaleFactor" within "handle" has no visible impact on rendering !!!
-/*
 			float requestedUserScale = userScale;
 			try {
 				String tmp = request.getParameter("userScale"); //$NON-NLS-1$
@@ -464,8 +472,6 @@ public class MapsforgeHandler extends AbstractHandler {
 			} catch (Exception e) {
 				throw new ServletException("Failed to parse \"userScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
-			displayModel.setUserScaleFactor(requestedUserScale);
-*/
 
 			boolean requestedTransparent = mapsforgeConfig.TRANSPARENTDEFAULT;
 			try {
@@ -486,12 +492,9 @@ public class MapsforgeHandler extends AbstractHandler {
 				throw new ServletException("Failed to parse \"tileRenderSize\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
 
-			Bitmap tileBitmap = null;
+			TileBitmap tileBitmap = null;
 			Tile tile = new Tile(x, y, (byte) z, requestedTileRenderSize);
 			if (multiMapDataStore.supportsTile(tile)) {
-				RendererJob job = new RendererJob(tile, multiMapDataStore, renderThemeFuture, displayModel,
-					requestedTextScale, requestedTransparent, false);
-
 				boolean enable_hs = true;
 				try {
 					String tmp = request.getParameter("hillshading"); //$NON-NLS-1$
@@ -500,48 +503,58 @@ public class MapsforgeHandler extends AbstractHandler {
 				} catch (Exception e) {
 					throw new ServletException("Failed to parse \"hillshading\" property: " + e.getMessage(), e); //$NON-NLS-1$
 				}
+				if (hillsRenderConfig != null && enable_hs) engine = "hs";
 
-				if (hillsRenderConfig != null && enable_hs)
-					engine = "hs";
-// Synchronizing threads has no visible effect -> disabled
-//				synchronized (this) {
+				// requestedUserScale = 2.0f; // Uncomment for testing purpose only!
+//				Calling "displayModel.setUserScaleFactor" alone has no visible impact on rendering.
+//				Starting new "renderThemeFuture" afterwards helps, but can significantly impact rendering performance
+//				if different TMS clients take turns requesting different userScale values !!!
+				if (displayModel.getUserScaleFactor() != requestedUserScale) {
+					displayModel.setUserScaleFactor (requestedUserScale);
+					updateRenderThemeFuture();
+				}
+
+				RendererJob job = new RendererJob(tile, multiMapDataStore, renderThemeFuture, displayModel,
+					requestedTextScale, requestedTransparent, false);
+
+// Synchronizing render jobs has no visible effect -> disabled
+// 				synchronized (this) {
 					if (directRenderer != null) {
-						tileBitmap = (AwtTileBitmap) directRenderer.get(engine).executeJob(job);
+						tileBitmap = directRenderer.get(engine).executeJob(job);
 					} else {
-						tileBitmap = (AwtTileBitmap) databaseRenderer.get(engine).executeJob(job);
-						labelInfoCache.put(job, null);
+						tileBitmap = databaseRenderer.get(engine).executeJob(job);
 					}
-//				}
+					if (!hillShadingOverlay) tileCache.put(job, null);
+// 				}
 			}
-			baseRequest.setHandled(true);
+
 			BufferedImage image;
 			if (tileBitmap != null) {
-				image = AwtGraphicFactory.getBitmap(tileBitmap);  // image type is TYPE_INT_RGB
+				image = AwtGraphicFactory.getBitmap(tileBitmap); // image type is TYPE_INT_RGB
+				//int imageType = image.getType(); // returns 1 (TYPE_INT_RGB)
 				int imageWidth  = image.getWidth();
 				int imageHeight = image.getHeight();
+				//int dataBufferType = image.getRaster().getDataBuffer().getDataType(); // returns 3 (TYPE_INT)
 				// DataBuffer created by Mapsforge renderer is of type DataBufferInt,
 				// i.e. one int value 0xaarrggbb per pixel
 				DataBufferInt dataBuffer = (DataBufferInt) image.getRaster().getDataBuffer();
 				int[] pixelArray = dataBuffer.getData();
-				
-				if (hillShadingOverlay) { // transparent hillshading overlay	
+				int pixelValue;
+				int pixelCount = imageWidth * imageHeight;
+				if (hillShadingOverlay) { // transparent hillshading overlay image requested
 					BufferedImage newImage = new BufferedImage (imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
 					DataBufferInt newDataBuffer = (DataBufferInt) newImage.getRaster().getDataBuffer();
 					int[] newPixelArray = newDataBuffer.getData();
-					int pixelValue;
-					int pixelCount = imageWidth * imageHeight;
 					while (pixelCount-- > 0) {
 						pixelValue = pixelArray[pixelCount];
 						if (pixelValue == 0xfff8f8f8) { // 'nodata' hillshading value
 							newPixelArray[pixelCount] = 0x00000000; // fully transparent pixel
-						} else { // gray value of pixel = blue value of pixel
-							newPixelArray[pixelCount] = grayLookupTable[pixelValue & 0xff];
+						} else { // get gray value of pixel from blue value of pixel
+							newPixelArray[pixelCount] = colorLookupTable[pixelValue & 0xff];
 						}
 					}
-					image = newImage; // Replace original image of type TYPE_INT_RGB by image of type TYPE_INT_ARGB
-				} else if (colorLookupTable != null) { // gamma correction and/or contrast-stretching
-					int pixelValue;
-					int pixelCount = imageWidth * imageHeight;
+					image = newImage; // return transparent overlay image instead of original image
+				} else if (colorLookupTable != null) { // apply gamma correction and/or contrast-stretching
 					while (pixelCount-- > 0) {
 						pixelValue = pixelArray[pixelCount];
 						pixelArray[pixelCount] = (pixelValue & 0xff000000) // alpha value
@@ -550,7 +563,7 @@ public class MapsforgeHandler extends AbstractHandler {
 								| (colorLookupTable[pixelValue & 0xff]); // blue value
 					}
 				}
-				response.setStatus(HttpServletResponse.SC_OK);			
+				response.setStatus(HttpServletResponse.SC_OK);
 			} else {
 				if(this.outOfRangeTms != null) {
 					response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
@@ -576,7 +589,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			responseBufferStream.close();
 			logger.info(logRequest(request, startTime, null, engine));
 		} catch (Exception e) {
- 			if (stopped) return;
+			if (stopped) return;
 			String extmsg = ExceptionUtils.getRootCauseMessage(e);
 			try {
 				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, extmsg);
@@ -587,6 +600,7 @@ public class MapsforgeHandler extends AbstractHandler {
 		}
 	}
 
+	// Extend class ByteArrayOutputStream by setting content length on buffer flush
 	private static class MyResponseBufferOutputStream extends ByteArrayOutputStream {
 		public MyResponseBufferOutputStream(int bufferSize) {
 			buf = new byte[bufferSize];
@@ -599,22 +613,42 @@ public class MapsforgeHandler extends AbstractHandler {
 		}
 	}
 
-	private static class MyTileBasedLabelStore extends TileBasedLabelStore {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-
-		public MyTileBasedLabelStore(int capacity) {
-			super(capacity);
+	// Enumeration of tile server's internal rendering themes
+	// (copied and extended from InternalRenderTheme enumeration)
+	// Using StreamRenderThemes throws exception when calling "updateRenderThemeFuture" within "handle"
+	private enum MyInternalRenderTheme implements XmlRenderTheme {
+		DEFAULT("/assets/mapsforge/default.xml"),
+		OSMARENDER("/assets/mapsforge/osmarender.xml"),
+		HILLSHADING("/assets/mapsforgesrv/hillshading.xml");
+		private XmlRenderThemeMenuCallback menuCallback;
+		private final String path;
+		MyInternalRenderTheme(String path) {
+			this.path = path;
 		}
-
 		@Override
-		public synchronized List<MapElementContainer> getVisibleItems(Tile upperLeft, Tile lowerRight) {
-			return super.getVisibleItems(upperLeft, lowerRight);
+		public XmlRenderThemeMenuCallback getMenuCallback() {
+			return menuCallback;
 		}
-
+		// @return the prefix for all relative resource paths.
+		@Override
+		public String getRelativePathPrefix() {
+			return "/assets/";
+		}
+		@Override
+		public InputStream getRenderThemeAsStream() {
+			return getClass().getResourceAsStream(this.path);
+		}
+		@Override
+		public XmlThemeResourceProvider getResourceProvider() {
+			return null;
+		}
+		@Override
+		public void setMenuCallback(XmlRenderThemeMenuCallback menuCallback) {
+			this.menuCallback = menuCallback;
+		}
+		@Override
+		public void setResourceProvider(XmlThemeResourceProvider resourceProvider) {
+		}
 	}
 
 }
