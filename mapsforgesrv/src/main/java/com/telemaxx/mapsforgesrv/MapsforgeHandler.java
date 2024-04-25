@@ -412,6 +412,8 @@ public class MapsforgeHandler extends AbstractHandler {
 
 			if (path.equals("/updatemapstyle")) { //$NON-NLS-1$
 				updateRenderThemeFuture();
+				response.setHeader("Cache-Control", "private, no-cache");
+				response.setHeader("Pragma", "no-cache");
 				response.setContentType("text/html;charset=utf-8");
 				response.setStatus(HttpServletResponse.SC_OK);
 				baseRequest.setHandled(true);
