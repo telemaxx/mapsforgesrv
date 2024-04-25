@@ -412,11 +412,11 @@ public class MapsforgeHandler extends AbstractHandler {
 
 			if (path.equals("/updatemapstyle")) { //$NON-NLS-1$
 				updateRenderThemeFuture();
-				try (ServletOutputStream out = response.getOutputStream();) {
-					out.print("<html><body><h1>updatemapstyle</h1>OK</body></html>"); //$NON-NLS-1$
-					out.flush();
-				}
-				response.sendError(HttpServletResponse.SC_OK);
+				response.setContentType("text/html;charset=utf-8");
+				response.setStatus(HttpServletResponse.SC_OK);
+				baseRequest.setHandled(true);
+				response.getWriter().println("<html><body><h1>updatemapstyle</h1>OK</body></html>");
+				response.flushBuffer();
 				return;
 			}
 
