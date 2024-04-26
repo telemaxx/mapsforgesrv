@@ -394,8 +394,9 @@ public class MapsforgeHandler extends AbstractHandler {
 				// Accept terminate request from loopback addresses only!
 				if (baseRequest.getHttpChannel().getRemoteAddress().getAddress().isLoopbackAddress()
 						&& mapsforgeConfig.getAcceptTerminate()) {
-					response.sendError(HttpServletResponse.SC_OK);
 					response.setContentLength(0);
+					response.setStatus(HttpServletResponse.SC_OK);
+					response.flushBuffer();
 					stopped = true;
 					System.exit(0);
 				} else {
@@ -411,11 +412,12 @@ public class MapsforgeHandler extends AbstractHandler {
 
 			if (path.equals("/updatemapstyle")) { //$NON-NLS-1$
 				updateRenderThemeFuture();
-				try (ServletOutputStream out = response.getOutputStream();) {
-					out.print("<html><body><h1>updatemapstyle</h1>OK</body></html>"); //$NON-NLS-1$
-					out.flush();
-				}
-				response.sendError(HttpServletResponse.SC_OK);
+				response.setHeader("Cache-Control", "private, no-cache");
+				response.setHeader("Pragma", "no-cache");
+				response.setContentType("text/html;charset=utf-8");
+				response.setStatus(HttpServletResponse.SC_OK);
+				response.getWriter().println("<html><body><h1>updatemapstyle</h1>OK</body></html>");
+				response.flushBuffer();
 				return;
 			}
 
