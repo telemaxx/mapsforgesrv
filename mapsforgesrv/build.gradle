@@ -11,7 +11,7 @@ repositories {
 dependencies {
     def mapsforgeVersion = '+'
     def jettyVersion = '9.4.54.v20240208'
-    def slf4j = '+'
+    def slf4j = '2.0.13'
 
     api "org.apache.commons:commons-math3:+"
     testImplementation "junit:junit:+"
