@@ -56,6 +56,7 @@
  *         command line parameter line-scale
  *         re-enable HTTP request property "userScale"
  *         some code optimizations
+ * 0.21.1: fix "IllegalStateException" on /updatemapstyle request (nono303)
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -77,7 +78,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
 	
-	private final static String VERSION = "0.21.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	private final static String VERSION = "0.21.1"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 
