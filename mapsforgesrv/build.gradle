@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'application'
     id 'com.github.johnrengelman.shadow' version "8.1.1"
-    id 'nebula.lint' version "19.0.1"
+    id 'nebula.lint' version "19.0.2"
 }
 
 repositories {
@@ -27,6 +27,7 @@ sourceSets {
 
 dependencies {
     def mapsforgeVersion = '+'
+    // https://mvnrepository.com/artifact/org.eclipse.jetty.http2/http2-server
     def jettyVersion = '11.0.20'
     def slf4j = '+'
 
