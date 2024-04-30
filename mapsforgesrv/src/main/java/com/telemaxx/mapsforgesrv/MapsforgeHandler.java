@@ -395,8 +395,9 @@ public class MapsforgeHandler extends AbstractHandler {
 				// Accept terminate request from loopback addresses only!
 				if (baseRequest.getHttpChannel().getRemoteAddress().getAddress().isLoopbackAddress()
 						&& mapsforgeConfig.getAcceptTerminate()) {
-					response.sendError(HttpServletResponse.SC_OK);
 					response.setContentLength(0);
+					response.setStatus(HttpServletResponse.SC_OK);
+					response.flushBuffer();
 					stopped = true;
 					System.exit(0);
 				} else {
