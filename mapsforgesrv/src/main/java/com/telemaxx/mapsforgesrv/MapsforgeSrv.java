@@ -62,16 +62,12 @@
 package com.telemaxx.mapsforgesrv;
 
 import java.net.BindException;
-import java.util.Arrays;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Executors;
 
-import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.ProxyConnectionFactory;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.util.thread.ExecutorThreadPool;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import org.eclipse.jetty.xml.XmlConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -79,12 +75,8 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 public class MapsforgeSrv {
 	
 	private final static String VERSION = "0.21.1"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
-	
+		
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
-
-	private MapsforgeConfig mapsforgeConfig = null;
-	private ExecutorThreadPool pool = null;
-	private LinkedBlockingQueue<Runnable> queue = null;
 	
 	public MapsforgeSrv(String[] args) throws Exception {
 		
@@ -95,56 +87,27 @@ public class MapsforgeSrv {
 
 		logger.debug("Current dir [user.dir]: " + System.getProperty("user.dir"));
 
-		mapsforgeConfig = new MapsforgeConfig(args);
+		MapsforgeConfig mapsforgeConfig = new MapsforgeConfig(args);
+		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig);
+		Server server = new Server();
+		XmlConfiguration xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY));
+		xmlConfiguration.configure(server);
+		((QueuedThreadPool) server.getThreadPool()).setVirtualThreadsExecutor(Executors.newVirtualThreadPerTaskExecutor());
 		
-		queue = new LinkedBlockingQueue<Runnable>(mapsforgeConfig.getMaxQueueSize());
-		pool = new ExecutorThreadPool(mapsforgeConfig.getMaxThreads(), mapsforgeConfig.getMinThreads(), queue);
-		pool.setIdleTimeout((int)mapsforgeConfig.getIdleTimeout());
-		pool.setName("queue");
-		Server server = new Server(pool);
-		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig, pool, queue);
 		server.setHandler(mapsforgeHandler);
-		server.setStopAtShutdown(true);
-		HttpConfiguration httpConfig = new HttpConfiguration();
-		ServerConnector connector = new ServerConnector(server, mapsforgeConfig.SERVERACCEPTORS, mapsforgeConfig.SERVERSELECTORS);
-		if (Arrays.asList(mapsforgeConfig.getServerConnectors()).contains("http11") || Arrays.asList(mapsforgeConfig.getServerConnectors()).contains("proxy")) {
-			HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
-			if (Arrays.asList(mapsforgeConfig.getServerConnectors()).contains("http11")){
-				connector.addConnectionFactory(http11);
-				logger.debug("+ add 'http11' connection factory");
-			}
-			if (!Arrays.asList(mapsforgeConfig.getServerConnectors()).contains("proxy")) {
-				ProxyConnectionFactory proxy = new ProxyConnectionFactory(http11.getProtocol());
-				connector.addConnectionFactory(proxy);
-				logger.debug("+ add 'proxy' connection factory");
-			}
-		}
-		if (Arrays.asList(mapsforgeConfig.getServerConnectors()).contains("h2c")) {
-			HTTP2CServerConnectionFactory h2c = new HTTP2CServerConnectionFactory(httpConfig);
-			connector.addConnectionFactory(h2c);
-			logger.debug("+ add 'h2c' connection factory");
-		}
-		connector.setAcceptQueueSize(mapsforgeConfig.SERVERACCEPTQUEUESIZE);
-		connector.setIdleTimeout(mapsforgeConfig.getIdleTimeout());
-		connector.setPort(mapsforgeConfig.getPortNumber());
-		if (mapsforgeConfig.getListeningInterface().toLowerCase().equals("localhost"))  //$NON-NLS-1$
-			connector.setHost("127.0.0.1");
-		server.addConnector(connector);
+
 		try {
 			logger.info("################ STARTING SERVER ################");
 			server.start();
+			logger.info("Started " +server.getThreadPool().toString());
 		} catch (BindException e) {
 			logger.error("Stopping server", e); //$NON-NLS-1$
 			System.exit(1);
 		}
-		//logger.debug("> server listening on '"+mapsforgeConfig.getListeningInterface().toLowerCase()+":" + mapsforgeConfig.getPortNumber()+"'"); //$NON-NLS-1$
-		logger.info("server connector configured with accept queue size '"+connector.getAcceptQueueSize()+"', idle timeout '"+connector.getIdleTimeout()+"'");
-		logger.info("job executor configured with threads min '"+pool.getMinThreads()+"', max '"+pool.getMaxThreads()+"', idle timeout '"+pool.getIdleTimeout()+"'");
-		logger.info("job queue configured with max size '"+queue.remainingCapacity()+"'");
-		logger.info("server is up and listening on '"+mapsforgeConfig.getListeningInterface().toLowerCase()+":" + mapsforgeConfig.getPortNumber()+"'"); //$NON-NLS-1$
+
 		server.join();
 	}
-
+	
 	public static void main(String[] args) throws Exception {
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
 		SLF4JBridgeHandler.install();
