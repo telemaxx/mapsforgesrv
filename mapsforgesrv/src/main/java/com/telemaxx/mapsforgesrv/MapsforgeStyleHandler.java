@@ -2,8 +2,10 @@ package com.telemaxx.mapsforgesrv;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import org.mapsforge.map.layer.cache.TileCache;
@@ -27,36 +29,26 @@ import org.mapsforge.map.rendertheme.rule.RenderThemeFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class MapsforgeStyleHandler {
 	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeStyleHandler.class);
 	
-	protected final DisplayModel displayModel;
+	private final DisplayModel displayModel;
+	private final TileBasedLabelStore labelStore;
+	private final TileCache tileCache;
+	private final File themeFile;
+	private final String themeFileStyle;
+	private final boolean renderLabels;
+	private final boolean cacheLabels;
 
-	protected HillsRenderConfig hillsRenderConfig = null;
-
-	protected XmlRenderTheme xmlRenderTheme;
-	protected RenderThemeFuture renderThemeFuture;
-
-
-	protected XmlRenderThemeStyleMenu renderThemeStyleMenu;
-	protected final TileBasedLabelStore labelStore;
-	protected final TileCache tileCache;
-
-
-	protected final boolean renderLabels;
-	protected final boolean cacheLabels;
-
-	protected final File themeFile;
-	protected final String themeFileStyle;
-	
+	private HillsRenderConfig hillsRenderConfig = null;
+	private XmlRenderTheme xmlRenderTheme;
+	private RenderThemeFuture renderThemeFuture;
 	private ShadingAlgorithm shadingAlgorithm = null;
-
 	private int[] colorLookupTable = null;
 	private String name;
-
-
+	private Map<String, DatabaseRenderer> databaseRenderer = null;
+	private Map<String, DirectRenderer> directRenderer = null;
 
 	private MapsforgeHandler mapsforgeHandler;
 	
@@ -137,15 +129,17 @@ public class MapsforgeStyleHandler {
 		}
 
 		if (mapsforgeConfig.getRendererName().equals("direct")) {
+			directRenderer = new HashMap<String, DirectRenderer>();
 			if (hillsRenderConfig != null)
-				mapsforgeHandler.getDirectRenderer().put("hs"+name,
+				directRenderer.put("hs",
 						new DirectRenderer(mapsforgeHandler.getMultiMapDataStore(), mapsforgeHandler.getGraphicFactory(), renderLabels, hillsRenderConfig));
-			mapsforgeHandler.getDirectRenderer().put("std"+name, new DirectRenderer(mapsforgeHandler.getMultiMapDataStore(), mapsforgeHandler.getGraphicFactory(), renderLabels, null));
+			directRenderer.put("std", new DirectRenderer(mapsforgeHandler.getMultiMapDataStore(), mapsforgeHandler.getGraphicFactory(), renderLabels, null));
 		} else {
+			databaseRenderer = new HashMap<String, DatabaseRenderer>();
 			if (hillsRenderConfig != null)
-				mapsforgeHandler.getDatabaseRenderer().put("hs"+name, new DatabaseRenderer(mapsforgeHandler.getMultiMapDataStore(), mapsforgeHandler.getGraphicFactory(), tileCache,
+				databaseRenderer.put("hs", new DatabaseRenderer(mapsforgeHandler.getMultiMapDataStore(), mapsforgeHandler.getGraphicFactory(), tileCache,
 						labelStore, renderLabels, cacheLabels, hillsRenderConfig));
-			mapsforgeHandler.getDatabaseRenderer().put("std"+name, new DatabaseRenderer(mapsforgeHandler.getMultiMapDataStore(), mapsforgeHandler.getGraphicFactory(), tileCache,
+			databaseRenderer.put("std", new DatabaseRenderer(mapsforgeHandler.getMultiMapDataStore(), mapsforgeHandler.getGraphicFactory(), tileCache,
 					labelStore, renderLabels, cacheLabels, null));
 		}
 
@@ -154,7 +148,6 @@ public class MapsforgeStyleHandler {
 			@Override
 			public Set<String> getCategories(XmlRenderThemeStyleMenu styleMenu) {
 				String id = null;
-				renderThemeStyleMenu = styleMenu;
 				if (themeFileStyle != null) {
 					id = themeFileStyle;
 				} else {
@@ -267,6 +260,13 @@ public class MapsforgeStyleHandler {
 		return colorLookupTable;
 	}
 	
+	public Map<String, DatabaseRenderer> getDatabaseRenderer() {
+		return databaseRenderer;
+	}
+
+	public Map<String, DirectRenderer> getDirectRenderer() {
+		return directRenderer;
+	}
 	
 	// Enumeration of tile server's internal rendering themes
 	// (copied and extended from InternalRenderTheme enumeration)

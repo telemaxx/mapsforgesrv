@@ -47,14 +47,9 @@ import org.mapsforge.core.graphics.TileBitmap;
 import org.mapsforge.core.model.Tile;
 import org.mapsforge.map.awt.graphics.AwtGraphicFactory;
 import org.mapsforge.map.datastore.MultiMapDataStore;
-import org.mapsforge.map.layer.renderer.DatabaseRenderer;
-import org.mapsforge.map.layer.renderer.DirectRenderer;
 import org.mapsforge.map.layer.renderer.RendererJob;
 import org.mapsforge.map.model.DisplayModel;
 import org.mapsforge.map.reader.MapFile;
-import org.mapsforge.map.rendertheme.XmlRenderTheme;
-import org.mapsforge.map.rendertheme.XmlRenderThemeMenuCallback;
-import org.mapsforge.map.rendertheme.XmlThemeResourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,30 +68,12 @@ public class MapsforgeHandler extends AbstractHandler {
 			new String[] { "x", "y", "z", "textScale", "userScale", "transparent", "tileRenderSize", "hillshading", "style" })); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 
 	protected final MultiMapDataStore multiMapDataStore;
-	public MultiMapDataStore getMultiMapDataStore() {
-		return multiMapDataStore;
-	}
-
 	protected final GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
-	public GraphicFactory getGraphicFactory() {
-		return graphicFactory;
-	}
-
 	protected final String outOfRangeTms;
-	protected Map<String, DatabaseRenderer> databaseRenderer = null;
-	protected Map<String, DirectRenderer> directRenderer = null;
+
 	private Map<String, MapsforgeStyleHandler> stylesHandler;
-
 	private MapsforgeConfig mapsforgeConfig;
-	public MapsforgeConfig getMapsforgeConfig() {
-		return mapsforgeConfig;
-	}
-
 	private boolean hillShadingOverlay = false;
-
-	public boolean isHillShadingOverlay() {
-		return hillShadingOverlay;
-	}
 
 	private static boolean stopped = false;
 	private static final Pattern P = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)\\.(.*)"); //$NON-NLS-1$
@@ -145,11 +122,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			logger.info("'(built-in)" + System.getProperty("file.separator") + "world.map'");
 			multiMapDataStore.addMapDataStore(map, true, true);
 		}
-		if (mapsforgeConfig.getRendererName().equals("direct")) {
-			directRenderer = new HashMap<String, DirectRenderer>();
-		} else {
-			databaseRenderer = new HashMap<String, DatabaseRenderer>();
-		}
+
 		stylesHandler = new HashMap<String, MapsforgeStyleHandler>();
 		for(String style : mapsforgeConfig.getStyles().keySet()) 
 			stylesHandler.put(style, new MapsforgeStyleHandler(this, mapsforgeConfig.getStyle(style), style));
@@ -162,7 +135,7 @@ public class MapsforgeHandler extends AbstractHandler {
 		if (query != null) msg += "?" + query;
 		// response time;idle threads
 		if (mapsforgeConfig.LOG_RESP_TIME)
-			msg = String.format("%-" + 5 + "s", Math.round((System.nanoTime() - startTime) / 1000000))+msg;
+			msg = String.format("%-" + 6 + "s", Math.round((System.nanoTime() - startTime) / 1000000))+msg;
 		// exception
 		if (ex != null)
 			return msg + " ! " + ex.getMessage() + System.lineSeparator() + ExceptionUtils.getStackTrace(ex);
@@ -174,7 +147,7 @@ public class MapsforgeHandler extends AbstractHandler {
 		baseRequest.setHandled(true);
 		long startTime = System.nanoTime();
 		String path = request.getPathInfo();
-		String engine = null;
+		String engine = "std";
 		try {
 			if (path.equals("/terminate")) { //$NON-NLS-1$
 				// Accept terminate request from loopback addresses only!
@@ -226,7 +199,6 @@ public class MapsforgeHandler extends AbstractHandler {
 				if(styleHandler == null) 
 					throw new ServletException("Unsupported style: " + request.getParameter("style")); //$NON-NLS-1$				
 			}
-			engine = "std"+styleHandler.getName();
 
 			int x, y, z;
 			String ext = mapsforgeConfig.EXTENSIONDEFAULT; // $NON-NLS-1$
@@ -304,7 +276,7 @@ public class MapsforgeHandler extends AbstractHandler {
 				} catch (Exception e) {
 					throw new ServletException("Failed to parse \"hillshading\" property: " + e.getMessage(), e); //$NON-NLS-1$
 				}
-				if (styleHandler.getHillsRenderConfig() != null && enable_hs) engine = "hs"+styleHandler.getName();
+				if (styleHandler.getHillsRenderConfig() != null && enable_hs) engine = "hs";
 
 				// requestedUserScale = 2.0f; // Uncomment for testing purpose only!
 //				Calling "displayModel.setUserScaleFactor" alone has no visible impact on rendering.
@@ -320,10 +292,10 @@ public class MapsforgeHandler extends AbstractHandler {
 
 // Synchronizing render jobs has no visible effect -> disabled
 // 				synchronized (this) {
-					if (directRenderer != null) {
-						tileBitmap = directRenderer.get(engine).executeJob(job);
+					if (mapsforgeConfig.getRendererName().equals("direct")) {
+						tileBitmap = styleHandler.getDirectRenderer().get(engine).executeJob(job);
 					} else {
-						tileBitmap = databaseRenderer.get(engine).executeJob(job);
+						tileBitmap = styleHandler.getDatabaseRenderer().get(engine).executeJob(job);
 					}
 					if (!hillShadingOverlay) styleHandler.getTileCache().put(job, null);
 // 				}
@@ -414,11 +386,19 @@ public class MapsforgeHandler extends AbstractHandler {
 		}
 	}
 	
-	public Map<String, DatabaseRenderer> getDatabaseRenderer() {
-		return databaseRenderer;
+	public MultiMapDataStore getMultiMapDataStore() {
+		return multiMapDataStore;
 	}
-
-	public Map<String, DirectRenderer> getDirectRenderer() {
-		return directRenderer;
+	
+	public GraphicFactory getGraphicFactory() {
+		return graphicFactory;
+	}
+	
+	public MapsforgeConfig getMapsforgeConfig() {
+		return mapsforgeConfig;
+	}
+	
+	public boolean isHillShadingOverlay() {
+		return hillShadingOverlay;
 	}
 }
