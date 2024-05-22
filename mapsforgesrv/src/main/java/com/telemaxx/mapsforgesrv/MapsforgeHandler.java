@@ -162,7 +162,7 @@ public class MapsforgeHandler extends AbstractHandler {
 		if (query != null) msg += "?" + query;
 		// response time;idle threads
 		if (mapsforgeConfig.LOG_RESP_TIME)
-			msg += " "+Math.round((System.nanoTime() - startTime) / 1000000) + "ms";
+			msg = String.format("%-" + 5 + "s", Math.round((System.nanoTime() - startTime) / 1000000))+msg;
 		// exception
 		if (ex != null)
 			return msg + " ! " + ex.getMessage() + System.lineSeparator() + ExceptionUtils.getStackTrace(ex);
