@@ -28,7 +28,7 @@ sourceSets {
 dependencies {
     def mapsforgeVersion = '+'
     // https://mvnrepository.com/artifact/org.eclipse.jetty.http2/http2-server
-    def jettyVersion = '11.0.20'
+    def jettyVersion = '11.0.21'
     def slf4j = '+'
 
 //  api "org.apache.commons:commons-math3:+"
@@ -43,8 +43,9 @@ dependencies {
 //  implementation "org.mapsforge:mapsforge-poi:${mapsforgeVersion}"
 
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
-    implementation "org.eclipse.jetty.http2:http2-server:${jettyVersion}"
+    runtimeOnly "org.eclipse.jetty.http2:http2-server:${jettyVersion}"
     implementation "org.eclipse.jetty:jetty-util:${jettyVersion}"
+    implementation "org.eclipse.jetty:jetty-xml:${jettyVersion}"
     implementation "org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:+"
 
     runtimeOnly "org.slf4j:slf4j-reload4j:${slf4j}"
