@@ -124,8 +124,13 @@ public class MapsforgeHandler extends AbstractHandler {
 		}
 
 		stylesHandler = new HashMap<String, MapsforgeStyleHandler>();
-		for(String style : mapsforgeConfig.getStylesConfig().keySet()) 
-			stylesHandler.put(style, new MapsforgeStyleHandler(this, mapsforgeConfig.getStylesConfig(style), style));
+		for(String style : mapsforgeConfig.getStylesConfig().keySet()) {
+			if(!hillShadingOverlay || style.equals("default")) {
+				stylesHandler.put(style, new MapsforgeStyleHandler(this, mapsforgeConfig.getStylesConfig(style), style));
+			} else {
+				logger.info("No map -> Style '"+style+"' not loaded");
+			}
+		}
 	}
 
 	private String logRequest(HttpServletRequest request, long startTime, Exception ex, String engine) {
