@@ -92,12 +92,15 @@ public class MapsforgeSrv {
 		Server server = new Server();
 		XmlConfiguration xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY));
 		xmlConfiguration.configure(server);
-		((QueuedThreadPool) server.getThreadPool()).setVirtualThreadsExecutor(Executors.newVirtualThreadPerTaskExecutor());
-		
 		server.setHandler(mapsforgeHandler);
 
 		try {
 			logger.info("################ STARTING SERVER ################");
+			// https://eclipse.dev/jetty/documentation/jetty-11/programming-guide/index.html#pg-arch-threads-thread-pool-virtual-threads
+			if(Runtime.version().version().getFirst() >= 21) {
+				((QueuedThreadPool) server.getThreadPool()).setVirtualThreadsExecutor(Executors.newVirtualThreadPerTaskExecutor());
+				logger.warn("Virtual threads enabled");
+			}
 			server.start();
 			logger.info("Started " +server.getThreadPool().toString());
 		} catch (BindException e) {
