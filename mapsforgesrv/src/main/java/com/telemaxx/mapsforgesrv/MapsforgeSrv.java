@@ -74,14 +74,12 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
 	
-	private final static String VERSION = "0.21.1"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
-		
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 	
 	public MapsforgeSrv(String[] args) throws Exception {
 		
 		/* IMPORTANT: the output of following line is used by other programs like guis. never change this syntax */
-		logger.info("MapsforgeSrv - a mapsforge tile server. " + "version: " + VERSION); //$NON-NLS-1$ //$NON-NLS-2$
+		logger.info("MapsforgeSrv - a mapsforge tile server. " + "version: " + PropertiesParser.VERSION); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		logger.info("Java runtime version: " + System.getProperty("java.version")); //$NON-NLS-1$
 
