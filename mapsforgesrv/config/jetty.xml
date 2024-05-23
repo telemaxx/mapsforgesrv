@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure.dtd">
+<!-- https://github.com/jetty/jetty.project/blob/jetty-11.0.x/jetty-server/src/main/config/etc/jetty-http.xml -->
 <Configure id="Server" class="org.eclipse.jetty.server.Server">
 	<!-- https://eclipse.dev/jetty/javadoc/jetty-11/org/eclipse/jetty/util/thread/QueuedThreadPool.html -->
 	<Get name="ThreadPool">
