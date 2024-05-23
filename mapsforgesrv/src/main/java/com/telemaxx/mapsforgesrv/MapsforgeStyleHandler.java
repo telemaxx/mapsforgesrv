@@ -123,6 +123,11 @@ public class MapsforgeStyleHandler {
 			MemoryCachingHgtReaderTileSource tileSource = new MemoryCachingHgtReaderTileSource(
 					demFolder, shadingAlgorithm, mapsforgeHandler.getGraphicFactory());
 			tileSource.setEnableInterpolationOverlap(mapsforgeConfig.HILLSHADINGENABLEINTERPOLATIONOVERLAP);
+			tileSource.setMainCacheSize(mapsforgeConfig.HILLSHADING_CACHE);
+			if(mapsforgeConfig.HILLSHADINGENABLEINTERPOLATIONOVERLAP)
+				tileSource.setNeighborCacheSize(mapsforgeConfig.HILLSHADING_NEIGHBOR_CACHE);
+			tileSource.applyConfiguration(true); // true for allow parallel
+			
 			hillsRenderConfig = new HillsRenderConfig(tileSource);
 			hillsRenderConfig.setMaginuteScaleFactor((float) mapsforgeStyleConfig.getHillShadingMagnitude());
 			hillsRenderConfig.indexOnThread();

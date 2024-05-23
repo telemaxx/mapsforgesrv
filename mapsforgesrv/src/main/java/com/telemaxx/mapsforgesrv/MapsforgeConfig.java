@@ -45,6 +45,8 @@ public class MapsforgeConfig extends PropertiesParser{
 	 * enableInterpolationOverlap = false: Less precise at tile edges but much faster
 	 */
 	public final boolean HILLSHADINGENABLEINTERPOLATIONOVERLAP = true;
+	public final int HILLSHADING_CACHE = 128; // default is 4
+	public final int HILLSHADING_NEIGHBOR_CACHE= 8; // default is 4	
 
 	public final String EXTENSIONDEFAULT = "png"; //$NON-NLS-1$
 	public final int TILERENDERSIZEDEFAULT = 256;
