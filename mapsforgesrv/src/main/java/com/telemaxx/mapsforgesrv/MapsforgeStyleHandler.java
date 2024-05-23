@@ -211,7 +211,14 @@ public class MapsforgeStyleHandler {
 	
 	protected void updateRenderThemeFuture() {
 		renderThemeFuture = new RenderThemeFuture(mapsforgeHandler.getGraphicFactory(), xmlRenderTheme, displayModel);
-		new Thread(renderThemeFuture).start();
+		String tname = "RenderThemeFuture-"+name;
+		for (Thread t : Thread.getAllStackTraces().keySet()) {
+	        if (t.getName().equals(tname)) {
+	        	t.interrupt();
+	        	logger.debug("Thread '"+tname+"' successfully stopped.");
+	        }
+	    }
+		new Thread(null,renderThemeFuture,tname).start();
 	}
 
 	/**
