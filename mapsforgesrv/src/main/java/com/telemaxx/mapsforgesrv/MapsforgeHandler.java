@@ -192,12 +192,15 @@ public class MapsforgeHandler extends AbstractHandler {
 			
 			/* style */
 			MapsforgeStyleHandler styleHandler = null;
+			MapsforgeStyleConfig  styleConfig = null;
 			if(request.getParameter("style") == null || request.getParameter("style").isEmpty()) {
 				styleHandler = stylesHandler.get("default");
+				styleConfig = mapsforgeConfig.getStylesConfig("default");
 			} else {
 				styleHandler = stylesHandler.get(request.getParameter("style"));
 				if(styleHandler == null) 
-					throw new ServletException("Unsupported style: " + request.getParameter("style")); //$NON-NLS-1$				
+					throw new ServletException("Unsupported style: " + request.getParameter("style")); //$NON-NLS-1$
+				styleConfig = mapsforgeConfig.getStylesConfig(request.getParameter("style"));
 			}
 
 			int x, y, z;
@@ -230,7 +233,7 @@ public class MapsforgeHandler extends AbstractHandler {
 				if (tmp != null) {
 //					Override text scaling from config value by text scaling from HTTP request
 //					Final text scaling = textScale * requestedTextScale
-					requestedTextScale = Float.parseFloat(tmp)/DisplayModel.textScale;
+					requestedTextScale = Float.parseFloat(tmp) / styleConfig.getTextScale();
 				}
 			} catch (Exception e) {
 				throw new ServletException("Failed to parse \"textScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
