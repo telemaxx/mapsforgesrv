@@ -124,8 +124,8 @@ public class MapsforgeHandler extends AbstractHandler {
 		}
 
 		stylesHandler = new HashMap<String, MapsforgeStyleHandler>();
-		for(String style : mapsforgeConfig.getStyles().keySet()) 
-			stylesHandler.put(style, new MapsforgeStyleHandler(this, mapsforgeConfig.getStyle(style), style));
+		for(String style : mapsforgeConfig.getStylesConfig().keySet()) 
+			stylesHandler.put(style, new MapsforgeStyleHandler(this, mapsforgeConfig.getStylesConfig(style), style));
 	}
 
 	private String logRequest(HttpServletRequest request, long startTime, Exception ex, String engine) {

@@ -30,7 +30,7 @@ public class MapsforgeConfig extends PropertiesParser{
 	private String outOfRangeTms = null;
 	private boolean appendWorldMap;
 	private boolean acceptTerminate;
-	private Map<String, MapsforgeStyleConfig> styles;
+	private Map<String, MapsforgeStyleConfig> stylesConfig;
 	private String configDirectory = null;
 	private String preferredLanguage = null;
 
@@ -153,13 +153,13 @@ public class MapsforgeConfig extends PropertiesParser{
 			logger.error(configDirectory+"/styles doesn't contain any properties files"); //$NON-NLS-1$
 			System.exit(-1);
 		} else {
-			styles = new HashMap<String, MapsforgeStyleConfig>();
+			stylesConfig = new HashMap<String, MapsforgeStyleConfig>();
 			MapsforgeStyleConfig msc;
 			for (File styleFile : styleFiles) { 
 				String styleName = styleFile.getName().replaceFirst("[.][^.]+$", ""); //$NON-NLS-1$
 				checkStyleName(styleName);
 				msc = new MapsforgeStyleConfig(styleName, styleFile);
-				styles.put(styleName, msc);
+				stylesConfig.put(styleName, msc);
 			}
 		}
 	}
@@ -252,20 +252,20 @@ public class MapsforgeConfig extends PropertiesParser{
 		return this.preferredLanguage;
 	}
 	
-	public Map<String, MapsforgeStyleConfig> getStyles() {
-		return styles;
+	public Map<String, MapsforgeStyleConfig> getStylesConfig() {
+		return stylesConfig;
 	}
 	
-	public MapsforgeStyleConfig getStyle(String style) throws Exception {
+	public MapsforgeStyleConfig getStylesConfig(String style) throws Exception {
 		try {
-			return styles.get(style);
+			return stylesConfig.get(style);
 		} catch(Exception e) {
 			throw new Exception("Style '"+style+"' don't exist");
 		}
 	}
 
 	public MapsforgeStyleConfig getDefaultStyle() throws Exception {
-		return getStyle("default");
+		return getStylesConfig("default");
 	}
 
 }
