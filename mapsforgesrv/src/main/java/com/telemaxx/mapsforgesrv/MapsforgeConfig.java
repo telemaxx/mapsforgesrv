@@ -34,32 +34,11 @@ public class MapsforgeConfig extends PropertiesParser{
 	private String configDirectory = null;
 	private String preferredLanguage = null;
 
-	private final static long DEFAULTCACHECONTROL = 0;
-	private final static String[] AUTHORIZEDRENDERER = { "database", "direct", }; //$NON-NLS-1$ //$NON-NLS-2$
-	private final static String DEFAULTRENDERER = AUTHORIZEDRENDERER[0];
+
 	private final static String styleNameRegex = "^[0-9a-z._-]+$"; //$NON-NLS-1$
 	private final static Pattern styleNameRegexPattern = Pattern.compile(styleNameRegex);
 
-	/*
-	 * enableInterpolationOverlap = true:  More precise at tile edges but much slower 
-	 * enableInterpolationOverlap = false: Less precise at tile edges but much faster
-	 */
-	public final boolean HILLSHADINGENABLEINTERPOLATIONOVERLAP = true;
-	public final int HILLSHADING_CACHE = 128; // default is 4
-	public final int HILLSHADING_NEIGHBOR_CACHE= 8; // default is 4	
 
-	public final String EXTENSIONDEFAULT = "png"; //$NON-NLS-1$
-	public final int TILERENDERSIZEDEFAULT = 256;
-	public final boolean TRANSPARENTDEFAULT = false;
-	
-	/* mandatory config files & directory */
-	public final static String FILECONFIG_JETTY = "jetty.xml"; //$NON-NLS-1$
-	public final static String FILECONFIG_SERVER = "server.properties"; //$NON-NLS-1$
-	public final static String FILECONFIG_DEFAULTSTYLE = "default.properties"; //$NON-NLS-1$
-	public final static String DIRCONFIG_STYLE = "styles/"; //$NON-NLS-1$
-
-	// log response time
-	public boolean LOG_RESP_TIME = true;
 
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeConfig.class);
 
@@ -128,8 +107,8 @@ public class MapsforgeConfig extends PropertiesParser{
 		parseMapFiles();
 		preferredLanguage = parseString(null, "language", null, "Preferred map language"); //$NON-NLS-1$ //$NON-NLS-2$
 		demFolder = parseFile("demfolder", FOLDER, true, "DEM", "undefined");
-		rendererName = parseString(DEFAULTRENDERER, "renderer", AUTHORIZEDRENDERER, "Renderer algorithm"); //$NON-NLS-1$ //$NON-NLS-2$
-		cacheControl = (long) parseNumber(DEFAULTCACHECONTROL, "cache-control", 0, null, "Browser cache ttl",false); //$NON-NLS-1$ //$NON-NLS-2$
+		rendererName = parseString(DEFAULT_RENDERER, "renderer", AUTHORIZED_RENDERER, "Renderer algorithm"); //$NON-NLS-1$ //$NON-NLS-2$
+		cacheControl = (long) parseNumber(DEFAULT_CACHECONTROL, "cache-control", 0, null, "Browser cache ttl",false); //$NON-NLS-1$ //$NON-NLS-2$
 		outOfRangeTms = parseString(null, "outofrange_tms", null, "Out of range TMS url"); //$NON-NLS-1$ //$NON-NLS-2$
 		appendWorldMap = parseHasOption("worldmap", "Append built-in world map");
 		acceptTerminate = parseHasOption("terminate", "Accept terminate request");

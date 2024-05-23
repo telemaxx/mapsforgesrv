@@ -48,7 +48,6 @@ import org.mapsforge.core.model.Tile;
 import org.mapsforge.map.awt.graphics.AwtGraphicFactory;
 import org.mapsforge.map.datastore.MultiMapDataStore;
 import org.mapsforge.map.layer.renderer.RendererJob;
-import org.mapsforge.map.model.DisplayModel;
 import org.mapsforge.map.reader.MapFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,7 +138,7 @@ public class MapsforgeHandler extends AbstractHandler {
 		String query = request.getQueryString();
 		if (query != null) msg += "?" + query;
 		// response time;idle threads
-		if (mapsforgeConfig.LOG_RESP_TIME)
+		if (MapsforgeConfig.LOG_RESP_TIME)
 			msg = String.format("%-" + 6 + "s", Math.round((System.nanoTime() - startTime) / 1000000))+msg;
 		// exception
 		if (ex != null)
@@ -216,7 +215,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 
 			int x, y, z;
-			String ext = mapsforgeConfig.EXTENSIONDEFAULT; // $NON-NLS-1$
+			String ext = MapsforgeConfig.TILE_EXTENSION; // $NON-NLS-1$
 			Matcher m = P.matcher(path);
 			if (m.matches()) {
 				x = Integer.parseInt(m.group(2));
@@ -261,7 +260,7 @@ public class MapsforgeHandler extends AbstractHandler {
 				throw new ServletException("Failed to parse \"userScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
 
-			boolean requestedTransparent = mapsforgeConfig.TRANSPARENTDEFAULT;
+			boolean requestedTransparent = MapsforgeConfig.DEFAULT_TRANSPARENT;
 			try {
 				String tmp = request.getParameter("transparent"); //$NON-NLS-1$
 				if (tmp != null) {
@@ -271,7 +270,7 @@ public class MapsforgeHandler extends AbstractHandler {
 				throw new ServletException("Failed to parse \"transparent\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
 
-			int requestedTileRenderSize = mapsforgeConfig.TILERENDERSIZEDEFAULT;
+			int requestedTileRenderSize = MapsforgeConfig.DEFAULT_TILE_RENDERSIZE;
 			try {
 				String tmp = request.getParameter("tileRenderSize"); //$NON-NLS-1$
 				if (tmp != null)

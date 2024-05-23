@@ -25,19 +25,6 @@ public class MapsforgeStyleConfig extends PropertiesParser{
 	private int blackValue;
 	private double gammaValue;
 	
-	private final static double DEFAULTGAMMA = 1.;
-	private final static int DEFAULTBLACK = 0;
-	
-	public final double[] HILLSHADINGSIMPLEDEFAULT = { 0.1, 0.666 };
-	public final double HILLSHADINGDIFDUSELIGHTDEFAULT = 50;
-	protected final static double DEFAULTHSMAGNITUDE = 1.;
-	
-	private final static float DEFAULTDEVICESCALE = 1.0f;
-	private final static float DEFAULTUSERSCALE = 1.0f;
-	private final static float DEFAULTTEXTSCALE = 1.0f;
-	private final static float DEFAULTSYMBOLSCALE = 1.0f;
-	private final static float DEFAULTLINESCALE = 1.0f;
-	
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeStyleConfig.class);
 	
 	public MapsforgeStyleConfig(String styleName, File styleFile) throws Exception {
@@ -80,21 +67,18 @@ public class MapsforgeStyleConfig extends PropertiesParser{
 	
 	private void initConfig() throws Exception {
 		logger.info("################## STYLE '"+styleName+"' CONFIG ##################");
-		parseThemeFile();
 		themeFileStyle = parseString(null, "style", null, "Theme style"); //$NON-NLS-1$ //$NON-NLS-2$
+		parseThemeFile();
 		parseThemeOverlays();
 		parseHillShading();
-		hillShadingMagnitude = (double) parseNumber(DEFAULTHSMAGNITUDE, "hillshading-magnitude", 0., 4., "Hillshading magnitude",false); //$NON-NLS-1$ //$NON-NLS-2$
-		deviceScale = (float) parseNumber(DEFAULTDEVICESCALE, "device-scale", 0., null, "Device scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
-		userScale = (float) parseNumber(DEFAULTUSERSCALE, "user-scale", 0., null, "User scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
-		textScale = (float) parseNumber(DEFAULTTEXTSCALE, "text-scale", 0., null, "Text scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
-		symbolScale = (float) parseNumber(DEFAULTSYMBOLSCALE, "symbol-scale", 0., null, "Symbol scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
-		lineScale = (float) parseNumber(DEFAULTLINESCALE, "line-scale", 0., null, "Line scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
-		parseHillShading();
-		hillShadingMagnitude = (double) parseNumber(DEFAULTHSMAGNITUDE, "hillshading-magnitude", 0., 4., "Hillshading magnitude",false); //$NON-NLS-1$ //$NON-NLS-2$
-		blackValue = (int) parseNumber(DEFAULTBLACK, "contrast-stretch", 0, 254, "Contrast stretch",false); //$NON-NLS-1$ //$NON-NLS-2$
-		gammaValue = (double) parseNumber(DEFAULTGAMMA, "gamma-correction", 0., null, "Gamma correction",true); //$NON-NLS-1$ //$NON-NLS-2$
-		
+		hillShadingMagnitude = (double) parseNumber(DEFAULT_HILLSHADING_MAGNITUDE, "hillshading-magnitude", 0., 4., "Hillshading magnitude",false); //$NON-NLS-1$ //$NON-NLS-2$
+		blackValue = (int) parseNumber(DEFAULT_BLACK, "contrast-stretch", 0, 254, "Contrast stretch",false); //$NON-NLS-1$ //$NON-NLS-2$
+		gammaValue = (double) parseNumber(DEFAULT_GAMMA, "gamma-correction", 0., null, "Gamma correction",true); //$NON-NLS-1$ //$NON-NLS-2$
+		deviceScale = (float) parseNumber(DEFAULT_DEVICESCALE, "device-scale", 0., null, "Device scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		userScale = (float) parseNumber(DEFAULT_USERSCALE, "user-scale", 0., null, "User scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		textScale = (float) parseNumber(DEFAULT_TEXTSCALE, "text-scale", 0., null, "Text scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		symbolScale = (float) parseNumber(DEFAULT_SYMBOLSCALE, "symbol-scale", 0., null, "Symbol scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		lineScale = (float) parseNumber(DEFAULT_LINESCALE, "line-scale", 0., null, "Line scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	private void parseHillShading() throws Exception {
@@ -113,8 +97,8 @@ public class MapsforgeStyleConfig extends PropertiesParser{
 						hillShadingArguments[0] = Double.parseDouble(m.group(2));
 						hillShadingArguments[1] = Double.parseDouble(m.group(3));
 					} else { // default values
-						hillShadingArguments[0] = HILLSHADINGSIMPLEDEFAULT[0];
-						hillShadingArguments[1] = HILLSHADINGSIMPLEDEFAULT[1];
+						hillShadingArguments[0] = DEFAULT_HILLSHADING_SIMPLE[0];
+						hillShadingArguments[1] = DEFAULT_HILLSHADING_SIMPLE[1];
 					}
 					logger.info(msgHeader + ": defined [" + hillShadingAlgorithm + "(" + hillShadingArguments[0] + "," //$NON-NLS-3$
 							+ hillShadingArguments[1] + ")]");
@@ -124,7 +108,7 @@ public class MapsforgeStyleConfig extends PropertiesParser{
 					if (m.group(5) != null) {
 						hillShadingArguments[0] = Double.parseDouble(m.group(5));
 					} else { // default value
-						hillShadingArguments[0] = HILLSHADINGDIFDUSELIGHTDEFAULT;
+						hillShadingArguments[0] = DEFAULT_HILLSHADING_DIFDUSELIGHT;
 					}
 					logger.info(msgHeader + ": defined [" + hillShadingAlgorithm + "(" + hillShadingArguments[0] + ")]"); //$NON-NLS-1$
 				}

@@ -122,10 +122,10 @@ public class MapsforgeStyleHandler {
 			DemFolderFS demFolder = new DemFolderFS(mapsforgeConfig.getDemFolder());
 			MemoryCachingHgtReaderTileSource tileSource = new MemoryCachingHgtReaderTileSource(
 					demFolder, shadingAlgorithm, mapsforgeHandler.getGraphicFactory());
-			tileSource.setEnableInterpolationOverlap(mapsforgeConfig.HILLSHADINGENABLEINTERPOLATIONOVERLAP);
-			tileSource.setMainCacheSize(mapsforgeConfig.HILLSHADING_CACHE);
-			if(mapsforgeConfig.HILLSHADINGENABLEINTERPOLATIONOVERLAP)
-				tileSource.setNeighborCacheSize(mapsforgeConfig.HILLSHADING_NEIGHBOR_CACHE);
+			tileSource.setEnableInterpolationOverlap(MapsforgeConfig.HILLSHADING_INTERPOLATION_OVERLAP);
+			tileSource.setMainCacheSize(MapsforgeConfig.HILLSHADING_CACHE);
+			if(MapsforgeConfig.HILLSHADING_INTERPOLATION_OVERLAP)
+				tileSource.setNeighborCacheSize(MapsforgeConfig.HILLSHADING_NEIGHBOR_CACHE);
 			tileSource.applyConfiguration(true); // true for allow parallel
 			
 			hillsRenderConfig = new HillsRenderConfig(tileSource);

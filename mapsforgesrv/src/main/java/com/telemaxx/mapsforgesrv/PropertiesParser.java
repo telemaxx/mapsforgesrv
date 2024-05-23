@@ -13,16 +13,70 @@ import org.slf4j.LoggerFactory;
 public abstract class PropertiesParser {
 
 	protected Properties configFile;
+	
+	/****************
+	 * FIXED VALUES *
+	 ****************/
+	
+	public final static String 		TILE_EXTENSION = "png"; //$NON-NLS-1$
+	// false: use default value true: exit(1)
+	protected static final String 	FILE = "file"; //$NON-NLS-1$
+	protected static final String 	FOLDER = "folder"; //$NON-NLS-1$
+	// log response time
+	public final static boolean 	LOG_RESP_TIME = true;
+	// mandatory config files & directory
+	public final static String 		FILECONFIG_JETTY = "jetty.xml"; //$NON-NLS-1$
+	public final static String		FILECONFIG_SERVER = "server.properties"; //$NON-NLS-1$
+	public final static String		FILECONFIG_DEFAULTSTYLE = "default.properties"; //$NON-NLS-1$
+	public final static String		DIRCONFIG_STYLE = "styles/"; //$NON-NLS-1$
+	
+	 // true:  More precise at tile edges but much slower / false: Less precise at tile edges but much faster
+	public final static boolean 	HILLSHADING_INTERPOLATION_OVERLAP = true;
+	public final static int 		HILLSHADING_CACHE = 128; // default is 4
+	public final static int 		HILLSHADING_NEIGHBOR_CACHE= 8; // default is 4	
 
-	/*
-	 * false: use default value true: exit(1)
-	 */
-	private final static boolean EXITONPARSINGERROR = true;
-	private final static int PADMSG = 26;
-	protected static final String FILE = "file"; //$NON-NLS-1$
-	protected static final String FOLDER = "folder"; //$NON-NLS-1$
+	/******************
+	 * DEFAULT VALUES *
+	 ******************/
 
-	private final static Logger logger = LoggerFactory.getLogger(PropertiesParser.class);
+	// URL.tileRenderSize
+	public final static int 		DEFAULT_TILE_RENDERSIZE = 256;
+	// URL.transparent
+	public final static boolean 	DEFAULT_TRANSPARENT = false;
+
+	// MapsforgeConfig.cacheControl
+	protected final static long 	DEFAULT_CACHECONTROL = 0;
+	protected final static String[] AUTHORIZED_RENDERER = { "database", "direct", }; //$NON-NLS-1$ //$NON-NLS-2$
+	// MapsforgeConfig.rendererName
+	protected final static String 	DEFAULT_RENDERER = AUTHORIZED_RENDERER[0];
+
+	// MapsforgeStyleConfig.gammaValue
+	protected final static double 	DEFAULT_GAMMA = 1.;
+	// MapsforgeStyleConfig.blackValue
+	protected final static int 		DEFAULT_BLACK = 0;
+	// MapsforgeStyleConfig.deviceScale
+	protected final static float	DEFAULT_DEVICESCALE = 1.0f;
+	// MapsforgeStyleConfig.userScale
+	protected final static float	DEFAULT_USERSCALE = 1.0f;
+	// MapsforgeStyleConfig.textScale
+	protected final static float	DEFAULT_TEXTSCALE = 1.0f;
+	// MapsforgeStyleConfig.symbolScale
+	protected final static float	DEFAULT_SYMBOLSCALE = 1.0f;
+	// MapsforgeStyleConfig.lineScale
+	protected final static float	DEFAULT_LINESCALE = 1.0f;
+	// MapsforgeStyleConfig.hillShadingArguments
+	public final static double[] 	DEFAULT_HILLSHADING_SIMPLE = { 0.1, 0.666 };
+	public final static	double 		DEFAULT_HILLSHADING_DIFDUSELIGHT = 50;
+	// MapsforgeStyleConfig.hillShadingMagnitude
+	protected final static double 	DEFAULT_HILLSHADING_MAGNITUDE = 1.;
+
+	/***********
+	 * PRIVATE *
+	 ***********/
+	
+	private final static boolean 	EXITON_PARSINGERROR = true;
+	private final static int 		PAD_MSG = 26;
+	private final static 			Logger logger = LoggerFactory.getLogger(PropertiesParser.class);
 
 	protected void readConfig(Object config) throws Exception {
 		FileInputStream in;
@@ -55,7 +109,7 @@ public abstract class PropertiesParser {
 	}
 
 	protected void parseError(String msgHeader, String msgErr, String defaultValue) {
-		if (EXITONPARSINGERROR) {
+		if (EXITON_PARSINGERROR) {
 			logger.error(msgHeader + ": exiting - " + msgErr); //$NON-NLS-1$
 			System.exit(1);
 		}
@@ -67,7 +121,7 @@ public abstract class PropertiesParser {
 	}
 
 	protected String parsePadMsg(String msg) {
-		return String.format("%-" + PADMSG + "s", msg);
+		return String.format("%-" + PAD_MSG + "s", msg);
 	}
 
 	/*
