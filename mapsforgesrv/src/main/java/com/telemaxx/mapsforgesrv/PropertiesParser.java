@@ -28,6 +28,7 @@ public abstract class PropertiesParser {
 	public final static boolean 	LOG_RESP_TIME = true;
 	// mandatory config files & directory
 	public final static String 		FILECONFIG_JETTY = "jetty.xml"; //$NON-NLS-1$
+	public final static String 		FILECONFIG_JETTY_THREADPOOL = "jetty-threadpool-virtual.xml"; //$NON-NLS-1$
 	public final static String		FILECONFIG_SERVER = "server.properties"; //$NON-NLS-1$
 	public final static String		FILECONFIG_DEFAULTSTYLE = "default.properties"; //$NON-NLS-1$
 	public final static String		DIRCONFIG_STYLE = "styles/"; //$NON-NLS-1$

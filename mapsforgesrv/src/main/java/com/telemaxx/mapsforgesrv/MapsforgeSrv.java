@@ -87,25 +87,26 @@ public class MapsforgeSrv {
 
 		MapsforgeConfig mapsforgeConfig = new MapsforgeConfig(args);
 		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig);
-		Server server = new Server();
-		XmlConfiguration xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY));
+		
+		logger.info("################ STARTING SERVER ################");
+		XmlConfiguration xmlConfiguration = null;
+		QueuedThreadPool queuedThreadPool = new QueuedThreadPool();
+		xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL));
+		xmlConfiguration.configure(queuedThreadPool);
+		Server server = new Server(queuedThreadPool);
+		xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY));
 		xmlConfiguration.configure(server);
+		if(!((QueuedThreadPool)server.getThreadPool()).getVirtualThreadsExecutor().equals(null))
+			logger.info("Virtual threads are enabled");
 		server.setHandler(mapsforgeHandler);
-
 		try {
-			logger.info("################ STARTING SERVER ################");
-			// https://eclipse.dev/jetty/documentation/jetty-11/programming-guide/index.html#pg-arch-threads-thread-pool-virtual-threads
-			if(Runtime.version().version().getFirst() >= 21) {
-				((QueuedThreadPool) server.getThreadPool()).setVirtualThreadsExecutor(Executors.newVirtualThreadPerTaskExecutor());
-				logger.warn("Virtual threads enabled");
-			}
+			
 			server.start();
 			logger.info("Started " +server.getThreadPool().toString());
 		} catch (BindException e) {
 			logger.error("Stopping server", e); //$NON-NLS-1$
 			System.exit(1);
 		}
-
 		server.join();
 	}
 	
