@@ -62,7 +62,6 @@
 package com.telemaxx.mapsforgesrv;
 
 import java.net.BindException;
-import java.util.concurrent.Executors;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.resource.Resource;

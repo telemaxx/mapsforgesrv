@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.mapsforge.map.layer.cache.TileCache;
-import org.mapsforge.map.layer.hills.DemFolderFS;
 import org.mapsforge.map.layer.hills.DiffuseLightShadingAlgorithm;
 import org.mapsforge.map.layer.hills.HillsRenderConfig;
 import org.mapsforge.map.layer.hills.MemoryCachingHgtReaderTileSource;
@@ -119,9 +118,9 @@ public class MapsforgeStyleHandler {
 				shadingAlgorithm = new DiffuseLightShadingAlgorithm(
 						(float) mapsforgeStyleConfig.getHillShadingArguments()[0]);
 			}
-			DemFolderFS demFolder = new DemFolderFS(mapsforgeConfig.getDemFolder());
+			
 			MemoryCachingHgtReaderTileSource tileSource = new MemoryCachingHgtReaderTileSource(
-					demFolder, shadingAlgorithm, mapsforgeHandler.getGraphicFactory());
+					mapsforgeHandler.getDemFolder(), shadingAlgorithm, mapsforgeHandler.getGraphicFactory());
 			tileSource.setEnableInterpolationOverlap(MapsforgeConfig.HILLSHADING_INTERPOLATION_OVERLAP);
 			tileSource.setMainCacheSize(MapsforgeConfig.HILLSHADING_CACHE);
 			if(MapsforgeConfig.HILLSHADING_INTERPOLATION_OVERLAP)

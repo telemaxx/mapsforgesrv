@@ -47,6 +47,7 @@ import org.mapsforge.core.graphics.TileBitmap;
 import org.mapsforge.core.model.Tile;
 import org.mapsforge.map.awt.graphics.AwtGraphicFactory;
 import org.mapsforge.map.datastore.MultiMapDataStore;
+import org.mapsforge.map.layer.hills.DemFolderFS;
 import org.mapsforge.map.layer.renderer.RendererJob;
 import org.mapsforge.map.reader.MapFile;
 import org.slf4j.Logger;
@@ -67,6 +68,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			new String[] { "x", "y", "z", "textScale", "userScale", "transparent", "tileRenderSize", "hillshading", "style" })); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 
 	protected final MultiMapDataStore multiMapDataStore;
+	protected final DemFolderFS demFolder;
 	protected final GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
 	protected final String outOfRangeTms;
 
@@ -120,6 +122,11 @@ public class MapsforgeHandler extends AbstractHandler {
 			MapFile map = new MapFile(mapFileChannel);
 			logger.info("'(built-in)" + System.getProperty("file.separator") + "world.map'");
 			multiMapDataStore.addMapDataStore(map, true, true);
+		}
+		if(mapsforgeConfig.getDemFolder() != null) {
+			demFolder = new DemFolderFS(mapsforgeConfig.getDemFolder());
+		} else {
+			demFolder = null;
 		}
 
 		stylesHandler = new HashMap<String, MapsforgeStyleHandler>();
@@ -414,5 +421,9 @@ public class MapsforgeHandler extends AbstractHandler {
 	
 	public boolean isHillShadingOverlay() {
 		return hillShadingOverlay;
+	}
+
+	public DemFolderFS getDemFolder() {
+		return demFolder;
 	}
 }
