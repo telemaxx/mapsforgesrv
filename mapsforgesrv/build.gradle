@@ -1,7 +1,9 @@
 plugins {
     id 'java-library'
     id 'application'
+    // https://github.com/johnrengelman/shadow/releases
     id 'com.github.johnrengelman.shadow' version "8.1.1"
+    // https://github.com/nebula-plugins/gradle-lint-plugin/releases/tag/v19.0.2
     id 'nebula.lint' version "19.0.2"
 }
 
@@ -61,8 +63,14 @@ dependencies {
     implementation "com.github.marschall:memoryfilesystem:+"
 }
 
+apply plugin : "java"
+
+ext {
+   javaMainClass = "com.telemaxx.mapsforgesrv.MapsforgeSrv"
+}
+
 application {
-    mainClass.set("com.telemaxx.mapsforgesrv.MapsforgeSrv")
+     mainClass.set(javaMainClass)
 }
 
 // https://github.com/johnrengelman/shadow
@@ -73,6 +81,11 @@ shadowJar {
         path = 'META-INF/services'
         include 'org.eclipse.jetty.http.HttpFieldPreEncoder'
    }
+   manifest {
+        attributes(
+            "Main-Class": javaMainClass
+        )
+    }
 }
 
 java {
