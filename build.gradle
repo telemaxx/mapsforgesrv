@@ -17,12 +17,7 @@ repositories {
 sourceSets {
     main {
         java {
-            srcDirs 'src/main'
-        }
-    }
-    test {
-        java {
-            srcDirs 'src/test'
+            srcDirs 'src'
         }
     }
  }
@@ -33,16 +28,11 @@ dependencies {
     def jettyVersion = '11.0.21'
     def slf4j = '+'
 
-//  api "org.apache.commons:commons-math3:+"
-    testImplementation "junit:junit:+"
-
     implementation "org.mapsforge:mapsforge-core:${mapsforgeVersion}"
     implementation "org.mapsforge:mapsforge-map:${mapsforgeVersion}"
     implementation "org.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
     runtimeOnly "org.mapsforge:mapsforge-themes:${mapsforgeVersion}"
     implementation "org.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
-//  implementation "org.mapsforge:mapsforge-poi-awt:${mapsforgeVersion}"
-//  implementation "org.mapsforge:mapsforge-poi:${mapsforgeVersion}"
 
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
     runtimeOnly "org.eclipse.jetty.http2:http2-server:${jettyVersion}"
@@ -57,9 +47,7 @@ dependencies {
     implementation "org.apache.commons:commons-lang3:+"
     runtimeOnly "org.xerial:sqlite-jdbc:+"
     runtimeOnly "net.sf.kxml:kxml2:+" 
-//  implementation "com.formdev:svgSalamander:+"
 
-//  implementation "com.google.jimfs:jimfs:+"
     implementation "com.github.marschall:memoryfilesystem:+"
 }
 
