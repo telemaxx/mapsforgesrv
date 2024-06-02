@@ -97,7 +97,7 @@ task copyFatJar2jars_ready2use(type: Copy, dependsOn: 'shadowJar') {
     group 'distribution'
     description 'Copy the fatJar to bin/jars_ready2use/'
     from file("$buildDir/libs/mapsforgesrv-fatjar.jar")
-    into file("$buildDir/../bin/jars_ready2use/")
+    into file("$buildDir/bin/jars_ready2use/")
 }
 
 gradleLint.rules = ['all-dependency']
