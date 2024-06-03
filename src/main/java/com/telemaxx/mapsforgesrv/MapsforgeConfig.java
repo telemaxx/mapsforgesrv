@@ -72,6 +72,7 @@ public class MapsforgeConfig extends PropertiesParser{
 		}
 		String config = configCmd.getOptionValue("config");
 		if (config != null) {
+			config = config.trim();
 			if (new File(config).isDirectory()) {
 				configDirectory = config+"/";
 				if (new File(configDirectory+FILECONFIG_SERVER).isFile()) {
