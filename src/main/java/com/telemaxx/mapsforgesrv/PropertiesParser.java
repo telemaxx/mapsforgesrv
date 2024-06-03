@@ -24,8 +24,6 @@ public abstract class PropertiesParser {
 	// false: use default value true: exit(1)
 	protected static final String 	FILE = "file"; //$NON-NLS-1$
 	protected static final String 	FOLDER = "folder"; //$NON-NLS-1$
-	// log response time
-	public final static boolean 	LOG_RESP_TIME = true;
 	// mandatory config files & directory
 	public final static String 		FILECONFIG_JETTY = "jetty.xml"; //$NON-NLS-1$
 	public final static String 		FILECONFIG_JETTY_THREADPOOL = "jetty-threadpool-virtual.xml"; //$NON-NLS-1$

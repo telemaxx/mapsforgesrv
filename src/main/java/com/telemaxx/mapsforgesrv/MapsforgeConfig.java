@@ -33,12 +33,10 @@ public class MapsforgeConfig extends PropertiesParser{
 	private Map<String, MapsforgeStyleConfig> stylesConfig;
 	private String configDirectory = null;
 	private String preferredLanguage = null;
-
+	private String requestLogFormat = null;
 
 	private final static String styleNameRegex = "^[0-9a-z._-]+$"; //$NON-NLS-1$
 	private final static Pattern styleNameRegexPattern = Pattern.compile(styleNameRegex);
-
-
 
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeConfig.class);
 
@@ -113,6 +111,7 @@ public class MapsforgeConfig extends PropertiesParser{
 		outOfRangeTms = parseString(null, "outofrange_tms", null, "Out of range TMS url"); //$NON-NLS-1$ //$NON-NLS-2$
 		appendWorldMap = parseHasOption("worldmap", "Append built-in world map");
 		acceptTerminate = parseHasOption("terminate", "Accept terminate request");
+		requestLogFormat = parseString("%{client}a - %u %t '%r' %s %O '%{Referer}i' '%{User-Agent}i' '%C'", "requestlog-format", null, "Request log format"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseStyles();
 	}
 	
@@ -231,6 +230,11 @@ public class MapsforgeConfig extends PropertiesParser{
 	public String getPreferredLanguage() {
 		return this.preferredLanguage;
 	}
+	
+	public String getRequestLogFormat() {
+		return requestLogFormat;
+	}
+
 	
 	public Map<String, MapsforgeStyleConfig> getStylesConfig() {
 		return stylesConfig;

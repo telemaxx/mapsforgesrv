@@ -63,7 +63,9 @@ package com.telemaxx.mapsforgesrv;
 
 import java.net.BindException;
 
+import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.Slf4jRequestLogWriter;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.xml.XmlConfiguration;
@@ -85,7 +87,6 @@ public class MapsforgeSrv {
 		logger.debug("Current dir [user.dir]: " + System.getProperty("user.dir"));
 
 		MapsforgeConfig mapsforgeConfig = new MapsforgeConfig(args);
-		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig);
 		
 		logger.info("################ STARTING SERVER ################");
 		XmlConfiguration xmlConfiguration = null;
@@ -97,7 +98,14 @@ public class MapsforgeSrv {
 		xmlConfiguration.configure(server);
 		if(!((QueuedThreadPool)server.getThreadPool()).getVirtualThreadsExecutor().equals(null))
 			logger.info("Virtual threads are enabled");
-		server.setHandler(mapsforgeHandler);
+		server.setHandler(new MapsforgeHandler(mapsforgeConfig));
+		
+		Slf4jRequestLogWriter slfjRequestLogWriter = new Slf4jRequestLogWriter();
+		slfjRequestLogWriter.setLoggerName("com.telemaxx.mapsforgesrv.request");
+		CustomRequestLog customRequestLog = new CustomRequestLog(slfjRequestLogWriter, mapsforgeConfig.getRequestLogFormat());
+		server.setRequestLog(customRequestLog);
+		
+		
 		try {
 			
 			server.start();

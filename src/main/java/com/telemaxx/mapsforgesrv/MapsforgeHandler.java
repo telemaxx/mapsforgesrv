@@ -139,24 +139,9 @@ public class MapsforgeHandler extends AbstractHandler {
 		}
 	}
 
-	private String logRequest(HttpServletRequest request, long startTime, Exception ex, String engine) {
-		// request
-		String msg = request.getPathInfo();
-		String query = request.getQueryString();
-		if (query != null) msg += "?" + query;
-		// response time;idle threads
-		if (MapsforgeConfig.LOG_RESP_TIME)
-			msg = String.format("%-" + 6 + "s", Math.round((System.nanoTime() - startTime) / 1000000))+msg;
-		// exception
-		if (ex != null)
-			return msg + " ! " + ex.getMessage() + System.lineSeparator() + ExceptionUtils.getStackTrace(ex);
-		return msg;
-	}
-
 	@Override
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) {
 		baseRequest.setHandled(true);
-		long startTime = System.nanoTime();
 		String path = request.getPathInfo();
 		String engine = "std";
 		try {
@@ -381,7 +366,6 @@ public class MapsforgeHandler extends AbstractHandler {
 			ImageIO.write(image, ext, responseBufferStream);
 			responseBufferStream.flush(response);
 			responseBufferStream.close();
-			logger.info(logRequest(request, startTime, null, engine));
 		} catch (Exception e) {
 			if (stopped) return;
 			String extmsg = ExceptionUtils.getRootCauseMessage(e);
@@ -390,7 +374,6 @@ public class MapsforgeHandler extends AbstractHandler {
 			} catch (IOException e1) {
 				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
-			logger.error(logRequest(request, startTime, e, engine));
 		}
 	}
 
