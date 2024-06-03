@@ -18,7 +18,7 @@ public abstract class PropertiesParser {
 	 * FIXED VALUES *
 	 ****************/
 	
-	public final static String 		VERSION = "0.21.2.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	public final static String 		VERSION = "0.21.3.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 	
 	public final static String 		TILE_EXTENSION = "png"; //$NON-NLS-1$
 	// false: use default value true: exit(1)
