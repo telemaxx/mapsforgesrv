@@ -7,3 +7,6 @@ build
 /.project
 /.settings/
 /dist/mapsforgesrv-fatjar.jar
+.project
+.settings
+
