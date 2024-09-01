@@ -6,7 +6,7 @@ build
 /.classpath
 /.project
 /.settings/
-/dist/mapsforgesrv-fatjar.jar
 .project
 .settings
 
+/bin/

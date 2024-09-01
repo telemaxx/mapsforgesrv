@@ -96,18 +96,20 @@ public class MapsforgeSrv {
 		Server server = new Server(queuedThreadPool);
 		xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY));
 		xmlConfiguration.configure(server);
-		if(!((QueuedThreadPool)server.getThreadPool()).getVirtualThreadsExecutor().equals(null))
-			logger.info("Virtual threads are enabled");
+		try {
+			if(!((QueuedThreadPool)server.getThreadPool()).getVirtualThreadsExecutor().equals(null))
+				logger.info("Virtual threads are enabled");
+		} catch (NullPointerException e) {
+			logger.info("Virtual threads are disabled");
+		};
 		server.setHandler(new MapsforgeHandler(mapsforgeConfig));
 		
 		Slf4jRequestLogWriter slfjRequestLogWriter = new Slf4jRequestLogWriter();
 		slfjRequestLogWriter.setLoggerName("com.telemaxx.mapsforgesrv.request");
 		CustomRequestLog customRequestLog = new CustomRequestLog(slfjRequestLogWriter, mapsforgeConfig.getRequestLogFormat());
 		server.setRequestLog(customRequestLog);
-		
-		
+
 		try {
-			
 			server.start();
 			logger.info("Started " +server.getThreadPool().toString());
 		} catch (BindException e) {

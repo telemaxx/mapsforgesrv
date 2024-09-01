@@ -26,12 +26,12 @@ public abstract class PropertiesParser {
 	protected static final String 	FOLDER = "folder"; //$NON-NLS-1$
 	// mandatory config files & directory
 	public final static String 		FILECONFIG_JETTY = "jetty.xml"; //$NON-NLS-1$
-	public final static String 		FILECONFIG_JETTY_THREADPOOL = "jetty-threadpool-virtual.xml"; //$NON-NLS-1$
+	public final static String 		FILECONFIG_JETTY_THREADPOOL = "jetty-threadpool.xml"; //$NON-NLS-1$
 	public final static String		FILECONFIG_SERVER = "server.properties"; //$NON-NLS-1$
-	public final static String		FILECONFIG_DEFAULTSTYLE = "default.properties"; //$NON-NLS-1$
-	public final static String		DIRCONFIG_STYLE = "styles/"; //$NON-NLS-1$
+	public final static String		FILECONFIG_DEFAULTTASK = "default.properties"; //$NON-NLS-1$
+	public final static String		DIRCONFIG_TASK = "tasks"+System.getProperty("file.separator"); //$NON-NLS-1$
 	
-	 // true:  More precise at tile edges but much slower / false: Less precise at tile edges but much faster
+	// true:  More precise at tile edges but much slower / false: Less precise at tile edges but much faster
 	public final static boolean 	HILLSHADING_INTERPOLATION_OVERLAP = true;
 	public final static int 		HILLSHADING_CACHE = 128; // default is 4
 	public final static int 		HILLSHADING_NEIGHBOR_CACHE= 8; // default is 4	
@@ -51,24 +51,24 @@ public abstract class PropertiesParser {
 	// MapsforgeConfig.rendererName
 	protected final static String 	DEFAULT_RENDERER = AUTHORIZED_RENDERER[0];
 
-	// MapsforgeStyleConfig.gammaValue
+	// MapsforgeTaskConfig.gammaValue
 	protected final static double 	DEFAULT_GAMMA = 1.;
-	// MapsforgeStyleConfig.blackValue
+	// MapsforgeTaskConfig.blackValue
 	protected final static int 		DEFAULT_BLACK = 0;
-	// MapsforgeStyleConfig.deviceScale
+	// MapsforgeTaskConfig.deviceScale
 	protected final static float	DEFAULT_DEVICESCALE = 1.0f;
-	// MapsforgeStyleConfig.userScale
+	// MapsforgeTaskConfig.userScale
 	protected final static float	DEFAULT_USERSCALE = 1.0f;
-	// MapsforgeStyleConfig.textScale
+	// MapsforgeTaskConfig.textScale
 	protected final static float	DEFAULT_TEXTSCALE = 1.0f;
-	// MapsforgeStyleConfig.symbolScale
+	// MapsforgeTaskConfig.symbolScale
 	protected final static float	DEFAULT_SYMBOLSCALE = 1.0f;
-	// MapsforgeStyleConfig.lineScale
+	// MapsforgeTaskConfig.lineScale
 	protected final static float	DEFAULT_LINESCALE = 1.0f;
-	// MapsforgeStyleConfig.hillShadingArguments
+	// MapsforgeTaskConfig.hillShadingArguments
 	public final static double[] 	DEFAULT_HILLSHADING_SIMPLE = { 0.1, 0.666 };
-	public final static	double 		DEFAULT_HILLSHADING_DIFDUSELIGHT = 50;
-	// MapsforgeStyleConfig.hillShadingMagnitude
+	public final static	double 		DEFAULT_HILLSHADING_DIFFUSELIGHT = 50;
+	// MapsforgeTaskConfig.hillShadingMagnitude
 	protected final static double 	DEFAULT_HILLSHADING_MAGNITUDE = 1.;
 
 	/***********
