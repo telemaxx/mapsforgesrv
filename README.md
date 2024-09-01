@@ -11,7 +11,7 @@ The description of this tool you find at the origin page:
 https://sourceforge.net/p/mobac/code/HEAD/tree/trunk/tools/MapsforgeSrv/
 
 The jar is now located in the dist folder:  
-git\mapsforgesrv\dist\mapsforgesrv-fatjar.jar 
+git\mapsforgesrv\dist\mapsforgesrv-fatjar.jar  
 Only one jar containing everything you need.
 
 	1. mapsforgesrv-fatjar.jar (branch "styles") developed and built with java version 11, needs java version 11 or higher to run
