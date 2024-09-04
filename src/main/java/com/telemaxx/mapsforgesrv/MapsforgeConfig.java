@@ -1,9 +1,24 @@
 package com.telemaxx.mapsforgesrv;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+
+import static java.nio.file.StandardWatchEventKinds.*;
+import java.nio.file.WatchService;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.imageio.ImageIO;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -25,14 +40,22 @@ public class MapsforgeConfig extends PropertiesParser{
 	private Map<String, MapsforgeTaskConfig> tasksConfig;
 	private String configDirectory = null;
 	private String requestLogFormat = null;
+	
+	public static BufferedImage BI_NOCONTENT;
 
-	private final static String taskFileNameRegex = "^[0-9a-z._-]+.properties$"; //$NON-NLS-1$
-
+	private final static String  taskFileNameRegex = "^[0-9a-z._-]+.properties$"; //$NON-NLS-1$
+	
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeConfig.class);
 
 	public MapsforgeConfig(String[] args) throws Exception {
+		// https://stackoverflow.com/questions/10235728/convert-bufferedimage-into-byte-without-i-o
+		ImageIO.setUseCache(false);
+		BI_NOCONTENT = ImageIO.read(getClass().getClassLoader().getResourceAsStream("assets/mapsforgesrv/no_content.png"));
+
 		initOption(args);
 		initConfig();
+		
+		watchConfig ();
 	}
 
 	/*
@@ -116,13 +139,53 @@ public class MapsforgeConfig extends PropertiesParser{
 			MapsforgeTaskConfig msc;
 			for (File taskFile : taskFiles) { 
 				String taskFileName = taskFile.getName();
-				logger.info("taskFileName="+taskFileName);
 				String taskName = taskFileName.replaceFirst("[.][^.]+$", ""); //$NON-NLS-1$
-				logger.info("taskName="+taskName);
 				msc = new MapsforgeTaskConfig(taskName, taskFile);
 				tasksConfig.put(taskName, msc);
 			}
 		}
+	}
+	
+	private void watchConfig () throws Exception {
+		Thread watchConfigThread = new Thread(null, new Runnable() {
+			@Override
+			public void run() {
+				Path configPath = Paths.get(configDirectory+"/tasks");
+				try {
+					WatchService watchService = FileSystems.getDefault().newWatchService();
+					configPath.register(watchService,
+				                           ENTRY_CREATE,
+				                           ENTRY_DELETE,
+				                           ENTRY_MODIFY);
+					boolean poll = true;
+					while (poll) {
+						WatchKey key = watchService.take();
+						for (WatchEvent<?> event : key.pollEvents()) {
+							Path pathName = (Path) event.context();
+							String fileName = pathName.toString();
+							if (!Pattern.matches(taskFileNameRegex,fileName)) continue;
+							MapsforgeHandler mapsforgeHandler = MapsforgeSrv.getMapsforgeHandler();
+							if (mapsforgeHandler == null) continue;
+							String taskName = fileName.replaceFirst("[.][^.]+$", "");
+							boolean taskExist = (mapsforgeHandler.getTasksHandler().get(taskName) != null);
+							System.out.println("Task exist: " + taskExist);
+							if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
+								System.out.println("File created: " + fileName);
+								// If task does not exist, create new task config and task handler
+							} else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
+								System.out.println("File deleted: " + fileName);
+								// If task does exist, delete task handler and config
+							} else if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
+								System.out.println("File modified: " + fileName);
+								// If task does exist, delete task handler and config
+							}
+						}
+						poll = key.reset();
+					}
+				} catch (Exception e) {}
+			}
+		}, "watchConfig");
+		watchConfigThread.start();
 	}
 
 	/*
