@@ -19,32 +19,22 @@
 package com.telemaxx.mapsforgesrv;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.imageio.ImageIO;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.mapsforge.core.graphics.GraphicFactory;
-import org.mapsforge.core.graphics.TileBitmap;
-import org.mapsforge.core.model.Tile;
 import org.mapsforge.map.awt.graphics.AwtGraphicFactory;
-import org.mapsforge.map.layer.renderer.RendererJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -56,23 +46,16 @@ public class MapsforgeHandler extends AbstractHandler {
 			new String[] { "x", "y", "z", "textScale", "userScale", "transparent", "tileRenderSize", "hillshading", "task" })); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 
 	protected final GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
-	protected final String outOfRangeTms;
 
 	private Map<String, MapsforgeTaskHandler> tasksHandler;
 	private MapsforgeConfig mapsforgeConfig;
 
 	private static boolean stopped = false;
-	private static final Pattern P = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)(?:(?:\\.)(.*))?"); //$NON-NLS-1$
-	private static BufferedImage BI_NOCONTENT;
 
 	public MapsforgeHandler(MapsforgeConfig mapsforgeConfig) throws Exception {
 		super();
-		// https://stackoverflow.com/questions/10235728/convert-bufferedimage-into-byte-without-i-o
-		ImageIO.setUseCache(false);
-		BI_NOCONTENT = ImageIO.read(getClass().getClassLoader().getResourceAsStream("assets/mapsforgesrv/no_content.png"));
 
 		this.mapsforgeConfig = mapsforgeConfig;
-		outOfRangeTms = mapsforgeConfig.getOutOfRangeTms();
 
 		tasksHandler = new HashMap<String, MapsforgeTaskHandler>();
 		for(String task : mapsforgeConfig.getTasksConfig().keySet()) {
@@ -84,7 +67,6 @@ public class MapsforgeHandler extends AbstractHandler {
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) {
 		baseRequest.setHandled(true);
 		String path = request.getPathInfo();
-		String engine = "std";
 		try {
 			if (path.equals("/terminate")) { //$NON-NLS-1$
 				// Accept terminate request from loopback addresses only!
@@ -135,185 +117,14 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 			
 			/* task */
-			MapsforgeTaskHandler taskHandler = null;
-			MapsforgeTaskConfig  taskConfig = null;
-			if(request.getParameter("task") == null || request.getParameter("task").isEmpty()) {
-				taskHandler = tasksHandler.get("default");
-				taskConfig = mapsforgeConfig.getTaskConfig("default");
+			String key = request.getParameter("task");
+			if(key == null || key.isEmpty()) {
+				key = "default";
 			} else {
-				taskHandler = tasksHandler.get(request.getParameter("task"));
-				if(taskHandler == null) 
-					throw new ServletException("Unsupported task: " + request.getParameter("task")); //$NON-NLS-1$
-				taskConfig = mapsforgeConfig.getTaskConfig(request.getParameter("task"));
+				if(tasksHandler.get(key) == null) 
+					throw new ServletException("Unsupported task: " + key); //$NON-NLS-1$
 			}
-
-			int x, y, z;
-			String ext = MapsforgeConfig.TILE_EXTENSION; // $NON-NLS-1$
-			Matcher m = P.matcher(path);
-			if (m.matches()) {
-				x = Integer.parseInt(m.group(2));
-				y = Integer.parseInt(m.group(3));
-				z = Integer.parseInt(m.group(1));
-				if (m.group(4) != null) ext = m.group(4);
-			} else {
-				try {
-					x = Integer.parseInt(request.getParameter("x")); //$NON-NLS-1$
-					y = Integer.parseInt(request.getParameter("y")); //$NON-NLS-1$
-					z = Integer.parseInt(request.getParameter("z")); //$NON-NLS-1$
-				} catch (NumberFormatException e) {
-					logger.error("Invalid tile request "+path); //$NON-NLS-1$
-					response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-					return;
-				};
-			}
-			if (x < 0 || x >= (1 << z)) {
-				logger.error("Tile number x=" + x + " out of range!"); //$NON-NLS-1$
-				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				return;
-			}
-			if (y < 0 || y >= (1 << z)) {
-				logger.error("Tile number y=" + y + " out of range!"); //$NON-NLS-1$
-				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				return;
-			}
-
-			float requestedTextScale = 1.0f; // Original text scaling comes from config value
-			try {
-				String tmp = request.getParameter("textScale"); //$NON-NLS-1$
-				if (tmp != null) {
-//					Override text scaling from config value by text scaling from HTTP request
-//					Final text scaling = textScale * requestedTextScale
-					requestedTextScale = Float.parseFloat(tmp) / taskConfig.getTextScale();
-				}
-			} catch (Exception e) {
-				throw new ServletException("Failed to parse \"textScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
-			}
-
-			float requestedUserScale = taskHandler.getDisplayModel().getUserScaleFactor();
-			try {
-				String tmp = request.getParameter("userScale"); //$NON-NLS-1$
-				if (tmp != null) {
-					requestedUserScale = Float.parseFloat(tmp);
-				}
-			} catch (Exception e) {
-				throw new ServletException("Failed to parse \"userScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
-			}
-
-			boolean requestedTransparent = MapsforgeConfig.DEFAULT_TRANSPARENT;
-			try {
-				String tmp = request.getParameter("transparent"); //$NON-NLS-1$
-				if (tmp != null) {
-					requestedTransparent = Boolean.parseBoolean(tmp);
-				}
-			} catch (Exception e) {
-				throw new ServletException("Failed to parse \"transparent\" property: " + e.getMessage(), e); //$NON-NLS-1$
-			}
-
-			int requestedTileRenderSize = MapsforgeConfig.DEFAULT_TILE_RENDERSIZE;
-			try {
-				String tmp = request.getParameter("tileRenderSize"); //$NON-NLS-1$
-				if (tmp != null)
-					requestedTileRenderSize = Integer.parseInt(tmp);
-			} catch (Exception e) {
-				throw new ServletException("Failed to parse \"tileRenderSize\" property: " + e.getMessage(), e); //$NON-NLS-1$
-			}
-
-			TileBitmap tileBitmap = null;
-			Tile tile = new Tile(x, y, (byte) z, requestedTileRenderSize);
-			if (taskHandler.getMultiMapDataStore().supportsTile(tile)) {
-				boolean enable_hs = true;
-				try {
-					String tmp = request.getParameter("hillshading"); //$NON-NLS-1$
-					if (tmp != null)
-						enable_hs = Integer.parseInt(request.getParameter("hillshading")) != 0; //$NON-NLS-1$
-				} catch (Exception e) {
-					throw new ServletException("Failed to parse \"hillshading\" property: " + e.getMessage(), e); //$NON-NLS-1$
-				}
-				if (taskHandler.getHillsRenderConfig() != null && enable_hs) engine = "hs";
-
-				// requestedUserScale = 2.0f; // Uncomment for testing purpose only!
-//				Calling "displayModel.setUserScaleFactor" alone has no visible impact on rendering.
-//				Starting new "renderThemeFuture" afterwards helps, but can significantly impact rendering performance
-//				if different TMS clients take turns requesting different userScale values !!!
-				if (taskHandler.getDisplayModel().getUserScaleFactor() != requestedUserScale) {
-					taskHandler.getDisplayModel().setUserScaleFactor (requestedUserScale);
-					taskHandler.updateRenderThemeFuture();
-				}
-
-				RendererJob job = new RendererJob(tile, taskHandler.getMultiMapDataStore(), taskHandler.getRenderThemeFuture(), taskHandler.getDisplayModel(),
-					requestedTextScale, requestedTransparent, false);
-
-// Synchronizing render jobs has no visible effect -> disabled
-// 				synchronized (this) {
-					if (taskHandler.getDirectRenderer() != null) {
-						tileBitmap = taskHandler.getDirectRenderer().get(engine).executeJob(job);
-					} else {
-						tileBitmap = taskHandler.getDatabaseRenderer().get(engine).executeJob(job);
-					}
-					if (!taskHandler.getHillShadingOverlay()) taskHandler.getTileCache().put(job, null);
-// 				}
-			}
-
-			BufferedImage image;
-			if (tileBitmap != null) {
-				image = AwtGraphicFactory.getBitmap(tileBitmap); // image type is TYPE_INT_RGB
-				//int imageType = image.getType(); // returns 1 (TYPE_INT_RGB)
-				int imageWidth  = image.getWidth();
-				int imageHeight = image.getHeight();
-				//int dataBufferType = image.getRaster().getDataBuffer().getDataType(); // returns 3 (TYPE_INT)
-				// DataBuffer created by Mapsforge renderer is of type DataBufferInt,
-				// i.e. one int value 0xaarrggbb per pixel
-				DataBufferInt dataBuffer = (DataBufferInt) image.getRaster().getDataBuffer();
-				int[] pixelArray = dataBuffer.getData();
-				int pixelValue;
-				int pixelCount = imageWidth * imageHeight;
-				int[] colorLookupTable = taskHandler.getColorLookupTable();
-				if (taskHandler.getHillShadingOverlay()) { // transparent hillshading overlay image requested
-					BufferedImage newImage = new BufferedImage (imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
-					DataBufferInt newDataBuffer = (DataBufferInt) newImage.getRaster().getDataBuffer();
-					int[] newPixelArray = newDataBuffer.getData();
-					while (pixelCount-- > 0) {
-						pixelValue = pixelArray[pixelCount];
-						if (pixelValue == 0xfff8f8f8) { // 'nodata' hillshading value
-							newPixelArray[pixelCount] = 0x00000000; // fully transparent pixel
-						} else { // get gray value of pixel from blue value of pixel
-							newPixelArray[pixelCount] = colorLookupTable[pixelValue & 0xff];
-						}
-					}
-					image = newImage; // return transparent overlay image instead of original image
-				} else if (colorLookupTable != null) { // apply gamma correction and/or contrast-stretching
-					while (pixelCount-- > 0) {
-						pixelValue = pixelArray[pixelCount];
-						pixelArray[pixelCount] = (pixelValue & 0xff000000) // alpha value
-								| (colorLookupTable[(pixelValue >>> 16) & 0xff] << 16) // red value
-								| (colorLookupTable[(pixelValue >>> 8) & 0xff] << 8) // green value
-								| (colorLookupTable[pixelValue & 0xff]); // blue value
-					}
-				}
-				response.setStatus(HttpServletResponse.SC_OK);
-			} else {
-				if(this.outOfRangeTms != null) {
-					response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
-					String redirecturl = this.outOfRangeTms.replace("{x}", x+"").replace("{y}", y+"").replace("{z}", z+"");
-					response.setHeader("Location", redirecturl);
-					response.flushBuffer();
-					logger.info("out-of-range redirect '"+redirecturl+"'");
-					return;
-				} else {
-					image = BI_NOCONTENT;
-					response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-				}
-			}
-			if (mapsforgeConfig.getCacheControl() > 0) {
-				response.addHeader("Cache-Control", "public, max-age=" + mapsforgeConfig.getCacheControl()); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-			response.setContentType("image/" + ext); //$NON-NLS-1$
-			//ImageIO.write(image, ext, response.getOutputStream());
-			int bufferSize = 256 + 4*image.getWidth()*image.getHeight(); // Assume image data size <= bufferSize
-			MyResponseBufferOutputStream responseBufferStream = new MyResponseBufferOutputStream(bufferSize);
-			ImageIO.write(image, ext, responseBufferStream);
-			responseBufferStream.flush(response);
-			responseBufferStream.close();
+			tasksHandler.get(key).handle(target, baseRequest, request, response);
 		} catch (Exception e) {
 			if (stopped) return;
 			String extmsg = ExceptionUtils.getRootCauseMessage(e);
@@ -325,19 +136,6 @@ public class MapsforgeHandler extends AbstractHandler {
 		}
 	}
 
-	// Extend class ByteArrayOutputStream by setting content length on buffer flush
-	private static class MyResponseBufferOutputStream extends ByteArrayOutputStream {
-		public MyResponseBufferOutputStream(int bufferSize) {
-			buf = new byte[bufferSize];
-		}
-		public void flush (HttpServletResponse response) throws IOException {
-			response.setContentLength(count);
-			ServletOutputStream responseOutputStream = response.getOutputStream();
-			responseOutputStream.write(buf, 0, count);
-			responseOutputStream.flush();
-		}
-	}
-
 	public GraphicFactory getGraphicFactory() {
 		return graphicFactory;
 	}
@@ -345,5 +143,10 @@ public class MapsforgeHandler extends AbstractHandler {
 	public MapsforgeConfig getMapsforgeConfig() {
 		return mapsforgeConfig;
 	}
+
+	public Map<String, MapsforgeTaskHandler> getTasksHandler() {
+		return tasksHandler;
+	}
+
 
 }
