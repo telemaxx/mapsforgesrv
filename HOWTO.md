@@ -6,7 +6,7 @@
     - Java SDK_(Preferences > Java > Installed JREs)_
   - [Buildship: Eclipse Plug-ins for Gradle](https://projects.eclipse.org/projects/tools.buildship)
     - _Build Scans might be disabled in Preferences > Gradle_
-  - An Eclipse workspace which doesn't already contai a project named **mapsforgesrv**
+  - An Eclipse workspace which doesn't already contain a project named **mapsforgesrv**
 
 - ### import
 
@@ -18,10 +18,13 @@
   > Before launching Gradle tasks, please check configuration files in `/config`:
 
   - `server.properties`
-    - `mapfiles` path must exist on your system if you want to use them
+    
+  - `/tasks/*.properties` _(except `default.properties`)_
+    - `mapfiles` path(s) must exist on your system if you want to use them
     - `demfolder` path must exist on your system if you want renderer with hillshading
-  - `/style/*.properties` _(except `default.properties`)_
-    - `themefile` path must exist on your system. _(you can simply suffix files with`.disabled` to avoid loading them)_
+    - `themefile` path must exist on your system.  
+  
+  - _(you can simply suffix files with`.disabled` to avoid loading them)_
 
 ### GRADLE
 
