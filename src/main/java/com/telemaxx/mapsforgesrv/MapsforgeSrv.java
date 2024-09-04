@@ -76,6 +76,8 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 public class MapsforgeSrv {
 	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
+	private static MapsforgeSrv mapsforgeSrv;
+	private static MapsforgeHandler mapsforgeHandler;
 	
 	public MapsforgeSrv(String[] args) throws Exception {
 		
@@ -102,7 +104,8 @@ public class MapsforgeSrv {
 		} catch (NullPointerException e) {
 			logger.info("Virtual threads are disabled");
 		};
-		server.setHandler(new MapsforgeHandler(mapsforgeConfig));
+		mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig);
+		server.setHandler(mapsforgeHandler);
 		
 		Slf4jRequestLogWriter slfjRequestLogWriter = new Slf4jRequestLogWriter();
 		slfjRequestLogWriter.setLoggerName("com.telemaxx.mapsforgesrv.request");
@@ -122,7 +125,15 @@ public class MapsforgeSrv {
 	public static void main(String[] args) throws Exception {
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
 		SLF4JBridgeHandler.install();
-		new MapsforgeSrv(args);
+		mapsforgeSrv = new MapsforgeSrv(args);
+	}
+	
+	public static MapsforgeSrv getMapsforgeSrv () {
+		return mapsforgeSrv;
+	}
+	
+	public static MapsforgeHandler getMapsforgeHandler () {
+		return mapsforgeHandler;
 	}
 }
 

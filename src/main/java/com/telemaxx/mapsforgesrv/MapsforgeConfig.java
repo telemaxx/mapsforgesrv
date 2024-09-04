@@ -168,15 +168,15 @@ public class MapsforgeConfig extends PropertiesParser{
 							if (mapsforgeHandler == null) continue;
 							String taskName = fileName.replaceFirst("[.][^.]+$", "");
 							boolean taskExist = (mapsforgeHandler.getTasksHandler().get(taskName) != null);
-							System.out.println("Task exist: " + taskExist);
+							System.out.println("Task "+taskName+" exists = " + taskExist);
 							if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
-								System.out.println("File created: " + fileName);
+								System.out.println("New task file created: " + fileName);
 								// If task does not exist, create new task config and task handler
 							} else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
-								System.out.println("File deleted: " + fileName);
+								System.out.println("Existing task file deleted: " + fileName);
 								// If task does exist, delete task handler and config
 							} else if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
-								System.out.println("File modified: " + fileName);
+								System.out.println("Existing task file modified: " + fileName);
 								// If task does exist, delete task handler and config
 							}
 						}
