@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.file.Files;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -12,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class PropertiesParser {
 
-	protected Properties configFile;
+	protected Properties configProperties;
 	
 	/****************
 	 * FIXED VALUES *
@@ -79,31 +82,33 @@ public abstract class PropertiesParser {
 	private final static int 		PAD_MSG = 26;
 	private final static 			Logger logger = LoggerFactory.getLogger(PropertiesParser.class);
 
-	protected void readConfig(Object config) throws Exception {
+	protected String readConfig(File configFile) throws Exception {
 		FileInputStream in;
 		try {
-			if(config instanceof String) {
-				in = new FileInputStream((String)config);
-			} else if(config instanceof File) {
-				in = new FileInputStream((File)config);
-			} else {
-				throw new Exception("unsupported object type '"+config.toString()+"'");
-			}
-			configFile = new Properties();
-			configFile.load(in);
+			in = new FileInputStream(configFile);
+			configProperties = new Properties();
+			configProperties.load(in);
 			in.close();
 		} catch (FileNotFoundException e) {
-			logger.error("Can't find config file '" + config + "': exiting"); //$NON-NLS-1$
+			logger.error("Can't find config file '" + configFile + "': exiting"); //$NON-NLS-1$
 			System.exit(1);
 		} catch (IOException e) {
-			logger.error("Can't parse config file '" + config + "': exiting"); //$NON-NLS-1$
+			logger.error("Can't parse config file '" + configFile + "': exiting"); //$NON-NLS-1$
 			System.exit(1);
 		}
+		return checkSum(configFile);
+	}
+	
+	public String checkSum (File file) throws Exception {
+		byte[] data = Files.readAllBytes(file.toPath());
+		byte[] hash = MessageDigest.getInstance("MD5").digest(data);
+		String checksum = new BigInteger(1, hash).toString(16);
+		return checksum;
 	}
 
 	protected String retrieveConfigValue(String key) throws Exception {
-		if (configFile != null) {
-			return configFile.getProperty(key);
+		if (configProperties != null) {
+			return configProperties.getProperty(key);
 		} else {
 			throw new Exception("configFile is NULL");
 		}
@@ -196,8 +201,8 @@ public abstract class PropertiesParser {
 	protected boolean parseHasOption(String configValue, String msgHeader) throws Exception {
 		msgHeader = parsePadMsg(msgHeader);
 		boolean target = false;
-		if (configFile != null) {
-			target = configFile.getProperty(configValue) != null;
+		if (configProperties != null) {
+			target = configProperties.getProperty(configValue) != null;
 		} else {
 			throw new Exception("configFile is NULL");
 		}

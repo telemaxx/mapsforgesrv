@@ -18,7 +18,6 @@
 
 package com.telemaxx.mapsforgesrv;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Enumeration;

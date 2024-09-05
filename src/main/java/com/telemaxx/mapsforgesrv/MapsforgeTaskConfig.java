@@ -33,12 +33,13 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	protected double hillShadingMagnitude;
 	private int blackValue;
 	private double gammaValue;
+	private String checkSum = null;
 	
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeTaskConfig.class);
 	
 	public MapsforgeTaskConfig(String taskName, File taskFile) throws Exception {
 		this.taskName = taskName;
-		readConfig(taskFile);
+		checkSum = readConfig(taskFile);
 		initConfig();
 	}
 	
@@ -115,11 +116,11 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 				logger.info(msgHeader + ": defined [{" + mapFilesString + "}]"); //$NON-NLS-1$
 			}
 		}
-		if (mapFiles.size() == 0) configFile.setProperty("worldmap", "");
+		if (mapFiles.size() == 0) configProperties.setProperty("worldmap", "");
 	}
 	
 	private void initConfig() throws Exception {
-		logger.info("################## TASK '"+taskName+"' CONFIG ##################");
+		logger.info("################ TASK '"+taskName+"' PROPERTIES ################");
 		rendererName = parseString(DEFAULT_RENDERER, "renderer", AUTHORIZED_RENDERER, "Renderer algorithm"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseMapFiles();
 		appendWorldMap = parseHasOption("worldmap", "Append built-in world map");
@@ -246,6 +247,10 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	
 	public double getGammaValue() {
 		return this.gammaValue;
+	}
+
+	public String getCheckSum() {
+		return this.checkSum;
 	}
 
 }

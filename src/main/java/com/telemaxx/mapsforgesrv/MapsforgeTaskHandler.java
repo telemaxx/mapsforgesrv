@@ -96,7 +96,7 @@ public class MapsforgeTaskHandler {
 		this.mapsforgeConfig = mapsforgeHandler.getMapsforgeConfig();
 		this.mapsforgeTaskConfig = mapsforgeTaskConfig;
 
-		logger.info("################### MAPS INFO ###################");
+		logger.info("------------------- MAPS INFO --------------------");
 		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
 		if (mapsforgeTaskConfig.getMapFiles().size() == 0) {
 			if (mapsforgeTaskConfig.getHillShadingAlgorithm() != null && mapsforgeTaskConfig.getDemFolder() != null) {
@@ -237,7 +237,7 @@ public class MapsforgeTaskHandler {
 
 				XmlRenderThemeStyleLayer baseLayer = styleMenu.getLayer(id);
 				Set<String> result = baseLayer.getCategories();
-				logger.info("################# THEME '"+name+"' OVERLAYS #################"); //$NON-NLS-1$
+				logger.info("----------------- THEME OVERLAYS -----------------"); //$NON-NLS-1$
 				for (XmlRenderThemeStyleLayer overlay : baseLayer.getOverlays()) {
 					String overlayId = overlay.getId();
 					boolean overlayEnabled = false;
@@ -491,7 +491,7 @@ public class MapsforgeTaskHandler {
 		final MapsforgeStyleParser mapStyleParser = new MapsforgeStyleParser();
 		final List<Style> styles = mapStyleParser.readXML(themeFile.getAbsolutePath());
 		Boolean selectedStyleExists = false;
-		logger.info("################ THEME '"+name+"' STYLES ################"); //$NON-NLS-1$
+		logger.info("------------------ THEME STYLES ------------------"); //$NON-NLS-1$
 		logger.info("Default style   : " + mapStyleParser.getDefaultStyle()); //$NON-NLS-1$
 		for (final Style style : styles) {
 			logger.info("Available style : " + style.getXmlLayer() + " --> " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$

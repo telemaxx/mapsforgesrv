@@ -3,8 +3,9 @@ package com.telemaxx.mapsforgesrv;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
@@ -13,9 +14,9 @@ import java.nio.file.WatchKey;
 
 import static java.nio.file.StandardWatchEventKinds.*;
 import java.nio.file.WatchService;
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
@@ -40,7 +41,7 @@ public class MapsforgeConfig extends PropertiesParser{
 	private Map<String, MapsforgeTaskConfig> tasksConfig;
 	private String configDirectory = null;
 	private String requestLogFormat = null;
-	
+
 	public static BufferedImage BI_NOCONTENT;
 
 	private final static String  taskFileNameRegex = "^[0-9a-z._-]+.properties$"; //$NON-NLS-1$
@@ -52,7 +53,7 @@ public class MapsforgeConfig extends PropertiesParser{
 		ImageIO.setUseCache(false);
 		BI_NOCONTENT = ImageIO.read(getClass().getClassLoader().getResourceAsStream("assets/mapsforgesrv/no_content.png"));
 
-		initOption(args);
+		initOptions(args);
 		initConfig();
 		
 		watchConfig ();
@@ -61,7 +62,7 @@ public class MapsforgeConfig extends PropertiesParser{
 	/*
 	 * OPTION
 	 */
-	private void initOption(String[] args) throws Exception {
+	private void initOptions(String[] args) throws Exception {
 		Options options = new Options();
 		options.addOption(Option.builder("c") //$NON-NLS-1$
 				.longOpt("config") //$NON-NLS-1$
@@ -97,7 +98,7 @@ public class MapsforgeConfig extends PropertiesParser{
 						System.exit(1);
 					}
 				}
-				readConfig(configDirectory+FILECONFIG_SERVER);
+				readConfig(new File(configDirectory+FILECONFIG_SERVER));
 			} else {
 				logger.error("Config directory '"+config+"' set with -c is not a directory: exiting"); //$NON-NLS-1$
 				System.exit(1);
@@ -130,18 +131,18 @@ public class MapsforgeConfig extends PropertiesParser{
 			    public boolean accept(File dir, String name) {
 			    	return name.matches(taskFileNameRegex);
 			    }};
-		File[] taskFiles = new File(configDirectory+"/tasks").listFiles(filenameFilter);
+		File[] taskFiles = new File(configDirectory+DIRCONFIG_TASK).listFiles(filenameFilter);
 		if(taskFiles.length == 0) {
-			logger.error(configDirectory+"/tasks doesn't contain any properties files named "+taskFileNameRegex); //$NON-NLS-1$
+			logger.error(configDirectory+DIRCONFIG_TASK+" doesn't contain any properties files named "+taskFileNameRegex); //$NON-NLS-1$
 			System.exit(-1);
 		} else {
 			tasksConfig = new HashMap<String, MapsforgeTaskConfig>();
-			MapsforgeTaskConfig msc;
+			MapsforgeTaskConfig mapsforgeTaskConfig;
 			for (File taskFile : taskFiles) { 
 				String taskFileName = taskFile.getName();
 				String taskName = taskFileName.replaceFirst("[.][^.]+$", ""); //$NON-NLS-1$
-				msc = new MapsforgeTaskConfig(taskName, taskFile);
-				tasksConfig.put(taskName, msc);
+				mapsforgeTaskConfig = new MapsforgeTaskConfig(taskName, taskFile);
+				tasksConfig.put(taskName, mapsforgeTaskConfig);
 			}
 		}
 	}
@@ -150,13 +151,10 @@ public class MapsforgeConfig extends PropertiesParser{
 		Thread watchConfigThread = new Thread(null, new Runnable() {
 			@Override
 			public void run() {
-				Path configPath = Paths.get(configDirectory+"/tasks");
+				Path configPath = Path.of(configDirectory+DIRCONFIG_TASK);
 				try {
 					WatchService watchService = FileSystems.getDefault().newWatchService();
-					configPath.register(watchService,
-				                           ENTRY_CREATE,
-				                           ENTRY_DELETE,
-				                           ENTRY_MODIFY);
+					configPath.register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
 					boolean poll = true;
 					while (poll) {
 						WatchKey key = watchService.take();
@@ -166,22 +164,42 @@ public class MapsforgeConfig extends PropertiesParser{
 							if (!Pattern.matches(taskFileNameRegex,fileName)) continue;
 							MapsforgeHandler mapsforgeHandler = MapsforgeSrv.getMapsforgeHandler();
 							if (mapsforgeHandler == null) continue;
+							Map<String, MapsforgeTaskHandler> tasksHandler = mapsforgeHandler.getTasksHandler();
 							String taskName = fileName.replaceFirst("[.][^.]+$", "");
-							boolean taskExist = (mapsforgeHandler.getTasksHandler().get(taskName) != null);
-							System.out.println("Task "+taskName+" exists = " + taskExist);
+							boolean taskExists = tasksHandler.get(taskName) != null;
 							if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
-								System.out.println("New task file created: " + fileName);
+								logger.info("New task file created: " + fileName);
 								// If task does not exist, create new task config and task handler
+								if (!taskExists) {
+									File taskFile = new File(configDirectory+DIRCONFIG_TASK,fileName);
+									tasksConfig.put(taskName, new MapsforgeTaskConfig(taskName, taskFile));
+									tasksHandler.put(taskName, new MapsforgeTaskHandler(MapsforgeSrv.getMapsforgeHandler(), tasksConfig.get(taskName), taskName));
+								}
 							} else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
-								System.out.println("Existing task file deleted: " + fileName);
+								logger.info("Existing task file deleted: " + fileName);
 								// If task does exist, delete task handler and config
+								if (taskExists) {
+									tasksHandler.remove(taskName);
+									tasksConfig.remove(taskName);
+								}
 							} else if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
-								System.out.println("Existing task file modified: " + fileName);
+								logger.info("Existing task file modified: " + fileName);
 								// If task does exist, delete task handler and config
+								if (taskExists) {
+									File taskFile = new File(configDirectory+DIRCONFIG_TASK,fileName);
+									String newCheckSum = checkSum(taskFile);
+									String oldCheckSum = tasksConfig.get(taskName).getCheckSum();
+									if (!newCheckSum.equals(oldCheckSum)) {
+										tasksConfig.remove(taskName);
+										tasksConfig.put(taskName, new MapsforgeTaskConfig(taskName, taskFile));
+									}
+								}
 							}
 						}
 						poll = key.reset();
 					}
+					logger.error("Config directory "+configPath+" no longer watchable: exiting"); //$NON-NLS-1$
+					System.exit(1);
 				} catch (Exception e) {}
 			}
 		}, "watchConfig");
