@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -84,6 +85,8 @@ public class MapsforgeTaskHandler {
 	private MapsforgeHandler mapsforgeHandler;
 	private MapsforgeConfig mapsforgeConfig;
 	private MapsforgeTaskConfig mapsforgeTaskConfig;
+	
+	private CountDownLatch countDownLatch = new CountDownLatch(0);
 	
 	private static final Pattern requestPathPattern = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)(?:(?:\\.)(.*))?"); //$NON-NLS-1$
 	
@@ -257,7 +260,8 @@ public class MapsforgeTaskHandler {
 						result.addAll(overlay.getCategories());
 					}
 				}
-
+				
+				countDownLatch.countDown();
 				return result;
 			}
 
@@ -273,6 +277,7 @@ public class MapsforgeTaskHandler {
 		} else if (themeFile.getPath().equals("DEFAULT")) {
 			xmlRenderTheme = MyInternalRenderTheme.DEFAULT;
 		} else {
+			countDownLatch = new CountDownLatch(1);
 			try {
 				xmlRenderTheme = new ExternalRenderTheme(themeFile, callBack);
 			} catch (Exception e) {
@@ -283,6 +288,10 @@ public class MapsforgeTaskHandler {
 		}
 
 		updateRenderThemeFuture();
+	}
+	
+	public CountDownLatch getCountDownLatch() {
+		return countDownLatch;
 	}
 	
 	protected void updateRenderThemeFuture() {

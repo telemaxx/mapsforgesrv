@@ -58,7 +58,9 @@ public class MapsforgeHandler extends AbstractHandler {
 
 		tasksHandler = new HashMap<String, MapsforgeTaskHandler>();
 		for(String task : mapsforgeConfig.getTasksConfig().keySet()) {
-			tasksHandler.put(task, new MapsforgeTaskHandler(this, mapsforgeConfig.getTaskConfig(task), task));
+			MapsforgeTaskHandler mapsforgeTaskHandler = new MapsforgeTaskHandler(this, mapsforgeConfig.getTaskConfig(task), task);
+			tasksHandler.put(task, mapsforgeTaskHandler);
+			mapsforgeTaskHandler.getCountDownLatch().await();
 		}
 	}
 
