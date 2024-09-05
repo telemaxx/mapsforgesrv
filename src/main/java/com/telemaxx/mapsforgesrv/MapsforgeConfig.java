@@ -3,18 +3,14 @@ package com.telemaxx.mapsforgesrv;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.math.BigInteger;
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 
 import static java.nio.file.StandardWatchEventKinds.*;
 import java.nio.file.WatchService;
-import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -168,7 +164,7 @@ public class MapsforgeConfig extends PropertiesParser{
 							String taskName = fileName.replaceFirst("[.][^.]+$", "");
 							boolean taskExists = tasksHandler.get(taskName) != null;
 							if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
-								logger.info("New task file created: " + fileName);
+								logger.info("New task properties created: " + fileName);
 								// If task does not exist, create new task config and task handler
 								if (!taskExists) {
 									File taskFile = new File(configDirectory+DIRCONFIG_TASK,fileName);
@@ -176,20 +172,20 @@ public class MapsforgeConfig extends PropertiesParser{
 									tasksHandler.put(taskName, new MapsforgeTaskHandler(MapsforgeSrv.getMapsforgeHandler(), tasksConfig.get(taskName), taskName));
 								}
 							} else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
-								logger.info("Existing task file deleted: " + fileName);
+								logger.info("Existing task properties deleted: " + fileName);
 								// If task does exist, delete task handler and config
 								if (taskExists) {
 									tasksHandler.remove(taskName);
 									tasksConfig.remove(taskName);
 								}
 							} else if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
-								logger.info("Existing task file modified: " + fileName);
-								// If task does exist, delete task handler and config
+								// If task does exist and properties have been changed, delete task handler and config
 								if (taskExists) {
 									File taskFile = new File(configDirectory+DIRCONFIG_TASK,fileName);
 									String newCheckSum = checkSum(taskFile);
 									String oldCheckSum = tasksConfig.get(taskName).getCheckSum();
 									if (!newCheckSum.equals(oldCheckSum)) {
+										logger.info("Existing task properties modified: " + fileName);
 										tasksConfig.remove(taskName);
 										tasksConfig.put(taskName, new MapsforgeTaskConfig(taskName, taskFile));
 									}
