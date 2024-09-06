@@ -42,7 +42,7 @@ public class MapsforgeHandler extends AbstractHandler {
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeHandler.class);
 
 	private final TreeSet<String> KNOWN_PARAMETER_NAMES = new TreeSet<>(Arrays.asList(
-			new String[] { "x", "y", "z", "textScale", "userScale", "transparent", "tileRenderSize", "hillshading", "task" })); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+			new String[] { "textScale", "userScale", "transparent", "tileRenderSize", "hillshading", "task" })); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 
 	protected final GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
 
@@ -96,7 +96,7 @@ public class MapsforgeHandler extends AbstractHandler {
 					updatedThemes.append(key+" updated<br>");
 				}
 				updatedThemes.append("<br>Nb Threads: "+Thread.getAllStackTraces().size()+"<br>");
-				for(Thread th : Thread.getAllStackTraces().keySet()) 
+				for(Thread th : Thread.getAllStackTraces().keySet())
 					if(th.getName().startsWith("RenderThemeFuture"))
 						updatedThemes.append(th.getName()+" updated<br>");
 				response.setHeader("Cache-Control", "private, no-cache");
@@ -116,13 +116,13 @@ public class MapsforgeHandler extends AbstractHandler {
 					throw new ServletException("Unsupported query parameter: " + name); //$NON-NLS-1$
 				}
 			}
-			
+
 			/* task */
 			String key = request.getParameter("task");
 			if(key == null || key.isEmpty()) {
 				key = "default";
 			} else {
-				if(tasksHandler.get(key) == null) 
+				if(tasksHandler.get(key) == null)
 					throw new ServletException("Unsupported task: " + key); //$NON-NLS-1$
 			}
 			tasksHandler.get(key).handle(target, baseRequest, request, response);

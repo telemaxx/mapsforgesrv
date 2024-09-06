@@ -59,9 +59,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public class MapsforgeTaskHandler {
-	
+
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeTaskHandler.class);
-	
+
 	private final DisplayModel displayModel;
 	private final TileBasedLabelStore labelStore;
 	private final TileCache tileCache;
@@ -71,7 +71,7 @@ public class MapsforgeTaskHandler {
 	private final String themeFileStyle;
 	private final boolean renderLabels;
 	private final boolean cacheLabels;
-	
+
 	private boolean hillShadingOverlay = false;
 	private HillsRenderConfig hillsRenderConfig = null;
 	private XmlRenderTheme xmlRenderTheme;
@@ -85,15 +85,15 @@ public class MapsforgeTaskHandler {
 	private MapsforgeHandler mapsforgeHandler;
 	private MapsforgeConfig mapsforgeConfig;
 	private MapsforgeTaskConfig mapsforgeTaskConfig;
-	
+
 	private CountDownLatch countDownLatch = new CountDownLatch(0);
-	
+
 	private static final Pattern requestPathPattern = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)(?:(?:\\.)(.*))?"); //$NON-NLS-1$
-	
+
 	public MapsforgeTaskHandler(MapsforgeHandler mapsforgeHandler, MapsforgeTaskConfig mapsforgeTaskConfig, String name) throws Exception {
-		
+
 		logger.info("################ STARTING TASK '"+name+"' ################"); //$NON-NLS-1$
-		
+
 		this.name = name;
 		this.mapsforgeHandler = mapsforgeHandler;
 		this.mapsforgeConfig = mapsforgeHandler.getMapsforgeConfig();
@@ -188,7 +188,7 @@ public class MapsforgeTaskHandler {
 		DisplayModel.symbolScale = mapsforgeTaskConfig.getSymbolScale();
 		DisplayModel.lineScale = mapsforgeTaskConfig.getLineScale();
 		displayModel = new DisplayModel();
-		displayModel.setUserScaleFactor(mapsforgeTaskConfig.getUserScale());		
+		displayModel.setUserScaleFactor(mapsforgeTaskConfig.getUserScale());
 
 		if (mapsforgeTaskConfig.getHillShadingAlgorithm() != null && mapsforgeTaskConfig.getDemFolder() != null) { // hillshading
 			if (mapsforgeTaskConfig.getHillShadingAlgorithm().equals("simple")) {
@@ -198,7 +198,7 @@ public class MapsforgeTaskHandler {
 				shadingAlgorithm = new DiffuseLightShadingAlgorithm(
 						(float) mapsforgeTaskConfig.getHillShadingArguments()[0]);
 			}
-			
+
 			MemoryCachingHgtReaderTileSource tileSource = new MemoryCachingHgtReaderTileSource(
 					demFolder, shadingAlgorithm, mapsforgeHandler.getGraphicFactory());
 			tileSource.setEnableInterpolationOverlap(MapsforgeConfig.HILLSHADING_INTERPOLATION_OVERLAP);
@@ -206,7 +206,7 @@ public class MapsforgeTaskHandler {
 			if(MapsforgeConfig.HILLSHADING_INTERPOLATION_OVERLAP)
 				tileSource.setNeighborCacheSize(MapsforgeConfig.HILLSHADING_NEIGHBOR_CACHE);
 			tileSource.applyConfiguration(true); // true for allow parallel
-			
+
 			hillsRenderConfig = new HillsRenderConfig(tileSource);
 			hillsRenderConfig.setMaginuteScaleFactor((float) mapsforgeTaskConfig.getHillShadingMagnitude());
 			hillsRenderConfig.indexOnThread();
@@ -260,13 +260,13 @@ public class MapsforgeTaskHandler {
 						result.addAll(overlay.getCategories());
 					}
 				}
-				
+
 				countDownLatch.countDown();
 				return result;
 			}
 
 		};
-		
+
 		themeFile = mapsforgeTaskConfig.getThemeFile();
 		themeFileStyle = mapsforgeTaskConfig.getThemeFileStyle();
 
@@ -289,27 +289,27 @@ public class MapsforgeTaskHandler {
 
 		updateRenderThemeFuture();
 	}
-	
+
 	public CountDownLatch getCountDownLatch() {
 		return countDownLatch;
 	}
-	
+
 	protected void updateRenderThemeFuture() {
 		renderThemeFuture = new RenderThemeFuture(mapsforgeHandler.getGraphicFactory(), xmlRenderTheme, displayModel);
 		String tname = "RenderThemeFuture-"+name;
 		for (Thread t : Thread.getAllStackTraces().keySet()) {
-	        if (t.getName().equals(tname)) {
-	        	t.interrupt();
-	        	logger.debug("Thread '"+tname+"' successfully stopped.");
-	        }
+		if (t.getName().equals(tname)) {
+			t.interrupt();
+			logger.debug("Thread '"+tname+"' successfully stopped.");
+		}
 	    }
 		new Thread(null,renderThemeFuture,tname).start();
 	}
-	
+
 	protected void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String path = request.getPathInfo();
 		String engine = "std";
-		
+
 		int x, y, z;
 		String ext = MapsforgeConfig.TILE_EXTENSION; // $NON-NLS-1$
 		Matcher m = requestPathPattern.matcher(path);
@@ -319,15 +319,9 @@ public class MapsforgeTaskHandler {
 			z = Integer.parseInt(m.group(1));
 			if (m.group(4) != null) ext = m.group(4);
 		} else {
-			try {
-				x = Integer.parseInt(request.getParameter("x")); //$NON-NLS-1$
-				y = Integer.parseInt(request.getParameter("y")); //$NON-NLS-1$
-				z = Integer.parseInt(request.getParameter("z")); //$NON-NLS-1$
-			} catch (NumberFormatException e) {
-				logger.error("Invalid tile request "+path); //$NON-NLS-1$
-				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				return;
-			};
+			logger.error("Invalid tile request: "+path); //$NON-NLS-1$
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			return;
 		}
 		if (x < 0 || x >= (1 << z)) {
 			logger.error("Tile number x=" + x + " out of range!"); //$NON-NLS-1$
@@ -519,7 +513,7 @@ public class MapsforgeTaskHandler {
 			logger.info("Defined style '"+themeFileStyle+"' used"); //$NON-NLS-1$
 		}
 	}
-	
+
 	// Enumeration of tile server's internal rendering themes
 	// (copied and extended from InternalRenderTheme enumeration)
 	// Using StreamRenderThemes throws exception when calling "updateRenderThemeFuture" within "handle"
@@ -556,5 +550,5 @@ public class MapsforgeTaskHandler {
 		@Override
 		public void setResourceProvider(XmlThemeResourceProvider resourceProvider) {
 		}
-	}	
+	}
 }
