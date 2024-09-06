@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
- * 
+ *
  *******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -40,26 +40,26 @@ import org.slf4j.LoggerFactory;
  * reading Mapsforge theme. after making instance call readXML
  * @author telemaxx
  * @see http://www.vogella.com/tutorials/JavaXML/article.html
- * 
+ *
  */
 public class MapsforgeStyleParser {
-   static final String ID              = "id";           //$NON-NLS-1$
-   static final String XML_LAYER       = "layer";        //$NON-NLS-1$
-   static final String STYLE_MENU      = "stylemenu";    //$NON-NLS-1$
-   static final String VISIBLE         = "visible";      //$NON-NLS-1$
-   static final String NAME            = "name";         //$NON-NLS-1$
-   static final String LANG            = "lang";         //$NON-NLS-1$
-   static final String DEFAULTLANG     = "defaultlang";  //$NON-NLS-1$
-   static final String DEFAULTSTYLE    = "defaultvalue"; //$NON-NLS-1$
-   static final String VALUE           = "value";        //$NON-NLS-1$
-	static  Boolean Style = false;
+	static final String ID              = "id";           //$NON-NLS-1$
+	static final String XML_LAYER       = "layer";        //$NON-NLS-1$
+	static final String STYLE_MENU      = "stylemenu";    //$NON-NLS-1$
+	static final String VISIBLE         = "visible";      //$NON-NLS-1$
+	static final String NAME            = "name";         //$NON-NLS-1$
+	static final String LANG            = "lang";         //$NON-NLS-1$
+	static final String DEFAULTLANG     = "defaultlang";  //$NON-NLS-1$
+	static final String DEFAULTSTYLE    = "defaultvalue"; //$NON-NLS-1$
+	static final String VALUE           = "value";        //$NON-NLS-1$
+	static Boolean Style = false;
 	String na_language = ""; //$NON-NLS-1$
 	String na_value = ""; //$NON-NLS-1$
 	String defaultlanguage = ""; //$NON-NLS-1$
 	String defaultstyle = ""; //$NON-NLS-1$
 
-	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeStyleParser.class);
+
 	/**
 	 * just for test purposes
 	 * @param args
@@ -78,11 +78,11 @@ public class MapsforgeStyleParser {
 			//logger.info("localisation " + Locale.getDefault().getCountry());
 		}
 	}
-	
+
 	public String getDefaultLanguage() {
 		return defaultlanguage;
 	}
-	
+
 	public String getDefaultStyle() {
 		return defaultstyle;
 	}
@@ -116,13 +116,12 @@ public class MapsforgeStyleParser {
 							final Attribute sm_attribute = sm_attributes.next();
 							if (sm_attribute.getName().toString().equals(DEFAULTLANG)) {
 								defaultlanguage = sm_attribute.getValue();
-							}
-							if (sm_attribute.getName().toString().equals(DEFAULTSTYLE)) {
+							} else if (sm_attribute.getName().toString().equals(DEFAULTSTYLE)) {
 								defaultstyle =  sm_attribute.getValue();
 								//logger.info("default style: " + defaultstyle);
 							}
 						}
-					}					
+					}
 					// If we have an item(layer) element, we create a new item
 					if (startElement.getName().getLocalPart().equals(XML_LAYER)) {
 						Style = false;
@@ -140,25 +139,24 @@ public class MapsforgeStyleParser {
 							}
 						}
 					}
-               if (event.isStartElement()) {
-                  if (event.asStartElement().getName().getLocalPart().equals(NAME)) {
-                  	final Iterator<Attribute> name_attributes = startElement.getAttributes();
-   						while (name_attributes.hasNext()) { //in the same line as <layer>
-   							final Attribute name_attribute = name_attributes.next();
-   							if (name_attribute.getName().toString().equals(LANG)){
-   								na_language = name_attribute.getValue();
-   							}
-   							if (name_attribute.getName().toString().equals(VALUE)){
-   								na_value = name_attribute.getValue();
-   							} 							
-   						}  
-   						if (Style) {
-   							item.setName(na_language, na_value);
-   						}
-                      event = eventReader.nextEvent();
-                      continue;
-                  }
-              }
+					if (event.isStartElement()) {
+						if (event.asStartElement().getName().getLocalPart().equals(NAME)) {
+							final Iterator<Attribute> name_attributes = startElement.getAttributes();
+							while (name_attributes.hasNext()) { //in the same line as <layer>
+								final Attribute name_attribute = name_attributes.next();
+								if (name_attribute.getName().toString().equals(LANG)){
+									na_language = name_attribute.getValue();
+								} else if (name_attribute.getName().toString().equals(VALUE)){
+									na_value = name_attribute.getValue();
+								}
+							}
+							if (Style) {
+								item.setName(na_language, na_value);
+							}
+							event = eventReader.nextEvent();
+							continue;
+						}
+					}
 				}
 				// If we reach the end of an item element, we add it to the list
 				if (event.isEndElement()) {
@@ -184,63 +182,64 @@ public class MapsforgeStyleParser {
 
 class Style {
 	private Map<String, String> name = new HashMap<>();
-   private String xmlLayer;
-   private String defaultlanguage = "de"; //$NON-NLS-1$
+	private String xmlLayer;
+	private String defaultlanguage = "de"; //$NON-NLS-1$
 
-   public String getDefaultLaguage() {
-      return defaultlanguage;
-  }
+	public String getDefaultLaguage() {
+		return defaultlanguage;
+	}
+
 	/**
-    * getting the name as map with all localizations
-    * @return Map<String language,String name>
-    */  
-   public Map<String, String> getName() {
-   	return name;
-   }   
-	
-   /**
-    * getting a local name of the mapstyle
-    * @param language string like "en"
-    * @return a String with the local name like "hiking"
-    */
-   public String getName(final String language) {
-   	if(language.equals("default")){ //$NON-NLS-1$
-   		return name.get(defaultlanguage);
-   	} else
-   	if(name.containsKey(language)){
-   		return name.get(language);
-   	} else {
-   		return name.get(defaultlanguage);
-   	}
-   }
+	 * getting the name as map with all localizations
+	 * @return Map<String language,String name>
+	 */
+	public Map<String, String> getName() {
+		return name;
+	}
+
 	/**
-    * get the style name like
-    * @return String containing the stylename like "elv-mtb"
-    */ 
-   public String getXmlLayer() {
-      return xmlLayer;
-  } 
-	
+	 * getting a local name of the mapstyle
+	 * @param language string like "en"
+	 * @return a String with the local name like "hiking"
+	 */
+	public String getName(final String language) {
+		if (language.equals("default")){ //$NON-NLS-1$
+			return name.get(defaultlanguage);
+		} else
+			if (name.containsKey(language)) {
+				return name.get(language);
+			} else {
+				return name.get(defaultlanguage);
+			}
+	}
+	/**
+	 * get the style name like
+	 * @return String containing the stylename like "elv-mtb"
+	 */
+	public String getXmlLayer() {
+		return xmlLayer;
+	}
+
 	public void setDefaultLanguage(final String language) {
-      this.defaultlanguage = language;
-  }
-   
-   /**
+		this.defaultlanguage = language;
+	}
+
+	/**
 	 * set the style name with a given language
 	 * @param language
 	 * @param name
-	 */	
-   public void setName(final String language, final String name) {
-   	//logger.info("setname: " + language + " name: " + name);
+	 */
+	public void setName(final String language, final String name) {
+		//logger.info("setname: " + language + " name: " + name);
 		this.name.put(language, name);
 	}
-   
-   public void setXmlLayer(final String xmlLayer) {
-      this.xmlLayer = xmlLayer;
-  }  
-   
-   @Override
-   public String toString() {
-       return "Item [xmlLayer=" + xmlLayer + " Name= " + name.get(defaultlanguage) + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-   }
+
+	public void setXmlLayer(final String xmlLayer) {
+		this.xmlLayer = xmlLayer;
+	}
+
+	@Override
+	public String toString() {
+		return "Item [xmlLayer=" + xmlLayer + " Name= " + name.get(defaultlanguage) + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	}
 }
