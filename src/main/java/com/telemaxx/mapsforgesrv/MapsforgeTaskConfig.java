@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MapsforgeTaskConfig extends PropertiesParser{
-	
+
 	private String rendererName = null;
 	private ArrayList<File> mapFiles = null;
 	private boolean appendWorldMap;
@@ -34,15 +34,15 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	private int blackValue;
 	private double gammaValue;
 	private String checkSum = null;
-	
+
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeTaskConfig.class);
-	
+
 	public MapsforgeTaskConfig(String taskName, File taskFile) throws Exception {
 		this.taskName = taskName;
 		checkSum = readConfig(taskFile);
 		initConfig();
 	}
-	
+
 	private void parseThemeFile() throws Exception {
 		String configValue = "themefile";
 		String configString = retrieveConfigValue(configValue);
@@ -60,7 +60,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 			themeFile = parseFile(configValue, FILE, false, msgHeader, "OSMARENDER");
 		}
 	}
-	
+
 	private void parseThemeOverlays() throws Exception {
 		String msgHeader = parsePadMsg("Theme overlay(s)"); //$NON-NLS-1$
 		String optionValue = retrieveConfigValue("overlays"); //$NON-NLS-1$
@@ -118,7 +118,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 		}
 		if (mapFiles.size() == 0) configProperties.setProperty("worldmap", "");
 	}
-	
+
 	private void initConfig() throws Exception {
 		logger.info("################ TASK '"+taskName+"' PROPERTIES ################");
 		rendererName = parseString(DEFAULT_RENDERER, "renderer", AUTHORIZED_RENDERER, "Renderer algorithm"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -139,7 +139,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 		symbolScale = (float) parseNumber(DEFAULT_SYMBOLSCALE, "symbol-scale", 0., null, "Symbol scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
 		lineScale = (float) parseNumber(DEFAULT_LINESCALE, "line-scale", 0., null, "Line scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
 	}
-	
+
 	private void parseHillShading() throws Exception {
 		String msgHeader = parsePadMsg("HillShading algorithm");
 		hillShadingArguments = null;
@@ -176,27 +176,27 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 			}
 		}
 	}
-	
+
 	public String getRendererName() {
 		return this.rendererName;
 	}
-	
+
 	public List<File> getMapFiles() {
 		return this.mapFiles;
 	}
-	
+
 	public String getPreferredLanguage() {
 		return this.preferredLanguage;
 	}
-	
+
 	public boolean getAppendWorldMap() {
 		return this.appendWorldMap;
 	}
-	
+
 	public File getDemFolder() {
 		return this.demFolder;
 	}
-	
+
 	public double getHillShadingMagnitude() {
 		return this.hillShadingMagnitude;
 	}
@@ -208,7 +208,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	public double[] getHillShadingArguments() {
 		return this.hillShadingArguments;
 	}
-	
+
 	public String getThemeFileStyle() {
 		return this.themeFileStyle;
 	}
@@ -216,23 +216,23 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	public String[] getThemeFileOverlays() {
 		return this.themeFileOverlays;
 	}
-	
+
 	public File getThemeFile() {
 		return this.themeFile;
 	}
-	
+
 	public float getDeviceScale() {
 		return this.deviceScale;
 	}
-	
+
 	public float getUserScale() {
 		return this.userScale;
 	}
-		
+
 	public float getTextScale() {
 		return this.textScale;
 	}
-	
+
 	public float getSymbolScale() {
 		return this.symbolScale;
 	}
@@ -244,7 +244,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	public int getBlackValue() {
 		return this.blackValue;
 	}
-	
+
 	public double getGammaValue() {
 		return this.gammaValue;
 	}

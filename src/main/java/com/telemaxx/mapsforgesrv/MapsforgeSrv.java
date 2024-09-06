@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
- * 
+ *
  * changelog:
  * 0.13: selectable style
  * 0.13.1: selectable overlays
@@ -44,7 +44,7 @@
  *         - only from loopback addresses
  *         - and only when accepted
  *         set maximum line length of "help" to 132 characters (JFritzle)
- * 0.19.1: raise version to 0.19.1  
+ * 0.19.1: raise version to 0.19.1
  * 0.20.0: mapsforge 0.20.0
  *         raise version to 0.20.0
  *         force sending responses at invalid/unhandled server requests
@@ -52,7 +52,7 @@
  *         accept internal theme "DEFAULT" or "OSMARENDER" for "themefile" value
  * 0.21.0: mapsforge 0.21.0
  *         raise version to 0.21.0
- *         set stop http server at JVM shutdown behaviour (on HTTP request "/terminate") 
+ *         set stop http server at JVM shutdown behaviour (on HTTP request "/terminate")
  *         command line parameter line-scale
  *         re-enable HTTP request property "userScale"
  *         some code optimizations
@@ -74,22 +74,22 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
-	
+
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 	private static MapsforgeSrv mapsforgeSrv;
 	private static MapsforgeHandler mapsforgeHandler;
-	
+
 	public MapsforgeSrv(String[] args) throws Exception {
-		
+
 		/* IMPORTANT: the output of following line is used by other programs like guis. never change this syntax */
 		logger.info("MapsforgeSrv - a mapsforge tile server. " + "version: " + PropertiesParser.VERSION); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		logger.info("Java runtime version: " + System.getProperty("java.version")); //$NON-NLS-1$
 
 		logger.debug("Current dir [user.dir]: " + System.getProperty("user.dir"));
 
 		MapsforgeConfig mapsforgeConfig = new MapsforgeConfig(args);
-		
+
 		logger.info("################ STARTING SERVER ################");
 		XmlConfiguration xmlConfiguration = null;
 		QueuedThreadPool queuedThreadPool = new QueuedThreadPool();
@@ -106,7 +106,7 @@ public class MapsforgeSrv {
 		};
 		mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig);
 		server.setHandler(mapsforgeHandler);
-		
+
 		Slf4jRequestLogWriter slfjRequestLogWriter = new Slf4jRequestLogWriter();
 		slfjRequestLogWriter.setLoggerName("com.telemaxx.mapsforgesrv.request");
 		CustomRequestLog customRequestLog = new CustomRequestLog(slfjRequestLogWriter, mapsforgeConfig.getRequestLogFormat());
@@ -121,17 +121,17 @@ public class MapsforgeSrv {
 		}
 		server.join();
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
 		SLF4JBridgeHandler.install();
 		mapsforgeSrv = new MapsforgeSrv(args);
 	}
-	
+
 	public static MapsforgeSrv getMapsforgeSrv () {
 		return mapsforgeSrv;
 	}
-	
+
 	public static MapsforgeHandler getMapsforgeHandler () {
 		return mapsforgeHandler;
 	}
