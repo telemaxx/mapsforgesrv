@@ -4,8 +4,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 
@@ -36,12 +36,13 @@ public class MapsforgeConfig extends PropertiesParser{
 	private boolean acceptTerminate;
 	private Map<String, MapsforgeTaskConfig> tasksConfig;
 	private String configDirectory = null;
+	private String taskDirectory = null;
 	private String requestLogFormat = null;
 
 	public static BufferedImage BI_NOCONTENT;
 
 	private final static String  taskFileNameRegex = "^[0-9a-z._-]+.properties$"; //$NON-NLS-1$
-	
+
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeConfig.class);
 
 	public MapsforgeConfig(String[] args) throws Exception {
@@ -51,7 +52,7 @@ public class MapsforgeConfig extends PropertiesParser{
 
 		initOptions(args);
 		initConfig();
-		
+
 		watchConfig ();
 	}
 
@@ -62,7 +63,7 @@ public class MapsforgeConfig extends PropertiesParser{
 		Options options = new Options();
 		options.addOption(Option.builder("c") //$NON-NLS-1$
 				.longOpt("config") //$NON-NLS-1$
-				.desc("Config directory including at least "+FILECONFIG_SERVER+", "+FILECONFIG_JETTY+", "+FILECONFIG_JETTY_THREADPOOL+", "+DIRCONFIG_TASK+FILECONFIG_DEFAULTTASK) //$NON-NLS-1$
+				.desc("Config directory including at least "+FILECONFIG_SERVER+", "+FILECONFIG_JETTY+", "+FILECONFIG_JETTY_THREADPOOL+", "+DIRCONFIG_TASKS+FILECONFIG_DEFAULTTASK) //$NON-NLS-1$
 				.required(false).hasArg(true).build());
 		options.addOption(Option.builder("h") //$NON-NLS-1$
 				.longOpt("help") //$NON-NLS-1$
@@ -87,7 +88,7 @@ public class MapsforgeConfig extends PropertiesParser{
 			config = config.trim();
 			if (new File(config).isDirectory()) {
 				configDirectory = config+System.getProperty("file.separator");
-				String[] configFiles = {FILECONFIG_SERVER, FILECONFIG_JETTY, FILECONFIG_JETTY_THREADPOOL, DIRCONFIG_TASK+FILECONFIG_DEFAULTTASK};  
+				String[] configFiles = {FILECONFIG_SERVER, FILECONFIG_JETTY, FILECONFIG_JETTY_THREADPOOL, DIRCONFIG_TASKS+FILECONFIG_DEFAULTTASK};
 				for (String configFile : configFiles) {
 					if (!new File(configDirectory+configFile).isFile()) {
 						logger.error("Default task config file '"+configDirectory+configFile+"' doesn't exist: exiting"); //$NON-NLS-1$
@@ -95,6 +96,7 @@ public class MapsforgeConfig extends PropertiesParser{
 					}
 				}
 				readConfig(new File(configDirectory+FILECONFIG_SERVER));
+				taskDirectory = configDirectory+DIRCONFIG_TASKS;
 			} else {
 				logger.error("Config directory '"+config+"' set with -c is not a directory: exiting"); //$NON-NLS-1$
 				System.exit(1);
@@ -117,24 +119,24 @@ public class MapsforgeConfig extends PropertiesParser{
 		requestLogFormat = parseString("%{client}a - %u %t '%r' %s %O '%{Referer}i' '%{User-Agent}i' '%C'", "requestlog-format", null, "Request log format"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseTasks();
 	}
-	
+
 	/*
 	 * PARSERS
 	 */
-	
+
 	private void parseTasks() throws Exception {
 		FilenameFilter filenameFilter = new FilenameFilter() {
 			    public boolean accept(File dir, String name) {
 			    	return name.matches(taskFileNameRegex);
 			    }};
-		File[] taskFiles = new File(configDirectory+DIRCONFIG_TASK).listFiles(filenameFilter);
+		File[] taskFiles = new File(taskDirectory).listFiles(filenameFilter);
 		if(taskFiles.length == 0) {
-			logger.error(configDirectory+DIRCONFIG_TASK+" doesn't contain any properties files named "+taskFileNameRegex); //$NON-NLS-1$
+			logger.error(taskDirectory+" doesn't contain any properties files named "+taskFileNameRegex); //$NON-NLS-1$
 			System.exit(-1);
 		} else {
 			tasksConfig = new HashMap<String, MapsforgeTaskConfig>();
 			MapsforgeTaskConfig mapsforgeTaskConfig;
-			for (File taskFile : taskFiles) { 
+			for (File taskFile : taskFiles) {
 				String taskFileName = taskFile.getName();
 				String taskName = taskFileName.replaceFirst("[.][^.]+$", ""); //$NON-NLS-1$
 				mapsforgeTaskConfig = new MapsforgeTaskConfig(taskName, taskFile);
@@ -142,12 +144,16 @@ public class MapsforgeConfig extends PropertiesParser{
 			}
 		}
 	}
-	
+
+	/*
+	 * CONFIG TASKS WATCHER
+	 */
+
 	private void watchConfig () throws Exception {
 		Thread watchConfigThread = new Thread(null, new Runnable() {
 			@Override
 			public void run() {
-				Path configPath = Path.of(configDirectory+DIRCONFIG_TASK);
+				Path configPath = Path.of(taskDirectory);
 				try {
 					WatchService watchService = FileSystems.getDefault().newWatchService();
 					configPath.register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
@@ -163,26 +169,26 @@ public class MapsforgeConfig extends PropertiesParser{
 							Map<String, MapsforgeTaskHandler> tasksHandler = mapsforgeHandler.getTasksHandler();
 							String taskName = fileName.replaceFirst("[.][^.]+$", "");
 							boolean taskExists = tasksHandler.get(taskName) != null;
-							if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
+							if (event.kind() == ENTRY_CREATE) {
 								logger.info("New task properties created: " + fileName);
 								// If task does not exist, create new task config and task handler
 								if (!taskExists) {
-									File taskFile = new File(configDirectory+DIRCONFIG_TASK,fileName);
+									File taskFile = new File(taskDirectory,fileName);
 									tasksConfig.put(taskName, new MapsforgeTaskConfig(taskName, taskFile));
 									tasksHandler.put(taskName, new MapsforgeTaskHandler(MapsforgeSrv.getMapsforgeHandler(), tasksConfig.get(taskName), taskName));
 								}
-							} else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
+							} else if (event.kind() == ENTRY_DELETE) {
 								logger.info("Existing task properties deleted: " + fileName);
 								// If task does exist, delete task handler and config
 								if (taskExists) {
 									tasksHandler.remove(taskName);
 									tasksConfig.remove(taskName);
 								}
-							} else if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
+							} else if (event.kind() == ENTRY_MODIFY) {
 								// If task does exist and properties have been changed, delete task handler and config
 								if (taskExists) {
-									File taskFile = new File(configDirectory+DIRCONFIG_TASK,fileName);
-									String newCheckSum = checkSum(taskFile);
+									File taskFile = new File(taskDirectory,fileName);
+									String newCheckSum = checkSum(Files.readAllBytes(taskFile.toPath()));
 									String oldCheckSum = tasksConfig.get(taskName).getCheckSum();
 									if (!newCheckSum.equals(oldCheckSum)) {
 										logger.info("Existing task properties modified: " + fileName);

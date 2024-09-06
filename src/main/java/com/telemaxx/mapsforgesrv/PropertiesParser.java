@@ -1,10 +1,12 @@
 package com.telemaxx.mapsforgesrv;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.Arrays;
@@ -16,13 +18,13 @@ import org.slf4j.LoggerFactory;
 public abstract class PropertiesParser {
 
 	protected Properties configProperties;
-	
+
 	/****************
 	 * FIXED VALUES *
 	 ****************/
-	
+
 	public final static String 		VERSION = "0.21.3.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
-	
+
 	public final static String 		TILE_EXTENSION = "png"; //$NON-NLS-1$
 	// false: use default value true: exit(1)
 	protected static final String 	FILE = "file"; //$NON-NLS-1$
@@ -32,12 +34,12 @@ public abstract class PropertiesParser {
 	public final static String 		FILECONFIG_JETTY_THREADPOOL = "jetty-threadpool.xml"; //$NON-NLS-1$
 	public final static String		FILECONFIG_SERVER = "server.properties"; //$NON-NLS-1$
 	public final static String		FILECONFIG_DEFAULTTASK = "default.properties"; //$NON-NLS-1$
-	public final static String		DIRCONFIG_TASK = "tasks"+System.getProperty("file.separator"); //$NON-NLS-1$
-	
+	public final static String		DIRCONFIG_TASKS = "tasks"+System.getProperty("file.separator"); //$NON-NLS-1$
+
 	// true:  More precise at tile edges but much slower / false: Less precise at tile edges but much faster
 	public final static boolean 	HILLSHADING_INTERPOLATION_OVERLAP = true;
 	public final static int 		HILLSHADING_CACHE = 128; // default is 4
-	public final static int 		HILLSHADING_NEIGHBOR_CACHE= 8; // default is 4	
+	public final static int 		HILLSHADING_NEIGHBOR_CACHE= 8; // default is 4
 
 	/******************
 	 * DEFAULT VALUES *
@@ -77,18 +79,20 @@ public abstract class PropertiesParser {
 	/***********
 	 * PRIVATE *
 	 ***********/
-	
+
 	private final static boolean 	EXITON_PARSINGERROR = true;
 	private final static int 		PAD_MSG = 26;
 	private final static 			Logger logger = LoggerFactory.getLogger(PropertiesParser.class);
 
 	protected String readConfig(File configFile) throws Exception {
-		FileInputStream in;
+		String checkSum = null;
 		try {
-			in = new FileInputStream(configFile);
+			byte[] data = Files.readAllBytes(configFile.toPath());
+	        InputStreamReader in = new InputStreamReader(new ByteArrayInputStream(data), StandardCharsets.UTF_8);
 			configProperties = new Properties();
 			configProperties.load(in);
 			in.close();
+			checkSum = checkSum(data);
 		} catch (FileNotFoundException e) {
 			logger.error("Can't find config file '" + configFile + "': exiting"); //$NON-NLS-1$
 			System.exit(1);
@@ -96,11 +100,10 @@ public abstract class PropertiesParser {
 			logger.error("Can't parse config file '" + configFile + "': exiting"); //$NON-NLS-1$
 			System.exit(1);
 		}
-		return checkSum(configFile);
+		return checkSum;
 	}
-	
-	public String checkSum (File file) throws Exception {
-		byte[] data = Files.readAllBytes(file.toPath());
+
+	public String checkSum (byte[] data) throws Exception {
 		byte[] hash = MessageDigest.getInstance("MD5").digest(data);
 		String checksum = new BigInteger(1, hash).toString(16);
 		return checksum;
