@@ -185,6 +185,7 @@ public class MapsforgeConfig extends PropertiesParser{
 									tasksConfig.remove(taskName);
 								}
 							} else if (event.kind() == ENTRY_MODIFY) {
+								logger.info("Existing task properties modified: " + fileName);
 								// If task does exist and properties have been changed, delete task handler and config
 								if (taskExists) {
 									File taskFile = new File(taskDirectory,fileName);
@@ -194,6 +195,7 @@ public class MapsforgeConfig extends PropertiesParser{
 										logger.info("Existing task properties modified: " + fileName);
 										tasksConfig.remove(taskName);
 										tasksConfig.put(taskName, new MapsforgeTaskConfig(taskName, taskFile));
+										tasksHandler.put(taskName, new MapsforgeTaskHandler(MapsforgeSrv.getMapsforgeHandler(), tasksConfig.get(taskName), taskName));
 									}
 								}
 							}
