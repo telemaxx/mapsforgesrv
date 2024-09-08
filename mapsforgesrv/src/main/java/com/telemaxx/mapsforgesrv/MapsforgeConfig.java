@@ -1,10 +1,14 @@
 package com.telemaxx.mapsforgesrv;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -86,7 +90,7 @@ public class MapsforgeConfig {
 	 */
 	public final boolean HILLSHADINGENABLEINTERPOLATIONOVERLAP = false;
 	public final double[] HILLSHADINGSIMPLEDEFAULT = { 0.1, 0.666 };
-	public final double HILLSHADINGDIFDUSELIGHTDEFAULT = 50;
+	public final double HILLSHADINGDIFFUSELIGHTDEFAULT = 50;
 	public final String EXTENSIONDEFAULT = "png"; //$NON-NLS-1$
 	public final int TILERENDERSIZEDEFAULT = 256;
 	public final boolean TRANSPARENTDEFAULT = false;
@@ -284,9 +288,9 @@ public class MapsforgeConfig {
 		}
 		String config = configCmd.getOptionValue("config");
 		if (config != null) {
-			FileInputStream in;
 			try {
-				in = new FileInputStream(config);
+				byte[] data = Files.readAllBytes(Paths.get(config));
+		        InputStreamReader in = new InputStreamReader(new ByteArrayInputStream(data), StandardCharsets.UTF_8);
 				configFile = new Properties();
 				configFile.load(in);
 				in.close();
@@ -457,11 +461,11 @@ public class MapsforgeConfig {
 	}
 
 	private void parseMapFiles() {
+		mapFiles = new ArrayList<File>();
 		String msgHeader = parsePadMsg("Map file(s)"); //$NON-NLS-1$
 		String mapFilePathsString = retrieveConfigValue("mapfiles"); //$NON-NLS-1$
 		if (mapFilePathsString != null) {
 			String[] mapFilePaths = mapFilePathsString.trim().split(","); //$NON-NLS-1$ //$NON-NLS-2$
-			mapFiles = new ArrayList<File>();
 			List<File> mapsErr = new ArrayList<File>();
 			for (String path : mapFilePaths) {
 				File file = new File(path.trim());
@@ -498,9 +502,6 @@ public class MapsforgeConfig {
 				mapFilesString = mapFiles.stream().map(File::getPath).collect(Collectors.joining(","));
 				logger.info(msgHeader + ": defined [{" + mapFilesString + "}]"); //$NON-NLS-1$
 			}
-		} else {
-			logger.error(msgHeader + ": exiting - no file(s) specified"); //$NON-NLS-1$
-			System.exit(1);
 		}
 	}
 
@@ -561,7 +562,7 @@ public class MapsforgeConfig {
 					if (m.group(5) != null) {
 						hillShadingArguments[0] = Double.parseDouble(m.group(5));
 					} else { // default value
-						hillShadingArguments[0] = HILLSHADINGDIFDUSELIGHTDEFAULT;
+						hillShadingArguments[0] = HILLSHADINGDIFFUSELIGHTDEFAULT;
 					}
 					logger.info(msgHeader + ": defined [" + hillShadingAlgorithm + "(" + hillShadingArguments[0] + ")]"); //$NON-NLS-1$
 				}
@@ -579,17 +580,23 @@ public class MapsforgeConfig {
 		logger.info("################## CONFIG INIT ##################");
 		portNumber = (int) parseNumber(DEFAULTSERVERPORT, "port", 1024, 65535, "Listening TCP port",false); //$NON-NLS-1$ //$NON-NLS-2$
 		listeningInterface = parseString(DEFAULTSERVERINTERFACE, "interface", AUTHORIZEDSERVERINTERFACE, "Server interface"); //$NON-NLS-1$ //$NON-NLS-2$
+		rendererName = parseString(DEFAULTRENDERER, "renderer", AUTHORIZEDRENDERER, "Renderer algorithm"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseMapFiles();
+		if (mapFiles.size() != 0) {
+			appendWorldMap = parseHasOption("worldmap", "Append built-in world map");
+		} else {
+			appendWorldMap = true;
+			logger.info(parsePadMsg("Append built-in world map") + ": defined [true]"); //$NON-NLS-1$
+		}
+		preferredLanguage = parseString(null, "language", null, "Preferred map language"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseThemeFile();
 		themeFileStyle = parseString(null, "style", null, "Theme style"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseThemeOverlays();
-		preferredLanguage = parseString(null, "language", null, "Preferred map language"); //$NON-NLS-1$ //$NON-NLS-2$
-		blackValue = (int) parseNumber(DEFAULTBLACK, "contrast-stretch", 0, 254, "Contrast stretch",false); //$NON-NLS-1$ //$NON-NLS-2$
-		gammaValue = (double) parseNumber(DEFAULTGAMMA, "gamma-correction", 0., null, "Gamma correction",true); //$NON-NLS-1$ //$NON-NLS-2$
+		demFolder = parseFile("demfolder", FOLDER, true, "DEM", "undefined");
 		parseHillShading();
 		hillShadingMagnitude = (double) parseNumber(DEFAULTHSMAGNITUDE, "hillshading-magnitude", 0., 4., "Hillshading magnitude",false); //$NON-NLS-1$ //$NON-NLS-2$
-		demFolder = parseFile("demfolder", FOLDER, true, "DEM", "undefined");
-		rendererName = parseString(DEFAULTRENDERER, "renderer", AUTHORIZEDRENDERER, "Renderer algorithm"); //$NON-NLS-1$ //$NON-NLS-2$
+		blackValue = (int) parseNumber(DEFAULTBLACK, "contrast-stretch", 0, 254, "Contrast stretch",false); //$NON-NLS-1$ //$NON-NLS-2$
+		gammaValue = (double) parseNumber(DEFAULTGAMMA, "gamma-correction", 0., null, "Gamma correction",true); //$NON-NLS-1$ //$NON-NLS-2$
 		deviceScale = (float) parseNumber(DEFAULTDEVICESCALE, "device-scale", 0., null, "Device scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
 		userScale = (float) parseNumber(DEFAULTUSERSCALE, "user-scale", 0., null, "User scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
 		textScale = (float) parseNumber(DEFAULTTEXTSCALE, "text-scale", 0., null, "Text scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
@@ -597,7 +604,6 @@ public class MapsforgeConfig {
 		lineScale = (float) parseNumber(DEFAULTLINESCALE, "line-scale", 0., null, "Line scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
 		cacheControl = (long) parseNumber(DEFAULTCACHECONTROL, "cache-control", 0, null, "Browser cache ttl",false); //$NON-NLS-1$ //$NON-NLS-2$
 		outOfRangeTms = parseString(null, "outofrange_tms", null, "Out of range TMS url"); //$NON-NLS-1$ //$NON-NLS-2$
-		appendWorldMap = parseHasOption("worldmap", "Append built-in world map");
 		maxQueueSize = (int) parseNumber(DEFAULTSERVERMAXQUEUESIZE, "max-queuesize", 0, null, "Server max queue size",false); //$NON-NLS-1$ //$NON-NLS-2$
 		maxThreads = (int) parseNumber(DEFAULTSERVERMAXTHREADS, "max-thread", 1, null, "Server max thread(s)",false); //$NON-NLS-1$ //$NON-NLS-2$
 		minThreads = (int) parseNumber(DEFAULTSERVERMINTHREADS, "min-thread", 0, null, "Server min thread(s)",false); //$NON-NLS-1$ //$NON-NLS-2$

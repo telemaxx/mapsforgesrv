@@ -57,7 +57,12 @@
  *         re-enable HTTP request property "userScale"
  *         some code optimizations
  * 0.21.1: fix "IllegalStateException" on /updatemapstyle request (nono303)
- ******************************************************************************/
+ * 0.21.2: Adopt some changes from "styles" branch:
+ *		   Handle UTF-8 characters in config file correctly
+ *		   Automatically enable built-in world map if map definition is missing or empty
+ *		   Remove request query parameters x, y and z and log invalid tile request paths
+ *		   Assign default file extension .png if file extension missing in tile request path
+ * ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
 
@@ -78,7 +83,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
 	
-	private final static String VERSION = "0.21.1"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	private final static String VERSION = "0.21.2"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 

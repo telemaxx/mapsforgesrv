@@ -92,7 +92,7 @@ public class MapsforgeStyleParser {
 	 * @param xmlFile
 	 * @return a list with availible, visible layers
 	 */
-	@SuppressWarnings({ "null" })
+//	@SuppressWarnings({ "null" })
 	public List<Style> readXML(final String xmlFile) {
 
 		final List<Style> items = new ArrayList<>();
@@ -111,6 +111,7 @@ public class MapsforgeStyleParser {
 					final StartElement startElement = event.asStartElement();
 					// if stylemenue, getting the defaults
 					if (startElement.getName().getLocalPart().equals(STYLE_MENU)) {
+						@SuppressWarnings("unchecked")
 						final Iterator<Attribute> sm_attributes = startElement.getAttributes();
 						while (sm_attributes.hasNext()) { //in the same line as <layer>
 							final Attribute sm_attribute = sm_attributes.next();
@@ -127,6 +128,7 @@ public class MapsforgeStyleParser {
 					if (startElement.getName().getLocalPart().equals(XML_LAYER)) {
 						Style = false;
 						item = new Style();
+						@SuppressWarnings("unchecked")
 						final Iterator<Attribute> attributes = startElement.getAttributes();
 						while (attributes.hasNext()) { //in the same line as <layer>
 							final Attribute attribute = attributes.next();
@@ -142,7 +144,8 @@ public class MapsforgeStyleParser {
 					}
                if (event.isStartElement()) {
                   if (event.asStartElement().getName().getLocalPart().equals(NAME)) {
-                  	final Iterator<Attribute> name_attributes = startElement.getAttributes();
+                  	@SuppressWarnings("unchecked")
+					final Iterator<Attribute> name_attributes = startElement.getAttributes();
    						while (name_attributes.hasNext()) { //in the same line as <layer>
    							final Attribute name_attribute = name_attributes.next();
    							if (name_attribute.getName().toString().equals(LANG)){
