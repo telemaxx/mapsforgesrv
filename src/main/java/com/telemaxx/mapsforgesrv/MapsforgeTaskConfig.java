@@ -74,9 +74,9 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	}
 
 	private void parseMapFiles() throws Exception {
+		mapFiles = new ArrayList<File>();
 		String msgHeader = parsePadMsg("Map file(s)"); //$NON-NLS-1$
 		String mapFilePathsString = retrieveConfigValue("mapfiles"); //$NON-NLS-1$
-		mapFiles = new ArrayList<File>();
 		if (mapFilePathsString != null) {
 			String[] mapFilePaths = mapFilePathsString.trim().split(","); //$NON-NLS-1$ //$NON-NLS-2$
 			List<File> mapsErr = new ArrayList<File>();
