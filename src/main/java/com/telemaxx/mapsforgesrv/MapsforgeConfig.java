@@ -185,7 +185,6 @@ public class MapsforgeConfig extends PropertiesParser{
 									tasksConfig.remove(taskName);
 								}
 							} else if (event.kind() == ENTRY_MODIFY) {
-								logger.info("Existing task properties modified: " + fileName);
 								// If task does exist and properties have been changed, delete task handler and config
 								if (taskExists) {
 									File taskFile = new File(taskDirectory,fileName);
