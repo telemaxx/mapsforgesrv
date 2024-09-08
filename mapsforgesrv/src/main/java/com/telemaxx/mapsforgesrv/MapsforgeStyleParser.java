@@ -92,7 +92,7 @@ public class MapsforgeStyleParser {
 	 * @param xmlFile
 	 * @return a list with availible, visible layers
 	 */
-	@SuppressWarnings({ "null" })
+	@SuppressWarnings({ })
 	public List<Style> readXML(final String xmlFile) {
 
 		final List<Style> items = new ArrayList<>();
