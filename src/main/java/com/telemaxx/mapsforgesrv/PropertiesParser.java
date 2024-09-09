@@ -33,7 +33,6 @@ public abstract class PropertiesParser {
 	public final static String 		FILECONFIG_JETTY = "jetty.xml"; //$NON-NLS-1$
 	public final static String 		FILECONFIG_JETTY_THREADPOOL = "jetty-threadpool.xml"; //$NON-NLS-1$
 	public final static String		FILECONFIG_SERVER = "server.properties"; //$NON-NLS-1$
-	public final static String		FILECONFIG_DEFAULTTASK = "default.properties"; //$NON-NLS-1$
 	public final static String		DIRCONFIG_TASKS = "tasks"+System.getProperty("file.separator"); //$NON-NLS-1$
 
 	// true:  More precise at tile edges but much slower / false: Less precise at tile edges but much faster

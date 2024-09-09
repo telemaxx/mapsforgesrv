@@ -145,7 +145,7 @@ public class MapsforgeTaskHandler {
 			cacheLabels = false;
 			colorLookupTable = new int[256];
 			int pixelValue,gray,dist,alpha;
-			int range = (int)(30*mapsforgeConfig.getDefaultConfig().getHillShadingMagnitude()); // gray value range
+			int range = (int)(30*mapsforgeTaskConfig.getHillShadingMagnitude()); // gray value range
 			if (range > 120) range = 120;	// maximum value range is 120
 			int base = 248-range; // obviously base gray value depending on hillshading magnitude
 			int index = 256;

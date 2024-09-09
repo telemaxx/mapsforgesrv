@@ -63,7 +63,7 @@ public class MapsforgeConfig extends PropertiesParser{
 		Options options = new Options();
 		options.addOption(Option.builder("c") //$NON-NLS-1$
 				.longOpt("config") //$NON-NLS-1$
-				.desc("Config directory including at least "+FILECONFIG_SERVER+", "+FILECONFIG_JETTY+", "+FILECONFIG_JETTY_THREADPOOL+", "+DIRCONFIG_TASKS+FILECONFIG_DEFAULTTASK) //$NON-NLS-1$
+				.desc("Config directory including at least "+FILECONFIG_SERVER+", "+FILECONFIG_JETTY+", "+FILECONFIG_JETTY_THREADPOOL+", "+DIRCONFIG_TASKS) //$NON-NLS-1$
 				.required(false).hasArg(true).build());
 		options.addOption(Option.builder("h") //$NON-NLS-1$
 				.longOpt("help") //$NON-NLS-1$
@@ -88,17 +88,23 @@ public class MapsforgeConfig extends PropertiesParser{
 			config = config.trim();
 			if (new File(config).isDirectory()) {
 				configDirectory = config+System.getProperty("file.separator");
-				String[] configFiles = {FILECONFIG_SERVER, FILECONFIG_JETTY, FILECONFIG_JETTY_THREADPOOL, DIRCONFIG_TASKS+FILECONFIG_DEFAULTTASK};
+				//String[] configFiles = {FILECONFIG_SERVER, FILECONFIG_JETTY, FILECONFIG_JETTY_THREADPOOL, DIRCONFIG_TASKS+FILECONFIG_DEFAULTTASK};
+				String[] configFiles = {FILECONFIG_SERVER, FILECONFIG_JETTY, FILECONFIG_JETTY_THREADPOOL};
 				for (String configFile : configFiles) {
-					if (!new File(configDirectory+configFile).isFile()) {
-						logger.error("Default task config file '"+configDirectory+configFile+"' doesn't exist: exiting"); //$NON-NLS-1$
+					configFile = configDirectory+configFile;
+					if (!new File(configFile).isFile()) {
+						logger.error("Required config file '"+configFile+"' doesn't exist: exiting"); //$NON-NLS-1$
 						System.exit(1);
 					}
 				}
-				readConfig(new File(configDirectory+FILECONFIG_SERVER));
 				taskDirectory = configDirectory+DIRCONFIG_TASKS;
+				if (!new File(taskDirectory).isDirectory()) {
+					logger.error("Tasks directory '"+taskDirectory+"' doesn't exist: exiting"); //$NON-NLS-1$
+					System.exit(1);
+				}
+				readConfig(new File(configDirectory+FILECONFIG_SERVER));
 			} else {
-				logger.error("Config directory '"+config+"' set with -c is not a directory: exiting"); //$NON-NLS-1$
+				logger.error("Config '"+config+"' set with -c is not a directory: exiting"); //$NON-NLS-1$
 				System.exit(1);
 			}
 		} else {
@@ -131,17 +137,15 @@ public class MapsforgeConfig extends PropertiesParser{
 			    }};
 		File[] taskFiles = new File(taskDirectory).listFiles(filenameFilter);
 		if(taskFiles.length == 0) {
-			logger.error(taskDirectory+" doesn't contain any properties files named "+taskFileNameRegex); //$NON-NLS-1$
-			System.exit(-1);
-		} else {
-			tasksConfig = new HashMap<String, MapsforgeTaskConfig>();
-			MapsforgeTaskConfig mapsforgeTaskConfig;
-			for (File taskFile : taskFiles) {
-				String taskFileName = taskFile.getName();
-				String taskName = taskFileName.replaceFirst("[.][^.]+$", ""); //$NON-NLS-1$
-				mapsforgeTaskConfig = new MapsforgeTaskConfig(taskName, taskFile);
-				tasksConfig.put(taskName, mapsforgeTaskConfig);
-			}
+			logger.error(taskDirectory+" doesn't yet contain any properties files named "+taskFileNameRegex); //$NON-NLS-1$
+		}
+		tasksConfig = new HashMap<String, MapsforgeTaskConfig>();
+		MapsforgeTaskConfig mapsforgeTaskConfig;
+		for (File taskFile : taskFiles) {
+			String taskFileName = taskFile.getName();
+			String taskName = taskFileName.replaceFirst("[.][^.]+$", ""); //$NON-NLS-1$
+			mapsforgeTaskConfig = new MapsforgeTaskConfig(taskName, taskFile);
+			tasksConfig.put(taskName, mapsforgeTaskConfig);
 		}
 	}
 
@@ -243,10 +247,6 @@ public class MapsforgeConfig extends PropertiesParser{
 		} catch(Exception e) {
 			throw new Exception("Task '"+task+"' don't exist");
 		}
-	}
-
-	public MapsforgeTaskConfig getDefaultConfig() throws Exception {
-		return getTaskConfig("default");
 	}
 
 }
