@@ -78,6 +78,7 @@ public class MapsforgeSrv {
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 	private static MapsforgeSrv mapsforgeSrv;
 	private static MapsforgeHandler mapsforgeHandler;
+	private static Server server;
 
 	public MapsforgeSrv(String[] args) throws Exception {
 
@@ -95,7 +96,8 @@ public class MapsforgeSrv {
 		QueuedThreadPool queuedThreadPool = new QueuedThreadPool();
 		xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL));
 		xmlConfiguration.configure(queuedThreadPool);
-		Server server = new Server(queuedThreadPool);
+		queuedThreadPool.setStopTimeout(0);
+		server = new Server(queuedThreadPool);
 		xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY));
 		xmlConfiguration.configure(server);
 		try {
@@ -111,6 +113,8 @@ public class MapsforgeSrv {
 		slfjRequestLogWriter.setLoggerName("com.telemaxx.mapsforgesrv.request");
 		CustomRequestLog customRequestLog = new CustomRequestLog(slfjRequestLogWriter, mapsforgeConfig.getRequestLogFormat());
 		server.setRequestLog(customRequestLog);
+		server.setStopAtShutdown(true);
+		server.setStopTimeout(0L);
 
 		try {
 			server.start();
@@ -126,6 +130,11 @@ public class MapsforgeSrv {
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
 		SLF4JBridgeHandler.install();
 		mapsforgeSrv = new MapsforgeSrv(args);
+	}
+
+	public static void stop() throws Exception {
+		server.stop();
+		System.exit(0);
 	}
 
 	public static MapsforgeSrv getMapsforgeSrv () {

@@ -77,7 +77,7 @@ public class MapsforgeHandler extends AbstractHandler {
 					response.setStatus(HttpServletResponse.SC_OK);
 					response.flushBuffer();
 					stopped = true;
-					System.exit(0);
+					MapsforgeSrv.stop();
 				} else {
 					response.sendError(HttpServletResponse.SC_FORBIDDEN);
 				}
