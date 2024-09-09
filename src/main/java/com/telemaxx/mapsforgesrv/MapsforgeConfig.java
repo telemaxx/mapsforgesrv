@@ -168,8 +168,8 @@ public class MapsforgeConfig extends PropertiesParser{
 							Path pathName = (Path) event.context();
 							String fileName = pathName.toString();
 							if (!Pattern.matches(taskFileNameRegex,fileName)) continue;
-							MapsforgeHandler mapsforgeHandler = MapsforgeSrv.getMapsforgeHandler();
-							if (mapsforgeHandler == null) continue;
+							if (MapsforgeSrv.getServer() == null) continue; // Config early called before server start
+							MapsforgeHandler mapsforgeHandler = (MapsforgeHandler) MapsforgeSrv.getServer().getHandler();
 							Map<String, MapsforgeTaskHandler> tasksHandler = mapsforgeHandler.getTasksHandler();
 							String taskName = fileName.replaceFirst("[.][^.]+$", "");
 							boolean taskExists = tasksHandler.get(taskName) != null;
@@ -179,7 +179,7 @@ public class MapsforgeConfig extends PropertiesParser{
 								if (!taskExists) {
 									File taskFile = new File(taskDirectory,fileName);
 									tasksConfig.put(taskName, new MapsforgeTaskConfig(taskName, taskFile));
-									tasksHandler.put(taskName, new MapsforgeTaskHandler(MapsforgeSrv.getMapsforgeHandler(), tasksConfig.get(taskName), taskName));
+									tasksHandler.put(taskName, new MapsforgeTaskHandler(mapsforgeHandler, tasksConfig.get(taskName), taskName));
 								}
 							} else if (event.kind() == ENTRY_DELETE) {
 								logger.info("Existing task properties deleted: " + fileName);
@@ -198,7 +198,7 @@ public class MapsforgeConfig extends PropertiesParser{
 										logger.info("Existing task properties modified: " + fileName);
 										tasksConfig.remove(taskName);
 										tasksConfig.put(taskName, new MapsforgeTaskConfig(taskName, taskFile));
-										tasksHandler.put(taskName, new MapsforgeTaskHandler(MapsforgeSrv.getMapsforgeHandler(), tasksConfig.get(taskName), taskName));
+										tasksHandler.put(taskName, new MapsforgeTaskHandler(mapsforgeHandler, tasksConfig.get(taskName), taskName));
 									}
 								}
 							}

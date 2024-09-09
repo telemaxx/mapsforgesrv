@@ -57,6 +57,14 @@
  *         re-enable HTTP request property "userScale"
  *         some code optimizations
  * 0.21.1: fix "IllegalStateException" on /updatemapstyle request (nono303)
+ * 0.21.2: Adopt some changes from "styles" branch:
+ *		   Handle UTF-8 characters in config file correctly
+ *		   Automatically enable built-in world map if map definition is missing or empty
+ *		   Remove request query parameters x, y and z and log invalid tile request paths
+ *		   Assign default file extension .png if file extension missing in tile request path
+ * 0.21.3.0: Refactored server using config files only
+ *			 Initial version (nono303)
+ *			 Fixes, improvements, extensions (JFritzle)
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -76,9 +84,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 public class MapsforgeSrv {
 
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
-	private static MapsforgeSrv mapsforgeSrv;
-	private static MapsforgeHandler mapsforgeHandler;
-	private static Server server;
+	private static Server server = null;
 
 	public MapsforgeSrv(String[] args) throws Exception {
 
@@ -106,7 +112,7 @@ public class MapsforgeSrv {
 		} catch (NullPointerException e) {
 			logger.info("Virtual threads are disabled");
 		};
-		mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig);
+		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig);
 		server.setHandler(mapsforgeHandler);
 
 		Slf4jRequestLogWriter slfjRequestLogWriter = new Slf4jRequestLogWriter();
@@ -129,7 +135,7 @@ public class MapsforgeSrv {
 	public static void main(String[] args) throws Exception {
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
 		SLF4JBridgeHandler.install();
-		mapsforgeSrv = new MapsforgeSrv(args);
+		new MapsforgeSrv(args);
 	}
 
 	public static void stop() throws Exception {
@@ -137,12 +143,9 @@ public class MapsforgeSrv {
 		System.exit(0);
 	}
 
-	public static MapsforgeSrv getMapsforgeSrv () {
-		return mapsforgeSrv;
+	public static Server getServer () {
+		return server;
 	}
 
-	public static MapsforgeHandler getMapsforgeHandler () {
-		return mapsforgeHandler;
-	}
 }
 
