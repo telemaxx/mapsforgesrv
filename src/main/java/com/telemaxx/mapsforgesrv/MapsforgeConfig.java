@@ -41,7 +41,7 @@ public class MapsforgeConfig extends PropertiesParser{
 
 	public static BufferedImage BI_NOCONTENT;
 
-	private final static String  taskFileNameRegex = "^[0-9a-z._-]+.properties$"; //$NON-NLS-1$
+	private final static String  taskFileNameRegex = "^[0-9a-zA-Z_+-.]+.properties$"; //$NON-NLS-1$
 
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeConfig.class);
 
@@ -118,7 +118,7 @@ public class MapsforgeConfig extends PropertiesParser{
 	 */
 
 	private void initConfig() throws Exception {
-		logger.info("################## SERVER CONFIG ##################");
+		logger.info("################## SERVER PROPERTIES ##################");
 		cacheControl = (long) parseNumber(DEFAULT_CACHECONTROL, "cache-control", 0, null, "Browser cache ttl",false); //$NON-NLS-1$ //$NON-NLS-2$
 		outOfRangeTms = parseString(null, "outofrange_tms", null, "Out of range TMS url"); //$NON-NLS-1$ //$NON-NLS-2$
 		acceptTerminate = parseHasOption("terminate", "Accept terminate request");
@@ -131,16 +131,16 @@ public class MapsforgeConfig extends PropertiesParser{
 	 */
 
 	private void parseTasks() throws Exception {
+		tasksConfig = new HashMap<String, MapsforgeTaskConfig>();
+		MapsforgeTaskConfig mapsforgeTaskConfig;
 		FilenameFilter filenameFilter = new FilenameFilter() {
 			    public boolean accept(File dir, String name) {
 			    	return name.matches(taskFileNameRegex);
 			    }};
 		File[] taskFiles = new File(taskDirectory).listFiles(filenameFilter);
 		if(taskFiles.length == 0) {
-			logger.error(taskDirectory+" doesn't yet contain any properties files named "+taskFileNameRegex); //$NON-NLS-1$
+			logger.error("Tasks directory "+taskDirectory+" does not yet contain any properties files named "+taskFileNameRegex); //$NON-NLS-1$
 		}
-		tasksConfig = new HashMap<String, MapsforgeTaskConfig>();
-		MapsforgeTaskConfig mapsforgeTaskConfig;
 		for (File taskFile : taskFiles) {
 			String taskFileName = taskFile.getName();
 			String taskName = taskFileName.replaceFirst("[.][^.]+$", ""); //$NON-NLS-1$
