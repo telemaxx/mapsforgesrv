@@ -147,7 +147,9 @@
         <Arg name="selectors" type="int">
           <Property name="jetty.http.selectors" default="-1" />
         </Arg>
-        <Set name="host" property="jetty.http.host" />
+        <Set name="host">
+          <Property name="jetty.http.host" />
+        </Set>
         <Set name="port">
           <Property name="jetty.http.port" default="8486" />
         </Set>
@@ -155,7 +157,9 @@
           <Property name="jetty.http.idleTimeout" default="30000" />
         </Set>
         <Set name="acceptorPriorityDelta" property="jetty.http.acceptorPriorityDelta" />
-        <Set name="acceptQueueSize" property="jetty.http.acceptQueueSize" />
+        <Set name="acceptQueueSize">
+          <Property name="jetty.http.acceptQueueSize" />
+        </Set>
         <Set name="reuseAddress">
           <Property name="jetty.http.reuseAddress" default="true" />
         </Set>
@@ -188,15 +192,4 @@
       </New>
     </Arg>
   </Call>
-  <!-- =========================================================== -->
-  <!-- extra server options                                        -->
-  <!-- =========================================================== -->
-  <Set name="stopAtShutdown">
-    <Property name="jetty.server.stopAtShutdown" default="true" />
-  </Set>
-  <Set name="stopTimeout">
-    <Property name="jetty.server.stopTimeout" default="5000" />
-  </Set>
-  <Set name="dumpAfterStart" property="jetty.server.dumpAfterStart" />
-  <Set name="dumpBeforeStop" property="jetty.server.dumpBeforeStop" />
 </Configure>
