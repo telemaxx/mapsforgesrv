@@ -117,8 +117,11 @@ public class MapsforgeSrv {
 
 		Slf4jRequestLogWriter slfjRequestLogWriter = new Slf4jRequestLogWriter();
 		slfjRequestLogWriter.setLoggerName("com.telemaxx.mapsforgesrv.request");
-		CustomRequestLog customRequestLog = new CustomRequestLog(slfjRequestLogWriter, mapsforgeConfig.getRequestLogFormat());
-		server.setRequestLog(customRequestLog);
+		String requestLogFormat = mapsforgeConfig.getRequestLogFormat();
+		if (!requestLogFormat.equals("")) {
+			CustomRequestLog customRequestLog = new CustomRequestLog(slfjRequestLogWriter, mapsforgeConfig.getRequestLogFormat());
+			server.setRequestLog(customRequestLog);
+		}
 		server.setStopAtShutdown(true);
 		server.setStopTimeout(0L);
 
