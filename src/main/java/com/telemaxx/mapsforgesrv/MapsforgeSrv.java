@@ -114,16 +114,16 @@ public class MapsforgeSrv {
 		};
 		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig);
 		server.setHandler(mapsforgeHandler);
-
-		Slf4jRequestLogWriter slfjRequestLogWriter = new Slf4jRequestLogWriter();
-		slfjRequestLogWriter.setLoggerName("com.telemaxx.mapsforgesrv.request");
-		String requestLogFormat = mapsforgeConfig.getRequestLogFormat();
-		if (!requestLogFormat.equals("")) {
-			CustomRequestLog customRequestLog = new CustomRequestLog(slfjRequestLogWriter, mapsforgeConfig.getRequestLogFormat());
-			server.setRequestLog(customRequestLog);
-		}
 		server.setStopAtShutdown(true);
 		server.setStopTimeout(0L);
+
+		String requestLogFormat = mapsforgeConfig.getRequestLogFormat();
+		if (!requestLogFormat.equals("")) {
+			Slf4jRequestLogWriter slfjRequestLogWriter = new Slf4jRequestLogWriter();
+			slfjRequestLogWriter.setLoggerName("com.telemaxx.mapsforgesrv.request");
+			CustomRequestLog customRequestLog = new CustomRequestLog(slfjRequestLogWriter, requestLogFormat);
+			server.setRequestLog(customRequestLog);
+		}
 
 		try {
 			server.start();
