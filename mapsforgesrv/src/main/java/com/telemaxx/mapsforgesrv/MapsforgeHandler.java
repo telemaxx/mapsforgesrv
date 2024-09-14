@@ -90,7 +90,7 @@ public class MapsforgeHandler extends AbstractHandler {
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeHandler.class);
 
 	private final TreeSet<String> KNOWN_PARAMETER_NAMES = new TreeSet<>(Arrays.asList(
-			new String[] { "x", "y", "z", "textScale", "userScale", "transparent", "tileRenderSize", "hillshading" })); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+			new String[] { "textScale", "userScale", "transparent", "tileRenderSize", "hillshading" })); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 
 	protected final MultiMapDataStore multiMapDataStore;
 	protected final DisplayModel displayModel;
@@ -100,6 +100,7 @@ public class MapsforgeHandler extends AbstractHandler {
 	protected Map<String, DirectRenderer> directRenderer = null;
 	protected XmlRenderTheme xmlRenderTheme;
 	protected RenderThemeFuture renderThemeFuture;
+	protected Thread renderThemeFutureThread = null;
 	protected XmlRenderThemeStyleMenu renderThemeStyleMenu;
 	protected final TileBasedLabelStore labelStore;
 	protected final TileCache tileCache;
@@ -125,7 +126,7 @@ public class MapsforgeHandler extends AbstractHandler {
 	private boolean hillShadingOverlay = false;
 	private static boolean stopped = false;
 
-	private static final Pattern P = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)\\.(.*)"); //$NON-NLS-1$
+	private static final Pattern P = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)(?:(?:\\.)(.*))?"); //$NON-NLS-1$
 	private static BufferedImage BI_NOCONTENT;
 
 	public MapsforgeHandler(MapsforgeConfig mapsforgeConfig, ExecutorThreadPool pool,
@@ -146,9 +147,7 @@ public class MapsforgeHandler extends AbstractHandler {
 
 		logger.info("################### MAPS INFO ###################");
 		multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
-		boolean appendWorldMap = mapsforgeConfig.getAppendWorldMap();
 		if (mapsforgeConfig.getMapFiles().size() == 0) {
-			appendWorldMap = true;
 			if (mapsforgeConfig.getHillShadingAlgorithm() != null && mapsforgeConfig.getDemFolder() != null) {
 				hillShadingOverlay = true;
 			}
@@ -166,7 +165,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			});
 		}
 		// Append built-in world.map
-		if (appendWorldMap) {
+		if (mapsforgeConfig.getAppendWorldMap()) {
 			InputStream inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
 //			FileSystem fileSystem = Jimfs.newFileSystem();
 			FileSystem fileSystem = MemoryFileSystemBuilder.newEmpty().build();
@@ -333,7 +332,9 @@ public class MapsforgeHandler extends AbstractHandler {
 
 	protected void updateRenderThemeFuture() {
 		renderThemeFuture = new RenderThemeFuture(graphicFactory, xmlRenderTheme, displayModel);
-		new Thread(renderThemeFuture).start();
+		if (renderThemeFutureThread != null) renderThemeFutureThread.interrupt();
+		renderThemeFutureThread = new Thread(renderThemeFuture);
+		renderThemeFutureThread.start();
 	}
 
 	/**
@@ -436,11 +437,11 @@ public class MapsforgeHandler extends AbstractHandler {
 				x = Integer.parseInt(m.group(2));
 				y = Integer.parseInt(m.group(3));
 				z = Integer.parseInt(m.group(1));
-				ext = m.group(4);
+				if (m.group(4) != null) ext = m.group(4);
 			} else {
-				x = Integer.parseInt(request.getParameter("x")); //$NON-NLS-1$
-				y = Integer.parseInt(request.getParameter("y")); //$NON-NLS-1$
-				z = Integer.parseInt(request.getParameter("z")); //$NON-NLS-1$
+				logger.error("Invalid tile request: "+path); //$NON-NLS-1$
+				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				return;
 			}
 			if (x < 0 || x >= (1 << z)) {
 				logger.error("Tile number x=" + x + " out of range!"); //$NON-NLS-1$
