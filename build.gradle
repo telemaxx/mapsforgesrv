@@ -1,0 +1,66 @@
+plugins {
+    id 'java-library'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version "7.1.2"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    def mapsforgeVersion = '+'
+    def jettyVersion = '9.4.54.v20240208'
+    def slf4j = '2.0.13'
+
+    api "org.apache.commons:commons-math3:+"
+    testImplementation "junit:junit:+"
+
+    implementation "org.mapsforge:mapsforge-core:${mapsforgeVersion}"
+    implementation "org.mapsforge:mapsforge-map:${mapsforgeVersion}"
+    implementation "org.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
+    implementation "org.mapsforge:mapsforge-themes:${mapsforgeVersion}"
+    implementation "org.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
+    implementation "org.mapsforge:mapsforge-poi-awt:${mapsforgeVersion}"
+    implementation "org.mapsforge:mapsforge-poi:${mapsforgeVersion}"
+    
+    implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
+    implementation "org.eclipse.jetty.http2:http2-server:${jettyVersion}"
+
+    implementation "org.slf4j:slf4j-reload4j:${slf4j}"
+    implementation "org.slf4j:jul-to-slf4j:${slf4j}"
+    implementation "commons-cli:commons-cli:+"
+    implementation "org.apache.commons:commons-lang3:+"
+    implementation "org.xerial:sqlite-jdbc:+"
+    implementation "net.sf.kxml:kxml2:+" 
+    implementation "com.formdev:svgSalamander:+"
+    
+//  implementation "com.google.jimfs:jimfs:+"
+    implementation "com.github.marschall:memoryfilesystem:+"
+}
+
+mainClassName = "com.telemaxx.mapsforgesrv.MapsforgeSrv"
+
+// https://github.com/johnrengelman/shadow
+shadowJar {
+   archiveBaseName.set('mapsforgesrv4java8')
+   archiveClassifier.set('')
+   archiveVersion.set('')
+   // https://github.com/johnrengelman/shadow/issues/341#issuecomment-445556737
+   mergeServiceFiles {
+        path = 'META-INF/services'
+        include 'org.eclipse.jetty.http.HttpFieldPreEncoder'
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+task copyFatJar2jars_ready2use(type: Copy, dependsOn: 'shadowJar') {
+	group 'distribution'
+	description 'Copy the fatJar to bin/jars_ready2use/'
+	from file("$buildDir/libs/mapsforgesrv4java8.jar")
+	into file("$buildDir/../bin/jars_ready2use/")
+}
