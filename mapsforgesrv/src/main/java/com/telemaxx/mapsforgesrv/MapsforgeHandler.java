@@ -175,6 +175,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			FileChannel mapFileChannel = FileChannel.open(worldMapPath, StandardOpenOption.READ);
 			MapFile map = new MapFile(mapFileChannel);
 			logger.info("'(built-in)" + System.getProperty("file.separator") + "world.map'");
+			if (mapsforgeConfig.getMapFiles().size() > 0) map.restrictToZoomRange((byte)0, (byte)9);
 			multiMapDataStore.addMapDataStore(map, true, true);
 		}
 
