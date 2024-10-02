@@ -3,8 +3,8 @@ plugins {
     id "eclipse"
     // https://github.com/johnrengelman/shadow/releases
     id "com.github.johnrengelman.shadow" version "8.1.1"
-    // https://github.com/nebula-plugins/gradle-lint-plugin/releases/tag/v19.0.2
-    id "nebula.lint" version "19.0.2"
+    // https://github.com/nebula-plugins/gradle-lint-plugin/releases
+    id "nebula.lint" version "20.0.0"
 }
 
 eclipse {
@@ -34,7 +34,7 @@ sourceSets {
 dependencies {
     def mapsforgeVersion = "+"
     // https://mvnrepository.com/artifact/org.eclipse.jetty.http2/http2-server
-    def jettyVersion = "11.0.23"
+    def jettyVersion = "11.0.24"
     def slf4j = "+"
 
     implementation "org.mapsforge:mapsforge-core:${mapsforgeVersion}"
