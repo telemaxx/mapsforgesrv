@@ -88,20 +88,33 @@ public class MapsforgeStyleParser {
 	}
 
 	/**
-	 * reading mapsforgetheme and return a list mit selectable layers
+	 * reading Mapsforge theme and return a list with selectable layers
 	 * @param xmlFile
-	 * @return a list with availible, visible layers
+	 * @return a list with available, visible layers
 	 */
 	@SuppressWarnings({ })
 	public List<Style> readXML(final String xmlFile) {
-
+		final List<Style> items = new ArrayList<>();
+		try {
+			final InputStream xmlFileStream = new FileInputStream(xmlFile);
+			items.addAll(readXML(xmlFileStream));
+		} catch (final Exception e) {
+			logger.error(e.getMessage(),e);
+		}
+		return items;
+	}
+	/**
+	 * reading Mapsforge theme and return a list with selectable layers
+	 * @param xmlFileStream
+	 * @return a list with available, visible layers
+	 */
+	public List<Style> readXML(final InputStream xmlFileStream) {
 		final List<Style> items = new ArrayList<>();
 		try {
 			// First, create a new XMLInputFactory
 			final XMLInputFactory inputFactory = XMLInputFactory.newInstance();
 			// Setup a new eventReader
-			final InputStream in = new FileInputStream(xmlFile);
-			final XMLEventReader eventReader = inputFactory.createXMLEventReader(in);
+			final XMLEventReader eventReader = inputFactory.createXMLEventReader(xmlFileStream);
 			// read the XML document
 			Style item = null;
 
