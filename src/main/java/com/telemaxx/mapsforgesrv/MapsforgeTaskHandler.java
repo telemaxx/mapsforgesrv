@@ -220,6 +220,7 @@ public class MapsforgeTaskHandler {
 				XmlRenderThemeStyleLayer baseLayer = styleMenu.getLayer(id);
 				Set<String> result = baseLayer.getCategories();
 				logger.info("----------------- THEME OVERLAYS -----------------"); //$NON-NLS-1$
+				String[] enabled = {"Disabled","Enabled "};
 				for (XmlRenderThemeStyleLayer overlay : baseLayer.getOverlays()) {
 					String overlayId = overlay.getId();
 					boolean overlayEnabled = false;
@@ -232,8 +233,8 @@ public class MapsforgeTaskHandler {
 								overlayEnabled = true;
 						}
 					}
-					logger.info("'" + overlayId + "' enabled: " + Boolean.toString(overlayEnabled)
-							+ ", title: '" + overlay.getTitle(mapsforgeTaskConfig.getPreferredLanguage()) + "'");
+					logger.info(enabled[overlayEnabled?0:1]+"  : " + overlayId + 
+							" --> " + overlay.getTitle(mapsforgeTaskConfig.getPreferredLanguage()));
 					if (overlayEnabled) {
 						result.addAll(overlay.getCategories());
 					}
@@ -480,18 +481,18 @@ public class MapsforgeTaskHandler {
 		Boolean selectedStyleExists = false;
 		String defaultStyle = mapStyleParser.getDefaultStyle();
 		logger.info("------------------ THEME STYLES ------------------"); //$NON-NLS-1$
-		logger.info("Default style   : " + defaultStyle); //$NON-NLS-1$
+		logger.info("Default   : " + defaultStyle); //$NON-NLS-1$
 		for (final Style style : styles) {
-			logger.info("Available style : " + style.getXmlLayer() + " --> " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			logger.info("Available : " + style.getXmlLayer() + " --> " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 					+ style.getName(Locale.getDefault().getLanguage()));
 			if (style.getXmlLayer().equals(themeFileStyle)) {
 				selectedStyleExists = true;
 			}
 		}
 		if (themeFileStyle == null) {
-			logger.info("Used style      : " + defaultStyle); //$NON-NLS-1$
+			logger.info("Used      : " + defaultStyle); //$NON-NLS-1$
 		} else if (selectedStyleExists) {
-			logger.info("Used style      : " + themeFileStyle); //$NON-NLS-1$
+			logger.info("Used      : " + themeFileStyle); //$NON-NLS-1$
 		} else {
 			logger.error("Defined style '" + themeFileStyle+"' not available: Task " + name + " disabled"); //$NON-NLS-1$
 			taskEnabled = false;
