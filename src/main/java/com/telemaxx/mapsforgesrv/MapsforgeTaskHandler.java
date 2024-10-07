@@ -233,7 +233,7 @@ public class MapsforgeTaskHandler {
 								overlayEnabled = true;
 						}
 					}
-					logger.info(enabled[overlayEnabled?0:1]+"  : " + overlayId + 
+					logger.info(enabled[overlayEnabled?1:0]+"  : " + overlayId + 
 							" --> " + overlay.getTitle(mapsforgeTaskConfig.getPreferredLanguage()));
 					if (overlayEnabled) {
 						result.addAll(overlay.getCategories());
