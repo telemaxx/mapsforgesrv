@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 public class MapsforgeTaskConfig extends PropertiesParser{
 
-	private String rendererName = null;
 	private ArrayList<File> mapFiles = null;
 	private boolean appendWorldMap;
 	private String preferredLanguage = null;
@@ -121,7 +120,6 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 
 	private void initConfig() throws Exception {
 		logger.info("################ TASK '"+taskName+"' PROPERTIES ################");
-		rendererName = parseString(DEFAULT_RENDERER, "renderer", AUTHORIZED_RENDERER, "Renderer algorithm"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseMapFiles();
 		appendWorldMap = parseHasOption("worldmap", "Append built-in world map");
 		preferredLanguage = parseString(null, "language", null, "Preferred map language"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -175,10 +173,6 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 				parseError(msgHeader, "'" + hillShadingOption + "' invalid", "undefined");
 			}
 		}
-	}
-
-	public String getRendererName() {
-		return this.rendererName;
 	}
 
 	public List<File> getMapFiles() {
