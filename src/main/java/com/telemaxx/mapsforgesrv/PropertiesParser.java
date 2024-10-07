@@ -51,9 +51,6 @@ public abstract class PropertiesParser {
 
 	// MapsforgeConfig.cacheControl
 	protected final static long 	DEFAULT_CACHECONTROL = 0;
-	protected final static String[] AUTHORIZED_RENDERER = { "database", "direct", }; //$NON-NLS-1$ //$NON-NLS-2$
-	// MapsforgeConfig.rendererName
-	protected final static String 	DEFAULT_RENDERER = AUTHORIZED_RENDERER[0];
 
 	// MapsforgeTaskConfig.gammaValue
 	protected final static double 	DEFAULT_GAMMA = 1.;
