@@ -7,10 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +33,6 @@ import org.mapsforge.map.layer.hills.ShadingAlgorithm;
 import org.mapsforge.map.layer.hills.SimpleShadingAlgorithm;
 import org.mapsforge.map.layer.labels.TileBasedLabelStore;
 import org.mapsforge.map.layer.renderer.DatabaseRenderer;
-import org.mapsforge.map.layer.renderer.DirectRenderer;
 import org.mapsforge.map.layer.renderer.RendererJob;
 import org.mapsforge.map.model.DisplayModel;
 import org.mapsforge.map.reader.MapFile;
@@ -50,8 +45,6 @@ import org.mapsforge.map.rendertheme.XmlThemeResourceProvider;
 import org.mapsforge.map.rendertheme.rule.RenderThemeFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletOutputStream;
@@ -72,6 +65,7 @@ public class MapsforgeTaskHandler {
 	private final boolean renderLabels;
 	private final boolean cacheLabels;
 
+	private boolean taskEnabled = true;
 	private boolean hillShadingOverlay = false;
 	private HillsRenderConfig hillsRenderConfig = null;
 	private XmlRenderTheme xmlRenderTheme;
@@ -80,7 +74,6 @@ public class MapsforgeTaskHandler {
 	private int[] colorLookupTable = null;
 	private String name;
 	private Map<String, DatabaseRenderer> databaseRenderer = null;
-	private Map<String, DirectRenderer> directRenderer = null;
 
 	private MapsforgeHandler mapsforgeHandler;
 	private MapsforgeConfig mapsforgeConfig;
@@ -120,13 +113,7 @@ public class MapsforgeTaskHandler {
 		}
 		// Append built-in world.map
 		if (mapsforgeTaskConfig.getAppendWorldMap()) {
-			InputStream inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
-			// FileSystem fileSystem = Jimfs.newFileSystem();
-			FileSystem fileSystem = MemoryFileSystemBuilder.newEmpty().build();
-			Path rootPath = fileSystem.getPath("");
-			Path worldMapPath = rootPath.resolve("world.map");
-			Files.copy(inputStream, worldMapPath, StandardCopyOption.REPLACE_EXISTING);
-			FileChannel mapFileChannel = FileChannel.open(worldMapPath, StandardOpenOption.READ);
+			FileChannel mapFileChannel = FileChannel.open(MapsforgeConfig.worldMapPath, StandardOpenOption.READ);
 			MapFile map = new MapFile(mapFileChannel);
 			logger.info("'(built-in)" + System.getProperty("file.separator") + "world.map'");
 			if (mapsforgeTaskConfig.getMapFiles().size() > 0) map.restrictToZoomRange((byte)0, (byte)9);
@@ -213,23 +200,14 @@ public class MapsforgeTaskHandler {
 			hillsRenderConfig.indexOnThread();
 		}
 
-		if (mapsforgeTaskConfig.getRendererName().equals("direct")) {
-			directRenderer = new HashMap<String, DirectRenderer>();
-			if (hillsRenderConfig != null)
-				directRenderer.put("hs",
-						new DirectRenderer(multiMapDataStore, mapsforgeHandler.getGraphicFactory(), renderLabels, hillsRenderConfig));
-			directRenderer.put("std", new DirectRenderer(multiMapDataStore, mapsforgeHandler.getGraphicFactory(), renderLabels, null));
-		} else {
-			databaseRenderer = new HashMap<String, DatabaseRenderer>();
-			if (hillsRenderConfig != null)
-				databaseRenderer.put("hs", new DatabaseRenderer(multiMapDataStore, mapsforgeHandler.getGraphicFactory(), tileCache,
-						labelStore, renderLabels, cacheLabels, hillsRenderConfig));
-			databaseRenderer.put("std", new DatabaseRenderer(multiMapDataStore, mapsforgeHandler.getGraphicFactory(), tileCache,
-					labelStore, renderLabels, cacheLabels, null));
-		}
+		databaseRenderer = new HashMap<String, DatabaseRenderer>();
+		databaseRenderer.put("std", new DatabaseRenderer(multiMapDataStore, mapsforgeHandler.getGraphicFactory(), tileCache,
+				labelStore, renderLabels, cacheLabels, null));
+		if (hillsRenderConfig != null)
+			databaseRenderer.put("hs", new DatabaseRenderer(multiMapDataStore, mapsforgeHandler.getGraphicFactory(), tileCache,
+					labelStore, renderLabels, cacheLabels, hillsRenderConfig));
 
 		XmlRenderThemeMenuCallback callBack = new XmlRenderThemeMenuCallback() {
-
 			@Override
 			public Set<String> getCategories(XmlRenderThemeStyleMenu styleMenu) {
 				String id = null;
@@ -256,7 +234,6 @@ public class MapsforgeTaskHandler {
 					}
 					logger.info("'" + overlayId + "' enabled: " + Boolean.toString(overlayEnabled)
 							+ ", title: '" + overlay.getTitle(mapsforgeTaskConfig.getPreferredLanguage()) + "'");
-
 					if (overlayEnabled) {
 						result.addAll(overlay.getCategories());
 					}
@@ -265,7 +242,6 @@ public class MapsforgeTaskHandler {
 				countDownLatch.countDown();
 				return result;
 			}
-
 		};
 
 		themeFile = mapsforgeTaskConfig.getThemeFile();
@@ -281,14 +257,19 @@ public class MapsforgeTaskHandler {
 			countDownLatch = new CountDownLatch(1);
 			try {
 				xmlRenderTheme = new ExternalRenderTheme(themeFile, callBack);
+				showStyleNames();
 			} catch (Exception e) {
-				logger.error("The defined theme file '"+themeFile+"' does not exist or cannot be read: exiting"); //$NON-NLS-1$
-				System.exit(2);
+				countDownLatch.countDown();
+				logger.error("Defined theme file '"+themeFile+"' does not exist or cannot be read: Task "+name+" disabled"); //$NON-NLS-1$
+				taskEnabled = false;
+				return;
 			}
-			showStyleNames();
 		}
 
 		updateRenderThemeFuture();
+		
+		countDownLatch.await();
+		logger.info("--------------------------------------------------"); //$NON-NLS-1$
 	}
 
 	public CountDownLatch getCountDownLatch() {
@@ -310,6 +291,12 @@ public class MapsforgeTaskHandler {
 	protected void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String path = request.getPathInfo();
 		String engine = "std";
+	
+		if (!taskEnabled) {
+			logger.error("Task "+name+" disabled. Invalid tile request: "+path); //$NON-NLS-1$
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			return;
+		}
 
 		int x, y, z;
 		String ext = MapsforgeConfig.TILE_EXTENSION; // $NON-NLS-1$
@@ -403,11 +390,7 @@ public class MapsforgeTaskHandler {
 
 //Synchronizing render jobs has no visible effect -> disabled
 //				synchronized (this) {
-				if (directRenderer != null) {
-					tileBitmap = directRenderer.get(engine).executeJob(job);
-				} else {
-					tileBitmap = databaseRenderer.get(engine).executeJob(job);
-				}
+				tileBitmap = databaseRenderer.get(engine).executeJob(job);
 				if (!hillShadingOverlay) tileCache.put(job, null);
 //				}
 		}
@@ -488,30 +471,31 @@ public class MapsforgeTaskHandler {
 	}
 
 	/**
-	 * displaying the containing styles inside theme xml if a style is given(!=null)
-	 * but this style did not exist the program terminates
+	 * Display all styles contained in theme
+	 * Disable task if defined style does not exist
 	 */
-	protected void showStyleNames() {
-		final MapsforgeStyleParser mapStyleParser = new MapsforgeStyleParser();
-		final List<Style> styles = mapStyleParser.readXML(themeFile.getAbsolutePath());
+	protected void showStyleNames() throws Exception {
+		MapsforgeStyleParser mapStyleParser = new MapsforgeStyleParser();
+		List<Style> styles = mapStyleParser.readXML(xmlRenderTheme.getRenderThemeAsStream());
 		Boolean selectedStyleExists = false;
+		String defaultStyle = mapStyleParser.getDefaultStyle();
 		logger.info("------------------ THEME STYLES ------------------"); //$NON-NLS-1$
-		logger.info("Default style   : " + mapStyleParser.getDefaultStyle()); //$NON-NLS-1$
+		logger.info("Default style   : " + defaultStyle); //$NON-NLS-1$
 		for (final Style style : styles) {
 			logger.info("Available style : " + style.getXmlLayer() + " --> " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 					+ style.getName(Locale.getDefault().getLanguage()));
-
-
 			if (style.getXmlLayer().equals(themeFileStyle)) {
 				selectedStyleExists = true;
 			}
 		}
-		if (!selectedStyleExists && themeFileStyle != null) {
-			logger.error("Defined style '"+themeFileStyle+"' not available: exiting"); //$NON-NLS-1$
-			System.exit(2);
-		}
-		if (selectedStyleExists && themeFileStyle != null) {
-			logger.info("Defined style '"+themeFileStyle+"' used"); //$NON-NLS-1$
+		if (themeFileStyle == null) {
+			logger.info("Used style      : " + defaultStyle); //$NON-NLS-1$
+		} else if (selectedStyleExists) {
+			logger.info("Used style      : " + themeFileStyle); //$NON-NLS-1$
+		} else {
+			logger.error("Defined style '" + themeFileStyle+"' not available: Task " + name + " disabled"); //$NON-NLS-1$
+			taskEnabled = false;
+			return;
 		}
 	}
 
