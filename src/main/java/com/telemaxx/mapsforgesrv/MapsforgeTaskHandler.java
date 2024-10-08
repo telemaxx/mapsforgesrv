@@ -221,6 +221,11 @@ public class MapsforgeTaskHandler {
 				Set<String> result = baseLayer.getCategories();
 				logger.info("----------------- THEME OVERLAYS -----------------"); //$NON-NLS-1$
 				String[] enabled = {"Disabled","Enabled "};
+				int maxlen = 0;
+				for (XmlRenderThemeStyleLayer overlay : baseLayer.getOverlays()) {
+					int strlen = overlay.getId().length();
+					if (strlen > maxlen) maxlen = strlen;
+				}
 				for (XmlRenderThemeStyleLayer overlay : baseLayer.getOverlays()) {
 					String overlayId = overlay.getId();
 					boolean overlayEnabled = false;
@@ -233,7 +238,7 @@ public class MapsforgeTaskHandler {
 								overlayEnabled = true;
 						}
 					}
-					logger.info(enabled[overlayEnabled?1:0]+"  : " + overlayId + 
+					logger.info(enabled[overlayEnabled?1:0] + "  : " + String.format("%-" + maxlen + "s", overlayId) + 
 							" --> " + overlay.getTitle(mapsforgeTaskConfig.getPreferredLanguage()));
 					if (overlayEnabled) {
 						result.addAll(overlay.getCategories());
@@ -271,10 +276,6 @@ public class MapsforgeTaskHandler {
 		
 		countDownLatch.await();
 		logger.info("--------------------------------------------------"); //$NON-NLS-1$
-	}
-
-	public CountDownLatch getCountDownLatch() {
-		return countDownLatch;
 	}
 
 	protected void updateRenderThemeFuture() {
@@ -480,14 +481,18 @@ public class MapsforgeTaskHandler {
 		List<Style> styles = mapStyleParser.readXML(xmlRenderTheme.getRenderThemeAsStream());
 		Boolean selectedStyleExists = false;
 		String defaultStyle = mapStyleParser.getDefaultStyle();
+		int maxlen = 0;
 		logger.info("------------------ THEME STYLES ------------------"); //$NON-NLS-1$
 		logger.info("Default   : " + defaultStyle); //$NON-NLS-1$
 		for (final Style style : styles) {
-			logger.info("Available : " + style.getXmlLayer() + " --> " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			int strlen = style.getXmlLayer().length();
+			if (strlen > maxlen) maxlen = strlen;
+		}
+		for (final Style style : styles) {
+			String styleId = style.getXmlLayer();
+			if (styleId.equals(themeFileStyle)) selectedStyleExists = true;
+			logger.info("Available : " + String.format("%-" + maxlen + "s", styleId) + " --> " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 					+ style.getName(Locale.getDefault().getLanguage()));
-			if (style.getXmlLayer().equals(themeFileStyle)) {
-				selectedStyleExists = true;
-			}
 		}
 		if (themeFileStyle == null) {
 			logger.info("Used      : " + defaultStyle); //$NON-NLS-1$
