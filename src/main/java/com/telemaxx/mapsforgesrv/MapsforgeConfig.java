@@ -132,10 +132,15 @@ public class MapsforgeConfig extends PropertiesParser{
 
 	private void initConfig() throws Exception {
 		logger.info("################## SERVER PROPERTIES ##################");
+		parseResetError();
 		cacheControl = (long) parseNumber(DEFAULT_CACHECONTROL, "cache-control", 0, null, "Browser cache ttl",false); //$NON-NLS-1$ //$NON-NLS-2$
 		outOfRangeTms = parseString(null, "outofrange_tms", null, "Out of range TMS url"); //$NON-NLS-1$ //$NON-NLS-2$
 		acceptTerminate = parseHasOption("terminate", "Accept terminate request");
 		requestLogFormat = parseString("%{client}a - %u %t '%r' %s %O '%{Referer}i' '%{User-Agent}i' '%C'", "requestlog-format", null, "Request log format"); //$NON-NLS-1$ //$NON-NLS-2$
+		if (parseGetError()) {
+			logger.error("Properties parsing error(s) - exiting"); //$NON-NLS-1$
+			System.exit(1);
+		}
 		parseTasks();
 	}
 
@@ -158,7 +163,8 @@ public class MapsforgeConfig extends PropertiesParser{
 			String taskFileName = taskFile.getName();
 			String taskName = taskFileName.replaceFirst("[.][^.]+$", ""); //$NON-NLS-1$
 			mapsforgeTaskConfig = new MapsforgeTaskConfig(taskName, taskFile);
-			tasksConfig.put(taskName, mapsforgeTaskConfig);
+			if (mapsforgeTaskConfig.getCheckSum() != null)
+				tasksConfig.put(taskName, mapsforgeTaskConfig);
 		}
 	}
 
@@ -191,8 +197,11 @@ public class MapsforgeConfig extends PropertiesParser{
 								// If task does not exist, create new task config and task handler
 								if (!taskExists) {
 									File taskFile = new File(taskDirectory,fileName);
-									tasksConfig.put(taskName, new MapsforgeTaskConfig(taskName, taskFile));
-									tasksHandler.put(taskName, new MapsforgeTaskHandler(mapsforgeHandler, tasksConfig.get(taskName), taskName));
+									MapsforgeTaskConfig mapsforgeTaskConfig = new MapsforgeTaskConfig(taskName, taskFile);
+									if (mapsforgeTaskConfig.getCheckSum() != null) {
+										tasksConfig.put(taskName, mapsforgeTaskConfig);
+										tasksHandler.put(taskName, new MapsforgeTaskHandler(mapsforgeHandler, tasksConfig.get(taskName), taskName));
+									}
 								}
 							} else if (event.kind() == ENTRY_DELETE) {
 								logger.info("Existing task properties deleted: " + fileName);
@@ -210,8 +219,11 @@ public class MapsforgeConfig extends PropertiesParser{
 									if (!newCheckSum.equals(oldCheckSum)) {
 										logger.info("Existing task properties modified: " + fileName);
 										tasksConfig.remove(taskName);
-										tasksConfig.put(taskName, new MapsforgeTaskConfig(taskName, taskFile));
-										tasksHandler.put(taskName, new MapsforgeTaskHandler(mapsforgeHandler, tasksConfig.get(taskName), taskName));
+										MapsforgeTaskConfig mapsforgeTaskConfig = new MapsforgeTaskConfig(taskName, taskFile);
+										if (mapsforgeTaskConfig.getCheckSum() != null) {
+											tasksConfig.put(taskName, mapsforgeTaskConfig);
+											tasksHandler.put(taskName, new MapsforgeTaskHandler(mapsforgeHandler, tasksConfig.get(taskName), taskName));
+										}
 									}
 								}
 							}
