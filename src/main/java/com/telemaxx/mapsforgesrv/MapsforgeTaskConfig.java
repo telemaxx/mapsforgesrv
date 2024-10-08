@@ -30,6 +30,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	private float lineScale;
 	protected double[] hillShadingArguments;
 	protected String hillShadingAlgorithm = null;
+	protected String hillShadingAlgorithmName = null;
 	protected double hillShadingMagnitude;
 	private int blackValue;
 	private double gammaValue;
@@ -159,8 +160,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 						hillShadingArguments[0] = DEFAULT_HILLSHADING_SIMPLE[0];
 						hillShadingArguments[1] = DEFAULT_HILLSHADING_SIMPLE[1];
 					}
-					logger.info(msgHeader + ": defined [" + hillShadingAlgorithm + "(" + hillShadingArguments[0] + "," //$NON-NLS-3$
-							+ hillShadingArguments[1] + ")]");
+					hillShadingAlgorithmName = hillShadingAlgorithm + "(linearity: " + hillShadingArguments[0] + ", scale: " + hillShadingArguments[1] + ")"; //$NON-NLS-3$
 				} else {
 					hillShadingAlgorithm = new String(m.group(4)); // ShadingAlgorithm = diffuselight
 					hillShadingArguments = new double[1];
@@ -169,8 +169,9 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 					} else { // default value
 						hillShadingArguments[0] = DEFAULT_HILLSHADING_DIFFUSELIGHT;
 					}
-					logger.info(msgHeader + ": defined [" + hillShadingAlgorithm + "(" + hillShadingArguments[0] + ")]"); //$NON-NLS-1$
+					hillShadingAlgorithmName = hillShadingAlgorithm + "(heightAngle: " + (int)hillShadingArguments[0] + ")"; //$NON-NLS-1$
 				}
+				logger.info(msgHeader + ": defined [" + hillShadingAlgorithmName +"]");	//$NON-NLS-3$
 			} else {
 				parseError(msgHeader, "'" + hillShadingOption + "' invalid", "undefined");
 			}
@@ -207,6 +208,10 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 
 	public double[] getHillShadingArguments() {
 		return this.hillShadingArguments;
+	}
+	
+	public String getHillShadingName() {
+		return this.hillShadingAlgorithmName;
 	}
 
 	public String getThemeFileStyle() {
