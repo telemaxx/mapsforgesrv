@@ -80,6 +80,7 @@ import org.eclipse.jetty.xml.XmlConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+import java.nio.file.*;
 
 public class MapsforgeSrv {
 
@@ -100,7 +101,14 @@ public class MapsforgeSrv {
 		logger.info("################ STARTING SERVER ################");
 		XmlConfiguration xmlConfiguration = null;
 		QueuedThreadPool queuedThreadPool = new QueuedThreadPool();
-		xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL));
+		Float jv = Float.parseFloat(System.getProperty("java.version"));
+		if(Files.exists(Paths.get(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL_VR)) && jv >= 21) {
+			logger.info("Found "+mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL_VR+" for JRE "+jv);
+			xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL_VR));
+		} else {
+			xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL));
+		}
+		
 		xmlConfiguration.configure(queuedThreadPool);
 		queuedThreadPool.setStopTimeout(0);
 		server = new Server(queuedThreadPool);

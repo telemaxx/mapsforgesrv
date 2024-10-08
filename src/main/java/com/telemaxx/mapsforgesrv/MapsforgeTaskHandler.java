@@ -308,6 +308,7 @@ public class MapsforgeTaskHandler {
 	}
 
 	protected void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		long startTime = System.nanoTime();
 		String path = request.getPathInfo();
 		String engine = "std";
 
@@ -387,7 +388,10 @@ public class MapsforgeTaskHandler {
 			} catch (Exception e) {
 				throw new ServletException("Failed to parse \"hillshading\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
-			if (hillsRenderConfig != null && enable_hs) engine = "hs";
+			if (hillsRenderConfig != null && enable_hs) {
+				engine = "hs";
+				response.addHeader("X-Hillshading", mapsforgeTaskConfig.getHillShadingName());
+			}
 
 			// requestedUserScale = 2.0f; // Uncomment for testing purpose only!
 //			Calling "displayModel.setUserScaleFactor" alone has no visible impact on rendering.
@@ -470,6 +474,7 @@ public class MapsforgeTaskHandler {
 		int bufferSize = 256 + 4*image.getWidth()*image.getHeight(); // Assume image data size <= bufferSize
 		MyResponseBufferOutputStream responseBufferStream = new MyResponseBufferOutputStream(bufferSize);
 		ImageIO.write(image, ext, responseBufferStream);
+		response.addHeader("X-HandleTime", String.valueOf(Math.round(((System.nanoTime() - startTime)/1000000 ))));
 		responseBufferStream.flush(response);
 		responseBufferStream.close();
 	}
