@@ -3,9 +3,12 @@ package com.telemaxx.mapsforgesrv;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.InputStream;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 
@@ -27,6 +30,8 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
+
 public class MapsforgeConfig extends PropertiesParser{
 
 	private CommandLine configCmd;
@@ -40,6 +45,7 @@ public class MapsforgeConfig extends PropertiesParser{
 	private String requestLogFormat = null;
 
 	public static BufferedImage BI_NOCONTENT;
+	public static Path worldMapPath;
 
 	private final static String  taskFileNameRegex = "^[a-zA-Z0-9]+([_+-.]?[a-zA-Z0-9]+)*.properties$"; //$NON-NLS-1$
 
@@ -49,6 +55,13 @@ public class MapsforgeConfig extends PropertiesParser{
 		// https://stackoverflow.com/questions/10235728/convert-bufferedimage-into-byte-without-i-o
 		ImageIO.setUseCache(false);
 		BI_NOCONTENT = ImageIO.read(getClass().getClassLoader().getResourceAsStream("assets/mapsforgesrv/no_content.png"));
+		
+		// Provide built-in world.map
+		InputStream inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
+		// FileSystem fileSystem = Jimfs.newFileSystem();
+		FileSystem fileSystem = MemoryFileSystemBuilder.newEmpty().build();
+		worldMapPath = fileSystem.getPath("").resolve("world.map");
+		Files.copy(inputStream, worldMapPath, StandardCopyOption.REPLACE_EXISTING);
 
 		initOptions(args);
 		initConfig();
@@ -119,10 +132,15 @@ public class MapsforgeConfig extends PropertiesParser{
 
 	private void initConfig() throws Exception {
 		logger.info("################## SERVER PROPERTIES ##################");
+		parseResetError();
 		cacheControl = (long) parseNumber(DEFAULT_CACHECONTROL, "cache-control", 0, null, "Browser cache ttl",false); //$NON-NLS-1$ //$NON-NLS-2$
 		outOfRangeTms = parseString(null, "outofrange_tms", null, "Out of range TMS url"); //$NON-NLS-1$ //$NON-NLS-2$
 		acceptTerminate = parseHasOption("terminate", "Accept terminate request");
 		requestLogFormat = parseString("%{client}a - %u %t '%r' %s %O '%{Referer}i' '%{User-Agent}i' '%C'", "requestlog-format", null, "Request log format"); //$NON-NLS-1$ //$NON-NLS-2$
+		if (parseGetError()) {
+			logger.error("Properties parsing error(s) - exiting"); //$NON-NLS-1$
+			System.exit(1);
+		}
 		parseTasks();
 	}
 
@@ -145,7 +163,8 @@ public class MapsforgeConfig extends PropertiesParser{
 			String taskFileName = taskFile.getName();
 			String taskName = taskFileName.replaceFirst("[.][^.]+$", ""); //$NON-NLS-1$
 			mapsforgeTaskConfig = new MapsforgeTaskConfig(taskName, taskFile);
-			tasksConfig.put(taskName, mapsforgeTaskConfig);
+			if (mapsforgeTaskConfig.getCheckSum() != null)
+				tasksConfig.put(taskName, mapsforgeTaskConfig);
 		}
 	}
 
@@ -178,8 +197,11 @@ public class MapsforgeConfig extends PropertiesParser{
 								// If task does not exist, create new task config and task handler
 								if (!taskExists) {
 									File taskFile = new File(taskDirectory,fileName);
-									tasksConfig.put(taskName, new MapsforgeTaskConfig(taskName, taskFile));
-									tasksHandler.put(taskName, new MapsforgeTaskHandler(mapsforgeHandler, tasksConfig.get(taskName), taskName));
+									MapsforgeTaskConfig mapsforgeTaskConfig = new MapsforgeTaskConfig(taskName, taskFile);
+									if (mapsforgeTaskConfig.getCheckSum() != null) {
+										tasksConfig.put(taskName, mapsforgeTaskConfig);
+										tasksHandler.put(taskName, new MapsforgeTaskHandler(mapsforgeHandler, tasksConfig.get(taskName), taskName));
+									}
 								}
 							} else if (event.kind() == ENTRY_DELETE) {
 								logger.info("Existing task properties deleted: " + fileName);
@@ -197,8 +219,11 @@ public class MapsforgeConfig extends PropertiesParser{
 									if (!newCheckSum.equals(oldCheckSum)) {
 										logger.info("Existing task properties modified: " + fileName);
 										tasksConfig.remove(taskName);
-										tasksConfig.put(taskName, new MapsforgeTaskConfig(taskName, taskFile));
-										tasksHandler.put(taskName, new MapsforgeTaskHandler(mapsforgeHandler, tasksConfig.get(taskName), taskName));
+										MapsforgeTaskConfig mapsforgeTaskConfig = new MapsforgeTaskConfig(taskName, taskFile);
+										if (mapsforgeTaskConfig.getCheckSum() != null) {
+											tasksConfig.put(taskName, mapsforgeTaskConfig);
+											tasksHandler.put(taskName, new MapsforgeTaskHandler(mapsforgeHandler, tasksConfig.get(taskName), taskName));
+										}
 									}
 								}
 							}

@@ -51,9 +51,6 @@ public abstract class PropertiesParser {
 
 	// MapsforgeConfig.cacheControl
 	protected final static long 	DEFAULT_CACHECONTROL = 0;
-	protected final static String[] AUTHORIZED_RENDERER = { "database", "direct", }; //$NON-NLS-1$ //$NON-NLS-2$
-	// MapsforgeConfig.rendererName
-	protected final static String 	DEFAULT_RENDERER = AUTHORIZED_RENDERER[0];
 
 	// MapsforgeTaskConfig.gammaValue
 	protected final static double 	DEFAULT_GAMMA = 1.;
@@ -79,7 +76,7 @@ public abstract class PropertiesParser {
 	 * PRIVATE *
 	 ***********/
 
-	private final static boolean 	EXITON_PARSINGERROR = true;
+	private boolean					parseError = false;
 	private final static int 		PAD_MSG = 26;
 	private final static 			Logger logger = LoggerFactory.getLogger(PropertiesParser.class);
 
@@ -116,16 +113,17 @@ public abstract class PropertiesParser {
 		}
 	}
 
-	protected void parseError(String msgHeader, String msgErr, String defaultValue) {
-		if (EXITON_PARSINGERROR) {
-			logger.error(msgHeader + ": exiting - " + msgErr); //$NON-NLS-1$
-			System.exit(1);
-		}
-		if (defaultValue != null) {
-			logger.warn(msgHeader + ": default [" + defaultValue + "] - " + msgErr); //$NON-NLS-1$
-		} else {
-			logger.warn(msgHeader + " - " + msgErr); //$NON-NLS-1$
-		}
+	protected void parseError(String msgHeader, String msgErr) {
+		logger.error(msgHeader + ": error - " + msgErr); //$NON-NLS-1$
+		parseError = true;
+	}
+	
+	protected boolean parseGetError() {
+		return parseError;
+	}
+	
+	protected void parseResetError() {
+		parseError = false;
 	}
 
 	protected String parsePadMsg(String msg) {
@@ -158,20 +156,20 @@ public abstract class PropertiesParser {
 					operator = "' < '";
 					if (excludeInRange)
 						operator = "' <= '";
-					parseError(msgHeader, "'" + target + operator + minValue + "' ", defaultValue.toString());
+					parseError(msgHeader, "'" + target + operator + minValue + "' ");
 					target = defaultValue;
 				} else if (maxValue != null && (target.doubleValue() > maxValue.doubleValue()
 						|| (excludeInRange && target.doubleValue() == maxValue.doubleValue()))) {
 					operator = "' > '";
 					if (excludeInRange)
 						operator = "' >= '";
-					parseError(msgHeader, "'" + target + operator + maxValue + "' ", defaultValue.toString());
+					parseError(msgHeader, "'" + target + operator + maxValue + "' ");
 					target = defaultValue;
 				} else {
 					logger.info(msgHeader + ": defined [" + target + "]"); //$NON-NLS-1$
 				}
 			} catch (NumberFormatException e) {
-				parseError(msgHeader, "'" + configString + "' not a number ", defaultValue.toString());
+				parseError(msgHeader, "'" + configString + "' not a number ");
 				target = defaultValue;
 			}
 		} else {
@@ -188,8 +186,7 @@ public abstract class PropertiesParser {
 		if (configString != null) {
 			configString = configString.trim();
 			if (authorizedValues != null && !Arrays.asList(authorizedValues).contains(configString)) {
-				parseError(msgHeader, "'" + configString + "' not in {" + String.join(",", authorizedValues) + "} ",
-						defaultValue);
+				parseError(msgHeader, "'" + configString + "' not in {" + String.join(",", authorizedValues) + "} ");
 			} else {
 				target = configString;
 				logger.info(msgHeader + ": defined [" + target + "]"); //$NON-NLS-1$
@@ -225,18 +222,15 @@ public abstract class PropertiesParser {
 			if (fileOrFolder == FILE) {
 				if (!target.isFile()) {
 					target = null;
-					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' not a file",
-							msgDefault);
+					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' not a file");
 				}
 			} else if (fileOrFolder == FOLDER) {
 				if (!target.isDirectory()) {
 					target = null;
-					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' not a folder",
-							msgDefault);
+					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' not a folder");
 				} else if (checkFolderNotEmpty && target.listFiles().length == 0) {
 					target = null;
-					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' empty folder",
-							msgDefault);
+					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' empty folder");
 				}
 			} else {
 				throw new Exception("fileOrFolder '" + fileOrFolder + "' not in [file|folder]"); //$NON-NLS-1$ //$NON-NLS-2$
