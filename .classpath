@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="src" path="mapsforgesrv/src/main/java"/>
-	<classpathentry kind="src" path="mapsforgesrv/src/test/java"/>
-	<classpathentry kind="lib" path="mapsforgesrv/bin/jars_ready2use/mapsforgesrv-fatjar.jar"/>
-	<classpathentry kind="lib" path="mapsforgesrv/build/libs/mapsforgesrv-fatjar.jar"/>
-	<classpathentry kind="lib" path="mapsforgesrv/build/libs/mapsforgesrv.jar"/>
-	<classpathentry kind="lib" path="mapsforgesrv/gradle/wrapper/gradle-wrapper.jar"/>
-	<classpathentry kind="lib" path="mapsforgesrv/libs/marlin-0.9.4.7-Unsafe-OpenJDK11.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="output" path="mapsforgesrv/bin/main"/>
+	<classpathentry excluding="resources/" kind="src" output="build/main" path="src/main/java">
+		<attributes>
+			<attribute name="gradle_scope" value="main"/>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/main" path="src/main/resources">
+		<attributes>
+			<attribute name="gradle_scope" value="main"/>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17/"/>
+	<classpathentry kind="con" path="org.eclipse.buildship.core.gradleclasspathcontainer"/>
+	<classpathentry kind="output" path="bin/default"/>
 </classpath>
