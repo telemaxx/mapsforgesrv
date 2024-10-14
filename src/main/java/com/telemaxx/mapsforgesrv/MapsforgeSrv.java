@@ -69,6 +69,7 @@
 
 package com.telemaxx.mapsforgesrv;
 
+import java.io.File;
 import java.net.BindException;
 
 import org.eclipse.jetty.server.CustomRequestLog;
@@ -91,7 +92,8 @@ public class MapsforgeSrv {
 		/* IMPORTANT: the output of following line is used by other programs like guis. never change this syntax */
 		logger.info("MapsforgeSrv - a mapsforge tile server. " + "version: " + PropertiesParser.VERSION); //$NON-NLS-1$ //$NON-NLS-2$
 
-		logger.info("Java runtime version: " + System.getProperty("java.version")); //$NON-NLS-1$
+		Runtime.Version runtimeVersion = Runtime.version();
+		logger.info("Java runtime version: " + runtimeVersion); //$NON-NLS-1$
 
 		logger.debug("Current dir [user.dir]: " + System.getProperty("user.dir"));
 
@@ -99,12 +101,35 @@ public class MapsforgeSrv {
 
 		logger.info("################ STARTING SERVER ################");
 		XmlConfiguration xmlConfiguration = null;
+		String jettyXML = null;
+		Resource resource = null;
+		File file = null;
+
+		if (runtimeVersion.version().get(0) >= 21) {
+			jettyXML = MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL_VR;
+		} else {
+			jettyXML = MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL;
+		}
+		file = new File(mapsforgeConfig.getConfigDirectory()+jettyXML);
+		if (file.isFile()) {
+			resource = Resource.newResource(file);
+		} else {
+			resource = Resource.newSystemResource("assets/mapsforgesrv/"+jettyXML);
+		}
+		xmlConfiguration = new XmlConfiguration(resource);
 		QueuedThreadPool queuedThreadPool = new QueuedThreadPool();
-		xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL));
 		xmlConfiguration.configure(queuedThreadPool);
 		queuedThreadPool.setStopTimeout(0);
+
+		jettyXML = MapsforgeConfig.FILECONFIG_JETTY;
+		file = new File(mapsforgeConfig.getConfigDirectory()+jettyXML);
+		if (file.isFile()) {
+			resource = Resource.newResource(file);
+		} else {
+			resource = Resource.newSystemResource("assets/mapsforgesrv/"+jettyXML);
+		}
+		xmlConfiguration = new XmlConfiguration(resource);
 		server = new Server(queuedThreadPool);
-		xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY));
 		xmlConfiguration.configure(server);
 		try {
 			if(!((QueuedThreadPool)server.getThreadPool()).getVirtualThreadsExecutor().equals(null))

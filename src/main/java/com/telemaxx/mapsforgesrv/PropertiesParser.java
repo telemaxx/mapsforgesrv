@@ -32,6 +32,7 @@ public abstract class PropertiesParser {
 	// mandatory config files & directory
 	public final static String 		FILECONFIG_JETTY = "jetty.xml"; //$NON-NLS-1$
 	public final static String 		FILECONFIG_JETTY_THREADPOOL = "jetty-threadpool.xml"; //$NON-NLS-1$
+	public final static String 		FILECONFIG_JETTY_THREADPOOL_VR = "jetty-threadpool-virtual.xml"; //$NON-NLS-1$
 	public final static String		FILECONFIG_SERVER = "server.properties"; //$NON-NLS-1$
 	public final static String		DIRCONFIG_TASKS = "tasks"+System.getProperty("file.separator"); //$NON-NLS-1$
 
