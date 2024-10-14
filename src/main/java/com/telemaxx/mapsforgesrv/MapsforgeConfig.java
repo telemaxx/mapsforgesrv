@@ -76,7 +76,7 @@ public class MapsforgeConfig extends PropertiesParser{
 		Options options = new Options();
 		options.addOption(Option.builder("c") //$NON-NLS-1$
 				.longOpt("config") //$NON-NLS-1$
-				.desc("Config directory including at least "+FILECONFIG_SERVER+", "+FILECONFIG_JETTY+", "+FILECONFIG_JETTY_THREADPOOL+", "+DIRCONFIG_TASKS) //$NON-NLS-1$
+				.desc("Config directory including at least "+FILECONFIG_SERVER+" and "+DIRCONFIG_TASKS+", optionally "+FILECONFIG_JETTY+", "+FILECONFIG_JETTY_THREADPOOL+", "+FILECONFIG_JETTY_THREADPOOL_VR) //$NON-NLS-1$
 				.required(false).hasArg(true).build());
 		options.addOption(Option.builder("h") //$NON-NLS-1$
 				.longOpt("help") //$NON-NLS-1$
@@ -101,14 +101,10 @@ public class MapsforgeConfig extends PropertiesParser{
 			config = config.trim();
 			if (new File(config).isDirectory()) {
 				configDirectory = config+System.getProperty("file.separator");
-				//String[] configFiles = {FILECONFIG_SERVER, FILECONFIG_JETTY, FILECONFIG_JETTY_THREADPOOL, DIRCONFIG_TASKS+FILECONFIG_DEFAULTTASK};
-				String[] configFiles = {FILECONFIG_SERVER, FILECONFIG_JETTY, FILECONFIG_JETTY_THREADPOOL};
-				for (String configFile : configFiles) {
-					configFile = configDirectory+configFile;
-					if (!new File(configFile).isFile()) {
-						logger.error("Required config file '"+configFile+"' doesn't exist: exiting"); //$NON-NLS-1$
-						System.exit(1);
-					}
+				String configFile = configDirectory+FILECONFIG_SERVER;
+				if (!new File(configFile).isFile()) {
+					logger.error("Required config file '"+configFile+"' doesn't exist: exiting"); //$NON-NLS-1$
+					System.exit(1);
 				}
 				taskDirectory = configDirectory+DIRCONFIG_TASKS;
 				if (!new File(taskDirectory).isDirectory()) {
