@@ -4,7 +4,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.InputStream;
-import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,8 +29,6 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
-
 public class MapsforgeConfig extends PropertiesParser{
 
 	private CommandLine configCmd;
@@ -47,7 +44,7 @@ public class MapsforgeConfig extends PropertiesParser{
 	public static BufferedImage BI_NOCONTENT;
 	public static Path worldMapPath;
 
-	private final static String  taskFileNameRegex = "^[a-zA-Z0-9]+([_+-.]?[a-zA-Z0-9]+)*.properties$"; //$NON-NLS-1$
+	private final static String taskFileNameRegex = "^[a-zA-Z0-9]+([_+-.]?[a-zA-Z0-9]+)*.properties$"; //$NON-NLS-1$
 
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeConfig.class);
 
@@ -55,12 +52,10 @@ public class MapsforgeConfig extends PropertiesParser{
 		// https://stackoverflow.com/questions/10235728/convert-bufferedimage-into-byte-without-i-o
 		ImageIO.setUseCache(false);
 		BI_NOCONTENT = ImageIO.read(getClass().getClassLoader().getResourceAsStream("assets/mapsforgesrv/no_content.png"));
-		
+
 		// Provide built-in world.map
 		InputStream inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
-		// FileSystem fileSystem = Jimfs.newFileSystem();
-		FileSystem fileSystem = MemoryFileSystemBuilder.newEmpty().build();
-		worldMapPath = fileSystem.getPath("").resolve("world.map");
+		worldMapPath = MapsforgeSrv.memoryFileSystem.getPath("").resolve("world.map");
 		Files.copy(inputStream, worldMapPath, StandardCopyOption.REPLACE_EXISTING);
 
 		initOptions(args);
@@ -148,9 +143,9 @@ public class MapsforgeConfig extends PropertiesParser{
 		tasksConfig = new HashMap<String, MapsforgeTaskConfig>();
 		MapsforgeTaskConfig mapsforgeTaskConfig;
 		FilenameFilter filenameFilter = new FilenameFilter() {
-			    public boolean accept(File dir, String name) {
-			    	return name.matches(taskFileNameRegex);
-			    }};
+			public boolean accept(File dir, String name) {
+				return name.matches(taskFileNameRegex);
+			}};
 		File[] taskFiles = new File(taskDirectory).listFiles(filenameFilter);
 		if(taskFiles.length == 0) {
 			logger.error("Tasks directory "+taskDirectory+" does not yet contain any properties files named "+taskFileNameRegex); //$NON-NLS-1$
