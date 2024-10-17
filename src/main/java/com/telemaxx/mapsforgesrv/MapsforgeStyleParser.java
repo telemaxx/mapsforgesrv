@@ -130,7 +130,7 @@ public class MapsforgeStyleParser {
 							if (sm_attribute.getName().toString().equals(DEFAULTLANG)) {
 								defaultlanguage = sm_attribute.getValue();
 							} else if (sm_attribute.getName().toString().equals(DEFAULTSTYLE)) {
-								defaultstyle =  sm_attribute.getValue();
+								defaultstyle = sm_attribute.getValue();
 								//logger.info("default style: " + defaultstyle);
 							}
 						}

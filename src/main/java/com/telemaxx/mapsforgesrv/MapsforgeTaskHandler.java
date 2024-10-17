@@ -238,7 +238,7 @@ public class MapsforgeTaskHandler {
 								overlayEnabled = true;
 						}
 					}
-					logger.info(enabled[overlayEnabled?1:0] + "  : " + String.format("%-" + maxlen + "s", overlayId) + 
+					logger.info(enabled[overlayEnabled?1:0] + "  : " + String.format("%-" + maxlen + "s", overlayId) +
 							" --> " + overlay.getTitle(mapsforgeTaskConfig.getPreferredLanguage()));
 					if (overlayEnabled) {
 						result.addAll(overlay.getCategories());
@@ -273,7 +273,7 @@ public class MapsforgeTaskHandler {
 		}
 
 		updateRenderThemeFuture();
-		
+
 		countDownLatch.await();
 		logger.info("--------------------------------------------------"); //$NON-NLS-1$
 	}
@@ -282,18 +282,18 @@ public class MapsforgeTaskHandler {
 		renderThemeFuture = new RenderThemeFuture(mapsforgeHandler.getGraphicFactory(), xmlRenderTheme, displayModel);
 		String tname = "RenderThemeFuture-"+name;
 		for (Thread t : Thread.getAllStackTraces().keySet()) {
-		if (t.getName().equals(tname)) {
-			t.interrupt();
-			logger.debug("Thread '"+tname+"' successfully stopped.");
+			if (t.getName().equals(tname)) {
+				t.interrupt();
+				logger.debug("Thread '"+tname+"' successfully stopped.");
+			}
 		}
-	    }
 		new Thread(null,renderThemeFuture,tname).start();
 	}
 
 	protected void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String path = request.getPathInfo();
 		String engine = "std";
-	
+
 		if (!taskEnabled) {
 			logger.error("Task "+name+" disabled. Invalid tile request: "+path); //$NON-NLS-1$
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

@@ -85,7 +85,7 @@ public abstract class PropertiesParser {
 		String checkSum = null;
 		try {
 			byte[] data = Files.readAllBytes(configFile.toPath());
-	        InputStreamReader in = new InputStreamReader(new ByteArrayInputStream(data), StandardCharsets.UTF_8);
+			InputStreamReader in = new InputStreamReader(new ByteArrayInputStream(data), StandardCharsets.UTF_8);
 			configProperties = new Properties();
 			configProperties.load(in);
 			in.close();
@@ -118,11 +118,11 @@ public abstract class PropertiesParser {
 		logger.error(msgHeader + ": error - " + msgErr); //$NON-NLS-1$
 		parseError = true;
 	}
-	
+
 	protected boolean parseGetError() {
 		return parseError;
 	}
-	
+
 	protected void parseResetError() {
 		parseError = false;
 	}
