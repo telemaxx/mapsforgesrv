@@ -167,7 +167,6 @@ public class MapsforgeSrv {
 				if (!setNode.hasChildNodes()) {
 					String propertyName = setNode.getAttributes().getNamedItem("property").getTextContent();
 					setNode.getAttributes().removeNamedItem("property");
-					logger.info("property="+propertyName);
 					Element property = xmlDoc.createElement("Property");
 					property.setAttribute("name", propertyName);
 					property.setAttribute("default", propertyValue);
