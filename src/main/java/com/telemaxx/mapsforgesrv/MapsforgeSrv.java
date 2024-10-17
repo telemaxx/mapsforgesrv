@@ -70,7 +70,20 @@
 package com.telemaxx.mapsforgesrv;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.net.BindException;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.Server;
@@ -81,11 +94,19 @@ import org.eclipse.jetty.xml.XmlConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+import org.w3c.dom.Document;
+import org.w3c.dom.DocumentType;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
 
 public class MapsforgeSrv {
 
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 	private static Server server = null;
+	static FileSystem memoryFileSystem;
 
 	public MapsforgeSrv(String[] args) throws Exception {
 
@@ -97,6 +118,8 @@ public class MapsforgeSrv {
 
 		logger.debug("Current dir [user.dir]: " + System.getProperty("user.dir"));
 
+		// FileSystem fileSystem = Jimfs.newFileSystem();
+		memoryFileSystem = MemoryFileSystemBuilder.newEmpty().build();
 		MapsforgeConfig mapsforgeConfig = new MapsforgeConfig(args);
 
 		logger.info("################ STARTING SERVER ################");
@@ -110,6 +133,7 @@ public class MapsforgeSrv {
 		} else {
 			jettyXML = MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL;
 		}
+
 		file = new File(mapsforgeConfig.getConfigDirectory()+jettyXML);
 		if (file.isFile()) {
 			resource = Resource.newResource(file);
@@ -128,8 +152,57 @@ public class MapsforgeSrv {
 		} else {
 			resource = Resource.newSystemResource("assets/mapsforgesrv/"+jettyXML);
 		}
-		xmlConfiguration = new XmlConfiguration(resource);
+
+		// Override jetty.xml property defaults by server.properties values
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		Document xmlDoc = db.parse(resource.getInputStream());
+		NodeList setNodes = xmlDoc.getElementsByTagName("Set");
+		int setIndex = setNodes.getLength();
+		while (setIndex > 0) {
+			Node setNode = setNodes.item(--setIndex);
+			String setName = setNode.getAttributes().getNamedItem("name").getTextContent();
+			String propertyValue = mapsforgeConfig.retrieveConfigValue(setName);
+			if (propertyValue != null) {
+				if (!setNode.hasChildNodes()) {
+					String propertyName = setNode.getAttributes().getNamedItem("property").getTextContent();
+					setNode.getAttributes().removeNamedItem("property");
+					logger.info("property="+propertyName);
+					Element property = xmlDoc.createElement("Property");
+					property.setAttribute("name", propertyName);
+					property.setAttribute("default", propertyValue);
+					setNode.appendChild(property);
+				} else {
+					NodeList childNodes = setNode.getChildNodes();
+					int childIndex = childNodes.getLength();
+					while (childIndex > 0) {
+						Node child = childNodes.item(--childIndex);
+						if (child.getNodeType() == Node.ELEMENT_NODE) {
+							if (child.getNodeName().equals("Property")) {
+								child.getAttributes().getNamedItem("default").setTextContent(propertyValue);
+							}
+						}
+					}
+				}
+			}
+		}
+		// Write modified jetty.xml to memory filesystem
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		Transformer transformer = transformerFactory.newTransformer();
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		transformer.setOutputProperty(OutputKeys.STANDALONE, "no");
+		DocumentType doctype = xmlDoc.getDoctype();
+		if(doctype != null) {
+			transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, doctype.getPublicId());
+			transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, doctype.getSystemId());
+		}
+		Path xmlFile = memoryFileSystem.getPath("").resolve("jetty.xml");
+		OutputStream stream = Files.newOutputStream(xmlFile,StandardOpenOption.CREATE);
+		transformer.transform(new DOMSource(xmlDoc), new StreamResult(stream));
+		resource = Resource.newResource(xmlFile);
+
 		server = new Server(queuedThreadPool);
+		xmlConfiguration = new XmlConfiguration(resource);
 		xmlConfiguration.configure(server);
 		try {
 			if(!((QueuedThreadPool)server.getThreadPool()).getVirtualThreadsExecutor().equals(null))
@@ -137,6 +210,7 @@ public class MapsforgeSrv {
 		} catch (NullPointerException e) {
 			logger.info("Virtual threads are disabled");
 		};
+
 		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig);
 		server.setHandler(mapsforgeHandler);
 		server.setStopAtShutdown(true);
