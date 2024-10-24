@@ -105,8 +105,9 @@ import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
 public class MapsforgeSrv {
 
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
-	private static Server server = null;
 	static FileSystem memoryFileSystem;
+	private static MapsforgeConfig mapsforgeConfig = null;
+	private static Server server = null;
 
 	public MapsforgeSrv(String[] args) throws Exception {
 
@@ -118,9 +119,8 @@ public class MapsforgeSrv {
 
 		logger.debug("Current dir [user.dir]: " + System.getProperty("user.dir"));
 
-		// FileSystem fileSystem = Jimfs.newFileSystem();
 		memoryFileSystem = MemoryFileSystemBuilder.newEmpty().build();
-		MapsforgeConfig mapsforgeConfig = new MapsforgeConfig(args);
+		mapsforgeConfig = new MapsforgeConfig(args);
 
 		logger.info("################ STARTING SERVER ################");
 		XmlConfiguration xmlConfiguration = null;
@@ -140,6 +140,7 @@ public class MapsforgeSrv {
 		} else {
 			resource = Resource.newSystemResource("assets/mapsforgesrv/"+jettyXML);
 		}
+		resource = overrideJettyXMLResource(resource);
 		xmlConfiguration = new XmlConfiguration(resource);
 		QueuedThreadPool queuedThreadPool = new QueuedThreadPool();
 		xmlConfiguration.configure(queuedThreadPool);
@@ -152,55 +153,8 @@ public class MapsforgeSrv {
 		} else {
 			resource = Resource.newSystemResource("assets/mapsforgesrv/"+jettyXML);
 		}
-
-		// Override jetty.xml property defaults by server.properties values
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = dbf.newDocumentBuilder();
-		Document xmlDoc = db.parse(resource.getInputStream());
-		NodeList setNodes = xmlDoc.getElementsByTagName("Set");
-		int setIndex = setNodes.getLength();
-		while (setIndex > 0) {
-			Node setNode = setNodes.item(--setIndex);
-			String setName = setNode.getAttributes().getNamedItem("name").getTextContent();
-			String propertyValue = mapsforgeConfig.retrieveConfigValue(setName);
-			if (propertyValue != null) {
-				if (!setNode.hasChildNodes()) {
-					String propertyName = setNode.getAttributes().getNamedItem("property").getTextContent();
-					setNode.getAttributes().removeNamedItem("property");
-					Element property = xmlDoc.createElement("Property");
-					property.setAttribute("name", propertyName);
-					property.setAttribute("default", propertyValue);
-					setNode.appendChild(property);
-				} else {
-					NodeList childNodes = setNode.getChildNodes();
-					int childIndex = childNodes.getLength();
-					while (childIndex > 0) {
-						Node child = childNodes.item(--childIndex);
-						if (child.getNodeType() == Node.ELEMENT_NODE) {
-							if (child.getNodeName().equals("Property")) {
-								child.getAttributes().getNamedItem("default").setTextContent(propertyValue);
-							}
-						}
-					}
-				}
-			}
-		}
-		// Write modified jetty.xml to memory filesystem
-		TransformerFactory transformerFactory = TransformerFactory.newInstance();
-		Transformer transformer = transformerFactory.newTransformer();
-		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		transformer.setOutputProperty(OutputKeys.STANDALONE, "no");
-		DocumentType doctype = xmlDoc.getDoctype();
-		if(doctype != null) {
-			transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, doctype.getPublicId());
-			transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, doctype.getSystemId());
-		}
-		Path xmlFile = memoryFileSystem.getPath("").resolve("jetty.xml");
-		OutputStream stream = Files.newOutputStream(xmlFile,StandardOpenOption.CREATE);
-		transformer.transform(new DOMSource(xmlDoc), new StreamResult(stream));
-		resource = Resource.newResource(xmlFile);
-
 		server = new Server(queuedThreadPool);
+		resource = overrideJettyXMLResource(resource);
 		xmlConfiguration = new XmlConfiguration(resource);
 		xmlConfiguration.configure(server);
 		try {
@@ -246,6 +200,60 @@ public class MapsforgeSrv {
 
 	public static Server getServer () {
 		return server;
+	}
+
+	/*
+	 * Read jetty XML resource into document
+	 * Override jetty XML properties by server.properties values
+	 * Write modified document as XML file to memory filesystem
+	 * Create new resource from XML file
+	 * Return modified resource
+	*/
+	private static Resource overrideJettyXMLResource(Resource resource) throws Exception {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		Document xmlDoc = db.parse(resource.getInputStream());
+		NodeList setNodes = xmlDoc.getElementsByTagName("Set");
+		int setIndex = setNodes.getLength();
+		while (setIndex-- > 0) {
+			Node setNode = setNodes.item(setIndex);
+			String setName = setNode.getAttributes().getNamedItem("name").getTextContent();
+			String propertyValue = mapsforgeConfig.retrieveConfigValue(setName);
+			if (propertyValue != null) {
+				if (!setNode.hasChildNodes()) {
+					String propertyName = setNode.getAttributes().getNamedItem("property").getTextContent();
+					setNode.getAttributes().removeNamedItem("property");
+					Element property = xmlDoc.createElement("Property");
+					property.setAttribute("name", propertyName);
+					property.setAttribute("default", propertyValue);
+					setNode.appendChild(property);
+				} else {
+					NodeList childNodes = setNode.getChildNodes();
+					int childIndex = childNodes.getLength();
+					while (childIndex > 0) {
+						Node child = childNodes.item(--childIndex);
+						if (child.getNodeType() == Node.ELEMENT_NODE) {
+							if (child.getNodeName().equals("Property")) {
+								child.getAttributes().getNamedItem("default").setTextContent(propertyValue);
+							}
+						}
+					}
+				}
+			}
+		}
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		Transformer transformer = transformerFactory.newTransformer();
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		transformer.setOutputProperty(OutputKeys.STANDALONE, "no");
+		DocumentType doctype = xmlDoc.getDoctype();
+		if(doctype != null) {
+			transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, doctype.getPublicId());
+			transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, doctype.getSystemId());
+		}
+		Path xmlFile = memoryFileSystem.getPath("").resolve("new.jetty.xml");
+		OutputStream stream = Files.newOutputStream(xmlFile,StandardOpenOption.CREATE);
+		transformer.transform(new DOMSource(xmlDoc), new StreamResult(stream));
+		return resource = Resource.newResource(xmlFile);
 	}
 
 }
