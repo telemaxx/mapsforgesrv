@@ -127,21 +127,22 @@ public class MapsforgeSrv {
 		String jettyXML = null;
 		Resource resource = null;
 		File file = null;
+		Path path = null;
 
 		if (runtimeVersion.version().get(0) >= 21) {
 			jettyXML = MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL_VR;
 		} else {
 			jettyXML = MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL;
 		}
-
 		file = new File(mapsforgeConfig.getConfigDirectory()+jettyXML);
 		if (file.isFile()) {
 			resource = Resource.newResource(file);
 		} else {
 			resource = Resource.newSystemResource("assets/mapsforgesrv/"+jettyXML);
 		}
-		resource = overrideJettyXMLResource(resource);
-		xmlConfiguration = new XmlConfiguration(resource);
+		path = Files.createTempFile(memoryFileSystem.getPath(""), null, ".xml");
+		xmlConfiguration = overrideXmlConfiguration(resource,path);
+		Files.delete(path);
 		QueuedThreadPool queuedThreadPool = new QueuedThreadPool();
 		xmlConfiguration.configure(queuedThreadPool);
 		queuedThreadPool.setStopTimeout(0);
@@ -153,9 +154,10 @@ public class MapsforgeSrv {
 		} else {
 			resource = Resource.newSystemResource("assets/mapsforgesrv/"+jettyXML);
 		}
+		path = Files.createTempFile(memoryFileSystem.getPath(""), null, ".xml");
+		xmlConfiguration = overrideXmlConfiguration(resource,path);
+		Files.delete(path);
 		server = new Server(queuedThreadPool);
-		resource = overrideJettyXMLResource(resource);
-		xmlConfiguration = new XmlConfiguration(resource);
 		xmlConfiguration.configure(server);
 		try {
 			if(!((QueuedThreadPool)server.getThreadPool()).getVirtualThreadsExecutor().equals(null))
@@ -163,7 +165,6 @@ public class MapsforgeSrv {
 		} catch (NullPointerException e) {
 			logger.info("Virtual threads are disabled");
 		};
-
 		MapsforgeHandler mapsforgeHandler = new MapsforgeHandler(mapsforgeConfig);
 		server.setHandler(mapsforgeHandler);
 		server.setStopAtShutdown(true);
@@ -205,11 +206,10 @@ public class MapsforgeSrv {
 	/*
 	 * Read jetty XML resource into document
 	 * Override jetty XML properties by server.properties values
-	 * Write modified document as XML file to memory filesystem
-	 * Create new resource from XML file
-	 * Return modified resource
+	 * Write modified document as XML file to path
+	 * Return new XmlConfiguration from modified resource
 	*/
-	private static Resource overrideJettyXMLResource(Resource resource) throws Exception {
+	private static XmlConfiguration overrideXmlConfiguration(Resource resource, Path path) throws Exception {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		Document xmlDoc = db.parse(resource.getInputStream());
@@ -250,10 +250,10 @@ public class MapsforgeSrv {
 			transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, doctype.getPublicId());
 			transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, doctype.getSystemId());
 		}
-		Path xmlFile = memoryFileSystem.getPath("").resolve("new.jetty.xml");
-		OutputStream stream = Files.newOutputStream(xmlFile,StandardOpenOption.CREATE);
+		OutputStream stream = Files.newOutputStream(path,StandardOpenOption.CREATE);
 		transformer.transform(new DOMSource(xmlDoc), new StreamResult(stream));
-		return resource = Resource.newResource(xmlFile);
+		stream.close();
+		return new XmlConfiguration(Resource.newResource(path));
 	}
 
 }
