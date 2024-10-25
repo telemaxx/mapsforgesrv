@@ -49,19 +49,23 @@ public class MapsforgeConfig extends PropertiesParser{
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeConfig.class);
 
 	public MapsforgeConfig(String[] args) throws Exception {
+		InputStream inputStream = null;
+		
+		initOptions(args);
+
 		// https://stackoverflow.com/questions/10235728/convert-bufferedimage-into-byte-without-i-o
 		ImageIO.setUseCache(false);
-		BI_NOCONTENT = ImageIO.read(getClass().getClassLoader().getResourceAsStream("assets/mapsforgesrv/no_content.png"));
+		inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/no_content.png");
+		BI_NOCONTENT = ImageIO.read(inputStream);
+		inputStream.close();
 
 		// Provide built-in world.map
-		InputStream inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
+		inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
 		worldMapPath = MapsforgeSrv.memoryFileSystem.getPath("").resolve("world.map");
 		Files.copy(inputStream, worldMapPath, StandardCopyOption.REPLACE_EXISTING);
 		inputStream.close();
 
-		initOptions(args);
 		initConfig();
-
 		watchConfig ();
 	}
 

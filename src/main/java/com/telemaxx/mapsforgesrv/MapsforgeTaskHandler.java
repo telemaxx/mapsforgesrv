@@ -477,7 +477,9 @@ public class MapsforgeTaskHandler {
 	 */
 	protected void showStyleNames() throws Exception {
 		MapsforgeStyleParser mapStyleParser = new MapsforgeStyleParser();
-		List<Style> styles = mapStyleParser.readXML(xmlRenderTheme.getRenderThemeAsStream());
+		InputStream inputStream = xmlRenderTheme.getRenderThemeAsStream();
+		List<Style> styles = mapStyleParser.readXML(inputStream);
+		inputStream.close();
 		Boolean selectedStyleExists = false;
 		String defaultStyle = mapStyleParser.getDefaultStyle();
 		int maxlen = 0;

@@ -85,10 +85,12 @@ public abstract class PropertiesParser {
 		String checkSum = null;
 		try {
 			byte[] data = Files.readAllBytes(configFile.toPath());
-			InputStreamReader in = new InputStreamReader(new ByteArrayInputStream(data), StandardCharsets.UTF_8);
+			ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
+			InputStreamReader in = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
 			configProperties = new Properties();
 			configProperties.load(in);
 			in.close();
+			inputStream.close();
 			checkSum = checkSum(data);
 		} catch (FileNotFoundException e) {
 			logger.error("Can't find config file '" + configFile + "': exiting"); //$NON-NLS-1$
