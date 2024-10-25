@@ -57,6 +57,7 @@ public class MapsforgeConfig extends PropertiesParser{
 		InputStream inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
 		worldMapPath = MapsforgeSrv.memoryFileSystem.getPath("").resolve("world.map");
 		Files.copy(inputStream, worldMapPath, StandardCopyOption.REPLACE_EXISTING);
+		inputStream.close();
 
 		initOptions(args);
 		initConfig();

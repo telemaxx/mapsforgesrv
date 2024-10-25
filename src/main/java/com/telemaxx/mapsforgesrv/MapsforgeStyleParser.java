@@ -98,6 +98,7 @@ public class MapsforgeStyleParser {
 		try {
 			final InputStream xmlFileStream = new FileInputStream(xmlFile);
 			items.addAll(readXML(xmlFileStream));
+			xmlFileStream.close();
 		} catch (final Exception e) {
 			logger.error(e.getMessage(),e);
 		}
