@@ -451,7 +451,6 @@ public class MapsforgeTaskHandler {
 			response.addHeader("Cache-Control", "public, max-age=" + mapsforgeConfig.getCacheControl()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		response.setContentType("image/" + ext); //$NON-NLS-1$
-		//ImageIO.write(image, ext, response.getOutputStream());
 		int bufferSize = 256 + 4*image.getWidth()*image.getHeight(); // Assume image data size <= bufferSize
 		MyResponseBufferOutputStream responseBufferStream = new MyResponseBufferOutputStream(bufferSize);
 		ImageIO.write(image, ext, responseBufferStream);
