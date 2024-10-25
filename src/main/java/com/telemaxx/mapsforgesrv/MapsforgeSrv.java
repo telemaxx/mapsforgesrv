@@ -123,6 +123,7 @@ public class MapsforgeSrv {
 		mapsforgeConfig = new MapsforgeConfig(args);
 
 		logger.info("################ STARTING SERVER ################");
+		{	// Begin of local scope 
 		XmlConfiguration xmlConfiguration = null;
 		String jettyXML = null;
 		Resource resource = null;
@@ -177,6 +178,8 @@ public class MapsforgeSrv {
 			CustomRequestLog customRequestLog = new CustomRequestLog(slfjRequestLogWriter, requestLogFormat);
 			server.setRequestLog(customRequestLog);
 		}
+		
+		}	// End of local scope: allow garbage collection of no longer referenced objects and save heap memory
 
 		try {
 			server.start();
