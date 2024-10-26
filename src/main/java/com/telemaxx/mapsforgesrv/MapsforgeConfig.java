@@ -266,7 +266,7 @@ public class MapsforgeConfig extends PropertiesParser{
 		try {
 			return tasksConfig.get(task);
 		} catch(Exception e) {
-			throw new Exception("Task '"+task+"' don't exist");
+			throw new Exception("Task '"+task+"' doesn't exist");
 		}
 	}
 
