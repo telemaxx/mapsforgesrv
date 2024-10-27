@@ -32,6 +32,7 @@ public abstract class PropertiesParser {
 	// mandatory config files & directory
 	public final static String 		FILECONFIG_JETTY = "jetty.xml"; //$NON-NLS-1$
 	public final static String 		FILECONFIG_JETTY_THREADPOOL = "jetty-threadpool.xml"; //$NON-NLS-1$
+	public final static String 		FILECONFIG_JETTY_THREADPOOL_VR = "jetty-threadpool-virtual.xml"; //$NON-NLS-1$
 	public final static String		FILECONFIG_SERVER = "server.properties"; //$NON-NLS-1$
 	public final static String		DIRCONFIG_TASKS = "tasks"+System.getProperty("file.separator"); //$NON-NLS-1$
 
@@ -84,10 +85,12 @@ public abstract class PropertiesParser {
 		String checkSum = null;
 		try {
 			byte[] data = Files.readAllBytes(configFile.toPath());
-	        InputStreamReader in = new InputStreamReader(new ByteArrayInputStream(data), StandardCharsets.UTF_8);
+			ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
+			InputStreamReader in = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
 			configProperties = new Properties();
 			configProperties.load(in);
 			in.close();
+			inputStream.close();
 			checkSum = checkSum(data);
 		} catch (FileNotFoundException e) {
 			logger.error("Can't find config file '" + configFile + "': exiting"); //$NON-NLS-1$
@@ -117,11 +120,11 @@ public abstract class PropertiesParser {
 		logger.error(msgHeader + ": error - " + msgErr); //$NON-NLS-1$
 		parseError = true;
 	}
-	
+
 	protected boolean parseGetError() {
 		return parseError;
 	}
-	
+
 	protected void parseResetError() {
 		parseError = false;
 	}

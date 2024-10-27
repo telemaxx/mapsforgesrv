@@ -4,7 +4,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.InputStream;
-import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,8 +29,6 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
-
 public class MapsforgeConfig extends PropertiesParser{
 
 	private CommandLine configCmd;
@@ -47,25 +44,28 @@ public class MapsforgeConfig extends PropertiesParser{
 	public static BufferedImage BI_NOCONTENT;
 	public static Path worldMapPath;
 
-	private final static String  taskFileNameRegex = "^[a-zA-Z0-9]+([_+-.]?[a-zA-Z0-9]+)*.properties$"; //$NON-NLS-1$
+	private final static String taskFileNameRegex = "^[a-zA-Z0-9]+([_+-.]?[a-zA-Z0-9]+)*.properties$"; //$NON-NLS-1$
 
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeConfig.class);
 
 	public MapsforgeConfig(String[] args) throws Exception {
+		InputStream inputStream = null;
+		
+		initOptions(args);
+
 		// https://stackoverflow.com/questions/10235728/convert-bufferedimage-into-byte-without-i-o
 		ImageIO.setUseCache(false);
-		BI_NOCONTENT = ImageIO.read(getClass().getClassLoader().getResourceAsStream("assets/mapsforgesrv/no_content.png"));
-		
+		inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/no_content.png");
+		BI_NOCONTENT = ImageIO.read(inputStream);
+		inputStream.close();
+
 		// Provide built-in world.map
-		InputStream inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
-		// FileSystem fileSystem = Jimfs.newFileSystem();
-		FileSystem fileSystem = MemoryFileSystemBuilder.newEmpty().build();
-		worldMapPath = fileSystem.getPath("").resolve("world.map");
+		inputStream = getClass().getResourceAsStream("/assets/mapsforgesrv/world.map");
+		worldMapPath = MapsforgeSrv.memoryFileSystem.getPath("").resolve("world.map");
 		Files.copy(inputStream, worldMapPath, StandardCopyOption.REPLACE_EXISTING);
+		inputStream.close();
 
-		initOptions(args);
 		initConfig();
-
 		watchConfig ();
 	}
 
@@ -76,7 +76,7 @@ public class MapsforgeConfig extends PropertiesParser{
 		Options options = new Options();
 		options.addOption(Option.builder("c") //$NON-NLS-1$
 				.longOpt("config") //$NON-NLS-1$
-				.desc("Config directory including at least "+FILECONFIG_SERVER+", "+FILECONFIG_JETTY+", "+FILECONFIG_JETTY_THREADPOOL+", "+DIRCONFIG_TASKS) //$NON-NLS-1$
+				.desc("Config directory including at least "+FILECONFIG_SERVER+" and "+DIRCONFIG_TASKS+", optionally "+FILECONFIG_JETTY+", "+FILECONFIG_JETTY_THREADPOOL+", "+FILECONFIG_JETTY_THREADPOOL_VR) //$NON-NLS-1$
 				.required(false).hasArg(true).build());
 		options.addOption(Option.builder("h") //$NON-NLS-1$
 				.longOpt("help") //$NON-NLS-1$
@@ -101,14 +101,10 @@ public class MapsforgeConfig extends PropertiesParser{
 			config = config.trim();
 			if (new File(config).isDirectory()) {
 				configDirectory = config+System.getProperty("file.separator");
-				//String[] configFiles = {FILECONFIG_SERVER, FILECONFIG_JETTY, FILECONFIG_JETTY_THREADPOOL, DIRCONFIG_TASKS+FILECONFIG_DEFAULTTASK};
-				String[] configFiles = {FILECONFIG_SERVER, FILECONFIG_JETTY, FILECONFIG_JETTY_THREADPOOL};
-				for (String configFile : configFiles) {
-					configFile = configDirectory+configFile;
-					if (!new File(configFile).isFile()) {
-						logger.error("Required config file '"+configFile+"' doesn't exist: exiting"); //$NON-NLS-1$
-						System.exit(1);
-					}
+				String configFile = configDirectory+FILECONFIG_SERVER;
+				if (!new File(configFile).isFile()) {
+					logger.error("Required config file '"+configFile+"' doesn't exist: exiting"); //$NON-NLS-1$
+					System.exit(1);
 				}
 				taskDirectory = configDirectory+DIRCONFIG_TASKS;
 				if (!new File(taskDirectory).isDirectory()) {
@@ -152,9 +148,9 @@ public class MapsforgeConfig extends PropertiesParser{
 		tasksConfig = new HashMap<String, MapsforgeTaskConfig>();
 		MapsforgeTaskConfig mapsforgeTaskConfig;
 		FilenameFilter filenameFilter = new FilenameFilter() {
-			    public boolean accept(File dir, String name) {
-			    	return name.matches(taskFileNameRegex);
-			    }};
+			public boolean accept(File dir, String name) {
+				return name.matches(taskFileNameRegex);
+			}};
 		File[] taskFiles = new File(taskDirectory).listFiles(filenameFilter);
 		if(taskFiles.length == 0) {
 			logger.error("Tasks directory "+taskDirectory+" does not yet contain any properties files named "+taskFileNameRegex); //$NON-NLS-1$
@@ -270,7 +266,7 @@ public class MapsforgeConfig extends PropertiesParser{
 		try {
 			return tasksConfig.get(task);
 		} catch(Exception e) {
-			throw new Exception("Task '"+task+"' don't exist");
+			throw new Exception("Task '"+task+"' doesn't exist");
 		}
 	}
 

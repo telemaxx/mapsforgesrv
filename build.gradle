@@ -56,7 +56,6 @@ dependencies {
     implementation "commons-cli:commons-cli:+"
     implementation "org.apache.commons:commons-lang3:+"
     implementation "com.github.marschall:memoryfilesystem:+"
-//  implementation "com.google.jimfs:jimfs:+"  <-- Alternative memory filesystem
 
     runtimeOnly    "org.xerial:sqlite-jdbc:+"
     runtimeOnly    "net.sf.kxml:kxml2:+" 

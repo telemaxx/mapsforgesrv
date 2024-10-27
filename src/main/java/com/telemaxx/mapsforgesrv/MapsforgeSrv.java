@@ -69,7 +69,21 @@
 
 package com.telemaxx.mapsforgesrv;
 
+import java.io.File;
+import java.io.OutputStream;
 import java.net.BindException;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.Server;
@@ -80,10 +94,19 @@ import org.eclipse.jetty.xml.XmlConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+import org.w3c.dom.Document;
+import org.w3c.dom.DocumentType;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
 
 public class MapsforgeSrv {
 
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
+	static FileSystem memoryFileSystem;
+	private static MapsforgeConfig mapsforgeConfig = null;
 	private static Server server = null;
 
 	public MapsforgeSrv(String[] args) throws Exception {
@@ -91,20 +114,51 @@ public class MapsforgeSrv {
 		/* IMPORTANT: the output of following line is used by other programs like guis. never change this syntax */
 		logger.info("MapsforgeSrv - a mapsforge tile server. " + "version: " + PropertiesParser.VERSION); //$NON-NLS-1$ //$NON-NLS-2$
 
-		logger.info("Java runtime version: " + System.getProperty("java.version")); //$NON-NLS-1$
+		Runtime.Version runtimeVersion = Runtime.version();
+		logger.info("Java runtime version: " + runtimeVersion); //$NON-NLS-1$
 
 		logger.debug("Current dir [user.dir]: " + System.getProperty("user.dir"));
 
-		MapsforgeConfig mapsforgeConfig = new MapsforgeConfig(args);
+		memoryFileSystem = MemoryFileSystemBuilder.newEmpty().build();
+		mapsforgeConfig = new MapsforgeConfig(args);
 
 		logger.info("################ STARTING SERVER ################");
+		{	// Begin of local scope 
 		XmlConfiguration xmlConfiguration = null;
+		String jettyXML = null;
+		Resource resource = null;
+		File file = null;
+		Path path = null;
+
+		if (runtimeVersion.version().get(0) >= 21) {
+			jettyXML = MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL_VR;
+		} else {
+			jettyXML = MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL;
+		}
+		file = new File(mapsforgeConfig.getConfigDirectory()+jettyXML);
+		if (file.isFile()) {
+			resource = Resource.newResource(file);
+		} else {
+			resource = Resource.newSystemResource("assets/mapsforgesrv/"+jettyXML);
+		}
+		path = Files.createTempFile(memoryFileSystem.getPath(""), null, ".xml");
+		xmlConfiguration = overrideXmlConfiguration(resource,path);
+		Files.delete(path);
 		QueuedThreadPool queuedThreadPool = new QueuedThreadPool();
-		xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL));
 		xmlConfiguration.configure(queuedThreadPool);
 		queuedThreadPool.setStopTimeout(0);
+
+		jettyXML = MapsforgeConfig.FILECONFIG_JETTY;
+		file = new File(mapsforgeConfig.getConfigDirectory()+jettyXML);
+		if (file.isFile()) {
+			resource = Resource.newResource(file);
+		} else {
+			resource = Resource.newSystemResource("assets/mapsforgesrv/"+jettyXML);
+		}
+		path = Files.createTempFile(memoryFileSystem.getPath(""), null, ".xml");
+		xmlConfiguration = overrideXmlConfiguration(resource,path);
+		Files.delete(path);
 		server = new Server(queuedThreadPool);
-		xmlConfiguration = new XmlConfiguration(Resource.newResource(mapsforgeConfig.getConfigDirectory()+MapsforgeConfig.FILECONFIG_JETTY));
 		xmlConfiguration.configure(server);
 		try {
 			if(!((QueuedThreadPool)server.getThreadPool()).getVirtualThreadsExecutor().equals(null))
@@ -124,6 +178,8 @@ public class MapsforgeSrv {
 			CustomRequestLog customRequestLog = new CustomRequestLog(slfjRequestLogWriter, requestLogFormat);
 			server.setRequestLog(customRequestLog);
 		}
+		
+		}	// End of local scope: allow garbage collection of no longer referenced objects and save heap memory
 
 		try {
 			server.start();
@@ -148,6 +204,59 @@ public class MapsforgeSrv {
 
 	public static Server getServer () {
 		return server;
+	}
+
+	/*
+	 * Read jetty XML resource into document
+	 * Override jetty XML properties by server.properties values
+	 * Write modified document as XML file to path
+	 * Return new XmlConfiguration from modified resource
+	*/
+	private static XmlConfiguration overrideXmlConfiguration(Resource resource, Path path) throws Exception {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		Document xmlDoc = db.parse(resource.getInputStream());
+		NodeList setNodes = xmlDoc.getElementsByTagName("Set");
+		int setIndex = setNodes.getLength();
+		while (setIndex-- > 0) {
+			Node setNode = setNodes.item(setIndex);
+			String setName = setNode.getAttributes().getNamedItem("name").getTextContent();
+			String propertyValue = mapsforgeConfig.retrieveConfigValue(setName);
+			if (propertyValue != null) {
+				if (!setNode.hasChildNodes()) {
+					String propertyName = setNode.getAttributes().getNamedItem("property").getTextContent();
+					setNode.getAttributes().removeNamedItem("property");
+					Element property = xmlDoc.createElement("Property");
+					property.setAttribute("name", propertyName);
+					property.setAttribute("default", propertyValue);
+					setNode.appendChild(property);
+				} else {
+					NodeList childNodes = setNode.getChildNodes();
+					int childIndex = childNodes.getLength();
+					while (childIndex > 0) {
+						Node child = childNodes.item(--childIndex);
+						if (child.getNodeType() == Node.ELEMENT_NODE) {
+							if (child.getNodeName().equals("Property")) {
+								child.getAttributes().getNamedItem("default").setTextContent(propertyValue);
+							}
+						}
+					}
+				}
+			}
+		}
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		Transformer transformer = transformerFactory.newTransformer();
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		transformer.setOutputProperty(OutputKeys.STANDALONE, "no");
+		DocumentType doctype = xmlDoc.getDoctype();
+		if(doctype != null) {
+			transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, doctype.getPublicId());
+			transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, doctype.getSystemId());
+		}
+		OutputStream stream = Files.newOutputStream(path,StandardOpenOption.CREATE);
+		transformer.transform(new DOMSource(xmlDoc), new StreamResult(stream));
+		stream.close();
+		return new XmlConfiguration(Resource.newResource(path));
 	}
 
 }

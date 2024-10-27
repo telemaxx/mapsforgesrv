@@ -98,6 +98,7 @@ public class MapsforgeStyleParser {
 		try {
 			final InputStream xmlFileStream = new FileInputStream(xmlFile);
 			items.addAll(readXML(xmlFileStream));
+			xmlFileStream.close();
 		} catch (final Exception e) {
 			logger.error(e.getMessage(),e);
 		}
@@ -130,7 +131,7 @@ public class MapsforgeStyleParser {
 							if (sm_attribute.getName().toString().equals(DEFAULTLANG)) {
 								defaultlanguage = sm_attribute.getValue();
 							} else if (sm_attribute.getName().toString().equals(DEFAULTSTYLE)) {
-								defaultstyle =  sm_attribute.getValue();
+								defaultstyle = sm_attribute.getValue();
 								//logger.info("default style: " + defaultstyle);
 							}
 						}
