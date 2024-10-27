@@ -20,8 +20,10 @@ https://github.com/JFritzle/Mapsforge-for-MyTourbook
 Graphical user interface *Mapsforge-to-Tiles* to render tiles with MapsforgeSrv without map application:  
 https://github.com/JFritzle/Mapsforge-to-Tiles   
 
-The ready2use folder is now located in the bin folder:  
-git\mapsforgesrv\mapsforgesrv\bin  
+The releases can now be found on the Release Page:
+https://github.com/telemaxx/mapsforgesrv/releases
+~~The ready2use folder is now located in the bin folder:~~
+~~git\mapsforgesrv\mapsforgesrv\bin~~
 Only one jar containing everything you need.
 
 	1. mapsforgesrv-fatjar.jar (branch "master") developed and built with java version 11, needs java version 11 or higher to run
@@ -29,7 +31,7 @@ Only one jar containing everything you need.
 
 Whats different to the origin?
 
-	1. mapsforge libs updated from 0.6.0 to 0.16.0
+	1. mapsforge libs updated from 0.6.0 to 0.21.0
 	2. updates all other libs to latest versions
 	3. build system "gradle" for easier libs management.
 	4. new command line interface: -m mapfile(s) -t themefile(optional) -l language(optional) -s themestyle(optional)
@@ -106,11 +108,13 @@ Branches:
 
 	1. "java8", when an old java 8 is installed, this branch is to be used for the development.
 	2. "master", this branch is for development with java version 11.
+ 	3. "styles", this branch is working with config files instead of endless long commandline parameters. Attention a different Readme in that branch.
 
 Building the jar:
 
 	There are some gradle tasks. Building the jar is done by:
-	"copyFatJar2jars_ready2use" builds the jar and copies to "$buildDir/../bin/jars_ready2use/"
+	"copyFatJar2jars_ready2use" builds the jar and copies to "$buildDir/../bin/jars_ready2use/" (master and java8 branch)
+ 	"shadowDistTar" builds the jar in the local "dist" folder (styles branch). The dist folder i set to "Ignore" on github to keep the repro small.
 
 -------------
 ### Contributors
