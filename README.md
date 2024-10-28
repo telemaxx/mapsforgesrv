@@ -7,7 +7,7 @@ The tiles are always rendered on the fly when requested.
 
 Source of this tile server is located at branch _tasks_ of [mapsforgesrv](https://github.com/telemaxx/mapsforgesrv) project.  
 The jar file `mapsforgesrv-fatjar.jar` can be downloaded from assets of _<release\>\_for\_java11\_tasks_ at [releases](https://github.com/telemaxx/mapsforgesrv/releases).   
-The jar file is developed and built with java version 11 and needs java version 11 or higher to run.  
+The jar file is developed and built with Java development kit (JDK) version 11 and needs Java runtime environment (JRE) version 11 or higher to run.  
 The jar file contains everything needed to run.
 
 
