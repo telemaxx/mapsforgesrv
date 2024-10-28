@@ -75,7 +75,7 @@ scheme://address:port/zoom/x/y.format?task=name
 | -----| ----------- |
 | scheme | protocol either _http_ or _https_ |
 | address | tile server's IP address |
-| port | tcp port to request map and hillshading overlay tiles |
+| port | tcp port to request tiles |
 | zoom | zoom level of requested tile |
 | x | tile number in x direction (longitude) |
 | y | tile number in y direction (latitude) |
