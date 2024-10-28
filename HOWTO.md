@@ -11,7 +11,7 @@
 - ### import
 
   - File > Import > Gradle > Existing Gradle Project
-  - Choose path to your cloned directory as Project root director"  > Finish
+  - Choose path to your cloned directory as Project root director  > Finish
 
 - ### configure
 
