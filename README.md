@@ -49,16 +49,16 @@ Task configuration files recognize the following parameters:
 | `themefile` | Theme file path with file extension `.xml`<br>or built-in Mapsforge theme `DEFAULT` or `OSMARENDER`<br>used for rendering<br>Default: built-in Mapsforge theme `OSMARENDER`
 | `style` | Theme file's style used for rendering<br>Default: unset =  theme file's built-in default style
 | `overlays` | Comma-separated list of style's overlays <br>to be enabled for rendering<br>Default: unset = style's overlays enabled by default
-| `demfolder` | Folder path containing DEM (Digital Elevation Model) data files<br>with file extension `.hgt` used for hillshading<br>Default: unset = no hillshading
-| `hillshading-algorithm` | Hillshading algorithm `simple` or `simple(linearity,scale)` or `diffuselight` or `diffuselight(angle)` used for hillshading<br>Default: unset = no hillshading<br>Parameter defaults: linearity=0.1, scale=0.666, angle=50.
+| `demfolder` | Folder path containing DEM (Digital Elevation Model) data files<br>with file extension `.hgt` required by hillshading<br>Default: unset = no hillshading
+| `hillshading-algorithm` | Hillshading algorithm `simple` or `simple(linearity,scale)` or `diffuselight` or `diffuselight(angle)` used for hillshading<br>Default: unset = no hillshading<br>Parameter defaults: linearity = 0.1, scale = 0.666, angle = 50.<br>Parameter ranges: 0. ≤ linearity ≤ 4., 0. ≤ scale, 0. ≤ angle ≤ 90.
 | `hillshading-magnitude` | Hillshading's gray value magnitude scaling, 0. ≤ value ≤ 4.<br>Value < 1. = brighter gray, value > 1. = darker gray<br>Default: `1.` = unscaled gray values
-| `contrast-stretch` | Contrast stretching of color value, 0 ≤ value ≤ 254<br>to increase color contrast by raising black level over value 0<br>Default: `0` = no contrast stretching
+| `contrast-stretch` | Contrast stretching of color value, 0 ≤ value ≤ 254 to increase<br>contrast by raising black level from 0 towards white level 255 <br>Default: `0` = no contrast stretching
 | `gamma-correction` | Gamma correction value > 0. for nonlinear luminance mapping<br>Default: `1.` = no gamma correction
 | `text-scale` | Text scale factor > 0. to scale size of labels on map<br>Default: `1.` = no text size scaling
 | `symbol-scale` | Symbol scale factor > 0. to scale size of symbols on map<br>Default: `1.` = no symbol size scaling
 | `line-scale` | Line scale factor > 0. to scale thickness of lines on map<br>Default: `1.` = no line thickness scaling
 | `user-scale` | Overall scale factor > 0. to scale all map elements<br>Scales value of `text-scale` and `symbol-scale` and `line-scale`<br>Default: `1.` = no overall scaling
-| `device-scale` | Device scale factor > 0.<br>Default: `1.` = no scaling
+| `device-scale` | Device scale factor > 0.<br>Default: `1.` = no device scaling
 
 Hillshading requirements:
 * Must be enabled in theme file
