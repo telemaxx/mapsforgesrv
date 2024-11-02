@@ -70,6 +70,7 @@
 package com.telemaxx.mapsforgesrv;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.BindException;
 import java.nio.file.FileSystem;
@@ -142,7 +143,9 @@ public class MapsforgeSrv {
 			resource = Resource.newSystemResource("assets/mapsforgesrv/"+jettyXML);
 		}
 		path = Files.createTempFile(memoryFileSystem.getPath(""), null, ".xml");
-		xmlConfiguration = overrideXmlConfiguration(resource,path);
+		overrideResource(resource,path);
+		resource = Resource.newResource(path);
+		xmlConfiguration = new XmlConfiguration(resource);
 		Files.delete(path);
 		QueuedThreadPool queuedThreadPool = new QueuedThreadPool();
 		xmlConfiguration.configure(queuedThreadPool);
@@ -156,7 +159,9 @@ public class MapsforgeSrv {
 			resource = Resource.newSystemResource("assets/mapsforgesrv/"+jettyXML);
 		}
 		path = Files.createTempFile(memoryFileSystem.getPath(""), null, ".xml");
-		xmlConfiguration = overrideXmlConfiguration(resource,path);
+		overrideResource(resource,path);
+		resource = Resource.newResource(path);
+		xmlConfiguration = new XmlConfiguration(resource);
 		Files.delete(path);
 		server = new Server(queuedThreadPool);
 		xmlConfiguration.configure(server);
@@ -210,12 +215,14 @@ public class MapsforgeSrv {
 	 * Read jetty XML resource into document
 	 * Override jetty XML properties by server.properties values
 	 * Write modified document as XML file to path
-	 * Return new XmlConfiguration from modified resource
 	*/
-	private static XmlConfiguration overrideXmlConfiguration(Resource resource, Path path) throws Exception {
+	private static void overrideResource(Resource resource, Path path) throws Exception {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
 		DocumentBuilder db = dbf.newDocumentBuilder();
-		Document xmlDoc = db.parse(resource.getInputStream());
+		InputStream inputStream = resource.getInputStream();
+		Document xmlDoc = db.parse(inputStream);
+		inputStream.close();
 		NodeList setNodes = xmlDoc.getElementsByTagName("Set");
 		int setIndex = setNodes.getLength();
 		while (setIndex-- > 0) {
@@ -253,10 +260,9 @@ public class MapsforgeSrv {
 			transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, doctype.getPublicId());
 			transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, doctype.getSystemId());
 		}
-		OutputStream stream = Files.newOutputStream(path,StandardOpenOption.CREATE);
-		transformer.transform(new DOMSource(xmlDoc), new StreamResult(stream));
-		stream.close();
-		return new XmlConfiguration(Resource.newResource(path));
+		OutputStream outputStream = Files.newOutputStream(path,StandardOpenOption.CREATE);
+		transformer.transform(new DOMSource(xmlDoc), new StreamResult(outputStream));
+		outputStream.close();
 	}
 
 }
