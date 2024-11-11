@@ -114,6 +114,8 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 				mapFilesString = mapFiles.stream().map(File::getPath).collect(Collectors.joining(","));
 				logger.info(msgHeader + ": defined [{" + mapFilesString + "}]"); //$NON-NLS-1$
 			}
+		} else {
+			logger.info(msgHeader + ": default [undefined]"); //$NON-NLS-1$
 		}
 		if (mapFiles.size() == 0) configProperties.setProperty("worldmap", "");
 	}
@@ -177,6 +179,8 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 			} else {
 				parseError(msgHeader, "'" + hillShadingOption + "' invalid");
 			}
+		} else {
+			logger.info(msgHeader + ": default [undefined]"); //$NON-NLS-1$
 		}
 	}
 
