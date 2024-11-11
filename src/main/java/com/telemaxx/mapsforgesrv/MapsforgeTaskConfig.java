@@ -146,7 +146,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	}
 
 	private void parseHillShading() throws Exception {
-		String msgHeader = parsePadMsg("HillShading algorithm");
+		String msgHeader = parsePadMsg("Hillshading algorithm");
 		hillShadingArguments = null;
 		String hillShadingOption = retrieveConfigValue("hillshading-algorithm"); //$NON-NLS-1$
 		if (hillShadingOption != null) {
