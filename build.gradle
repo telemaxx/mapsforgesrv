@@ -40,7 +40,6 @@ dependencies {
 	def slf4j = "+"
 
 	implementation "org.mapsforge:mapsforge-core:${mapsforgeVersion}"
-	implementation "org.mapsforge:mapsforge-core:${mapsforgeVersion}"
 	implementation "org.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
 	implementation "org.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
 	runtimeOnly    "org.mapsforge:mapsforge-themes:${mapsforgeVersion}"
