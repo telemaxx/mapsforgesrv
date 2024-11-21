@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rendertheme xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    map-background="#F8F8F8" map-background-outside="#DDDDDD"
+    map-background="#FFFFFF" map-background-outside="#FFFFFF"
     version="5" xmlns="http://mapsforge.org/renderTheme"
     xsi:schemaLocation="http://mapsforge.org/renderTheme https://raw.githubusercontent.com/mapsforge/mapsforge/master/resources/renderTheme.xsd">
-<hillshading zoom-min="7" zoom-max="18" />
+<hillshading zoom-min="7" zoom-max="18" magnitude="64"/>
 </rendertheme>
