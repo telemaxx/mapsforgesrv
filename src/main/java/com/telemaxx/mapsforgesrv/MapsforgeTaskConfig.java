@@ -3,6 +3,7 @@ package com.telemaxx.mapsforgesrv;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,17 +47,17 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 		String configValue = "themefile";
 		String configString = retrieveConfigValue(configValue);
 		String msgHeader = "Theme";
+		String internalThemes[] = {"DEFAULT", "OSMARENDER"};
 		if (configString == null) {
 			themeFile = new File("OSMARENDER");
 			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": default [OSMARENDER]"); //$NON-NLS-1$
-		} else if (configString.trim().equals("OSMARENDER")) {
-			themeFile = new File("OSMARENDER");
-			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": defined [OSMARENDER]"); //$NON-NLS-1$
-		} else if (configString.trim().equals("DEFAULT")) {
-			themeFile = new File("DEFAULT");
-			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": defined [DEFAULT]"); //$NON-NLS-1$
+		} else if (Arrays.asList(internalThemes).contains(configString.trim())) {
+			configString = configString.trim();
+			themeFile = new File(configString);
+			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": defined ["+configString+"]"); //$NON-NLS-1$
 		} else {
 			themeFile = parseFile(configValue, FILE, false, msgHeader, "OSMARENDER");
+			if (themeFile == null) themeFile = new File("OSMARENDER");
 		}
 	}
 

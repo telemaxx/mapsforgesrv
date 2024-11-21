@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -127,6 +129,8 @@ public class MapsforgeTaskHandler {
 
 		if (hillShadingOverlay) {
 			logger.info("No map -> hillshading overlay with alpha transparency only!");
+			themeFile = new File("HILLSHADING");
+			themeFileStyle = null;
 			tileCache = null;
 			labelStore = null;
 			renderLabels = false;
@@ -148,6 +152,8 @@ public class MapsforgeTaskHandler {
 				colorLookupTable[index] = pixelValue;
 			}
 		} else {
+			themeFile = mapsforgeTaskConfig.getThemeFile();
+			themeFileStyle = mapsforgeTaskConfig.getThemeFileStyle();
 			tileCache = new DummyCache(1024);
 			labelStore = new TileBasedLabelStore(1024);
 			renderLabels = true;
@@ -250,19 +256,18 @@ public class MapsforgeTaskHandler {
 			}
 		};
 
-		themeFile = mapsforgeTaskConfig.getThemeFile();
-		themeFileStyle = mapsforgeTaskConfig.getThemeFileStyle();
+		xmlRenderTheme = null;
+		for (MyInternalRenderTheme enumItem : new ArrayList<MyInternalRenderTheme>(EnumSet.allOf(MyInternalRenderTheme.class))) {
+			if (enumItem.toString().equals(themeFile.getPath())) {
+				xmlRenderTheme = enumItem;	// Internal render theme
+				break;
+			};
+		};
 
-		if (hillShadingOverlay) {
-			xmlRenderTheme = MyInternalRenderTheme.HILLSHADING;
-		} else if (themeFile == null || themeFile.getPath().equals("OSMARENDER")) {
-			xmlRenderTheme = MyInternalRenderTheme.OSMARENDER;
-		} else if (themeFile.getPath().equals("DEFAULT")) {
-			xmlRenderTheme = MyInternalRenderTheme.DEFAULT;
-		} else {
+		if (xmlRenderTheme == null) {
 			countDownLatch = new CountDownLatch(1);
 			try {
-				xmlRenderTheme = new ExternalRenderTheme(themeFile, callBack);
+				xmlRenderTheme = new ExternalRenderTheme(themeFile, callBack);	// External render theme
 				showStyleNames();
 			} catch (Exception e) {
 				countDownLatch.countDown();
@@ -416,7 +421,7 @@ public class MapsforgeTaskHandler {
 				int[] newPixelArray = newDataBuffer.getData();
 				while (pixelCount-- > 0) {
 					pixelValue = pixelArray[pixelCount];
-					if (pixelValue == 0xfff8f8f8) { // 'nodata' hillshading value
+					if (pixelValue == 0xffffffff) { // 'nodata' hillshading value
 						newPixelArray[pixelCount] = 0x00000000; // fully transparent pixel
 					} else { // get gray value of pixel from blue value of pixel
 						newPixelArray[pixelCount] = colorLookupTable[pixelValue & 0xff];
