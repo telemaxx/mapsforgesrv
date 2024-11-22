@@ -364,8 +364,7 @@ public class MapsforgeTaskHandler {
 		int requestedTileRenderSize = MapsforgeConfig.DEFAULT_TILE_RENDERSIZE;
 		try {
 			String tmp = request.getParameter("tileRenderSize"); //$NON-NLS-1$
-			if (tmp != null)
-				requestedTileRenderSize = Integer.parseInt(tmp);
+			if (tmp != null) requestedTileRenderSize = Integer.parseInt(tmp);
 		} catch (Exception e) {
 			throw new ServletException("Failed to parse \"tileRenderSize\" property: " + e.getMessage(), e); //$NON-NLS-1$
 		}
@@ -376,8 +375,7 @@ public class MapsforgeTaskHandler {
 			boolean enable_hs = true;
 			try {
 				String tmp = request.getParameter("hillshading"); //$NON-NLS-1$
-				if (tmp != null)
-					enable_hs = Integer.parseInt(request.getParameter("hillshading")) != 0; //$NON-NLS-1$
+				if (tmp != null) enable_hs = Integer.parseInt(tmp) != 0; //$NON-NLS-1$
 			} catch (Exception e) {
 				throw new ServletException("Failed to parse \"hillshading\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
