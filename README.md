@@ -108,13 +108,13 @@ Branches:
 
 	1. "java8", when an old java 8 is installed, this branch is to be used for the development.
 	2. "master", this branch is for development with java version 11.
- 	3. "styles", this branch is working with config files instead of endless long commandline parameters. Attention a different Readme in that branch.
+ 	3. "tasks", this branch is working with config files instead of endless long commandline parameters. Attention a different Readme in that branch.
 
 Building the jar:
 
 	There are some gradle tasks. Building the jar is done by:
 	"copyFatJar2jars_ready2use" builds the jar and copies to "$buildDir/../bin/jars_ready2use/" (master and java8 branch)
- 	"shadowDistTar" builds the jar in the local "dist" folder (styles branch). The dist folder i set to "Ignore" on github to keep the repro small.
+ 	"shadowDistTar" builds the jar in the local "dist" folder (tasks branch). The dist folder is set to "Ignore" on github to keep the repo small.
 
 -------------
 ### Contributors

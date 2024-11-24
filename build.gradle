@@ -1,7 +1,10 @@
 plugins {
-    id 'java-library'
-    id 'application'
-    id 'com.github.johnrengelman.shadow' version "7.1.2"
+	id "application"
+	id "eclipse"
+	// https://github.com/johnrengelman/shadow/releases
+	id 'com.gradleup.shadow' version "8.3.5"
+ 	// https://github.com/nebula-plugins/gradle-lint-plugin/releases
+	id "nebula.lint" version "20.2.2"
 }
 
 repositories {
@@ -10,36 +13,28 @@ repositories {
 
 dependencies {
     def mapsforgeVersion = '+'
-    def jettyVersion = '11.0.20'
-    def slf4j = '2.0.13'
-
-    api "org.apache.commons:commons-math3:+"
-    testImplementation "junit:junit:+"
+    def jettyVersion = '11.0.24'
+    def slf4j = '+'
 
     implementation "org.mapsforge:mapsforge-core:${mapsforgeVersion}"
-    implementation "org.mapsforge:mapsforge-map:${mapsforgeVersion}"
+ 	implementation "org.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
     implementation "org.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
-    implementation "org.mapsforge:mapsforge-themes:${mapsforgeVersion}"
-    implementation "org.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
-    implementation "org.mapsforge:mapsforge-poi-awt:${mapsforgeVersion}"
-    implementation "org.mapsforge:mapsforge-poi:${mapsforgeVersion}"
-
+    runtimeOnly    "org.mapsforge:mapsforge-themes:${mapsforgeVersion}"
+ 
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
     implementation "org.eclipse.jetty.http2:http2-server:${jettyVersion}"
 
-    implementation "org.slf4j:slf4j-reload4j:${slf4j}"
+    runtimeOnly    "org.slf4j:slf4j-reload4j:${slf4j}"
     implementation "org.slf4j:jul-to-slf4j:${slf4j}"
+
     implementation "commons-cli:commons-cli:+"
     implementation "org.apache.commons:commons-lang3:+"
-    implementation "org.xerial:sqlite-jdbc:+"
-    implementation "net.sf.kxml:kxml2:+" 
-    implementation "com.formdev:svgSalamander:+"
-    
-//  implementation "com.google.jimfs:jimfs:+"
     implementation "com.github.marschall:memoryfilesystem:+"
 }
 
-mainClassName = "com.telemaxx.mapsforgesrv.MapsforgeSrv"
+application {
+	 mainClass.set("com.telemaxx.mapsforgesrv.MapsforgeSrv")
+}
 
 // https://github.com/johnrengelman/shadow
 shadowJar {
@@ -54,8 +49,9 @@ shadowJar {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
 }
 
 task copyFatJar2jars_ready2use(type: Copy, dependsOn: 'shadowJar') {
@@ -64,3 +60,5 @@ task copyFatJar2jars_ready2use(type: Copy, dependsOn: 'shadowJar') {
 	from file("$buildDir/libs/mapsforgesrv-fatjar.jar")
 	into file("$buildDir/../bin/jars_ready2use/")
 }
+
+gradleLint.rules = ["all-dependency"]
