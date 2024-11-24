@@ -63,6 +63,7 @@
  *		   Remove request query parameters x, y and z and log invalid tile request paths
  *		   Assign default file extension .png if file extension missing in tile request path
  * 0.21.3: For more accurate coastlines, restrict world map to zoom levels 0 to 9
+ * 0.21.4: Update build.gradle, use gradle 8.11, shrink JAR size to 1/3
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -84,7 +85,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MapsforgeSrv {
 	
-	private final static String VERSION = "0.21.3"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	private final static String VERSION = "0.21.4"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 	
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeSrv.class);
 
