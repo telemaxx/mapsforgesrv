@@ -107,9 +107,9 @@ runShadow {
 }
 
 java {
-	toolchain {
-		languageVersion.set(JavaLanguageVersion.of(11))
-	}
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
 }
 
 gradleLint.rules = ["all-dependency"]
