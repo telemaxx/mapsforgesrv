@@ -1,110 +1,109 @@
 plugins {
-    id "application"
-    id "eclipse"
-    // https://github.com/johnrengelman/shadow/releases
-    id "com.github.johnrengelman.shadow" version "8.1.1"
-    // https://github.com/nebula-plugins/gradle-lint-plugin/releases/tag/v19.0.2
-    id "nebula.lint" version "19.0.2"
+	id "application"
+	id "eclipse"
+	// https://github.com/johnrengelman/shadow/releases
+	id 'com.gradleup.shadow' version "8.3.5"
+	// https://github.com/nebula-plugins/gradle-lint-plugin/releases
+	id "nebula.lint" version "20.2.2"
 }
 
 eclipse {
-    classpath {
-        // https://github.com/redhat-developer/vscode-java/issues/1615#issuecomment-1512864529 avoid creation of useles /bin dir in project root
-        baseSourceOutputDir = file('build')
-    }
+	classpath {
+		// https://github.com/redhat-developer/vscode-java/issues/1615#issuecomment-1512864529 avoid creation of useles /bin dir in project root
+		baseSourceOutputDir = file('build')
+	}
 }
 
 repositories {
-    mavenCentral()
+	mavenCentral()
+	// https://github.com/mapsforge/mapsforge/blob/master/docs/Integration.md
+	maven { url 'https://jitpack.io' }
 }
 
 sourceSets {
-    main {
-        // https://github.com/redhat-developer/vscode-java/issues/1590#issuecomment-1471280246 avoid Java Model Exception
-        java {
-            srcDirs = ["src/main/java"]
-            exclude "resources/"
-        }
-        resources {
-            srcDirs = ["src/main/resources"]
+	main {
+		// https://github.com/redhat-developer/vscode-java/issues/1590#issuecomment-1471280246 avoid Java Model Exception
+		java {
+			srcDirs = ["src/main/java"]
+			exclude "resources/"
+		}
+		resources {
+			srcDirs = ["src/main/resources"]
 		}
 	}
 }
 
 dependencies {
-    def mapsforgeVersion = "+"
-    // https://mvnrepository.com/artifact/org.eclipse.jetty.http2/http2-server
-    def jettyVersion = "11.0.23"
-    def slf4j = "+"
+	def mapsforgeVersion = "+"
+	// https://mvnrepository.com/artifact/org.eclipse.jetty.http2/http2-server
+	def jettyVersion = "11.0.24"
+	def slf4j = "+"
 
-    implementation "org.mapsforge:mapsforge-core:${mapsforgeVersion}"
-    implementation "org.mapsforge:mapsforge-map:${mapsforgeVersion}"
-    implementation "org.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
-    implementation "org.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
-    runtimeOnly    "org.mapsforge:mapsforge-themes:${mapsforgeVersion}"
+	implementation "org.mapsforge:mapsforge-core:${mapsforgeVersion}"
+	implementation "org.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
+	implementation "org.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
+	runtimeOnly    "org.mapsforge:mapsforge-themes:${mapsforgeVersion}"
 
-    implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
-    runtimeOnly    "org.eclipse.jetty.http2:http2-server:${jettyVersion}"
-    implementation "org.eclipse.jetty:jetty-util:${jettyVersion}"
+	implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
+	runtimeOnly    "org.eclipse.jetty.http2:http2-server:${jettyVersion}"
+	implementation "org.eclipse.jetty:jetty-util:${jettyVersion}"
 	implementation "org.eclipse.jetty:jetty-xml:${jettyVersion}"
-    implementation "org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:+"
+	implementation "org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:+"
 
-    runtimeOnly    "org.slf4j:slf4j-reload4j:${slf4j}"
-    implementation "org.slf4j:jul-to-slf4j:${slf4j}"
+	runtimeOnly    "org.slf4j:slf4j-reload4j:${slf4j}"
+	implementation "org.slf4j:jul-to-slf4j:${slf4j}"
 	implementation "org.slf4j:slf4j-api:${slf4j}"
 
-    implementation "commons-cli:commons-cli:+"
-    implementation "org.apache.commons:commons-lang3:+"
-    implementation "com.github.marschall:memoryfilesystem:+"
-
-    runtimeOnly    "org.xerial:sqlite-jdbc:+"
-    runtimeOnly    "net.sf.kxml:kxml2:+" 
+	implementation "commons-cli:commons-cli:+"
+	implementation "org.apache.commons:commons-lang3:+"
+	implementation "com.github.marschall:memoryfilesystem:+"
 }
 
 application {
-     mainClass.set("com.telemaxx.mapsforgesrv.MapsforgeSrv")
+	 mainClass.set("com.telemaxx.mapsforgesrv.MapsforgeSrv")
 }
 
 // https://github.com/johnrengelman/shadow
 shadowJar {
-   archiveBaseName.set("mapsforgesrv")
-   archiveClassifier.set("fatjar")
-   archiveVersion.set("")
-   destinationDirectory.set(file("dist"))
+	archiveBaseName.set("mapsforgesrv")
+	archiveClassifier.set("fatjar")
+	archiveVersion.set("")
+	destinationDirectory.set(file("dist"))
 
-   // https://github.com/johnrengelman/shadow/issues/341#issuecomment-445556737
-   mergeServiceFiles {
-        path = "META-INF/services"
-        include "org.eclipse.jetty.http.HttpFieldPreEncoder"
-   }
+	// https://github.com/johnrengelman/shadow/issues/341#issuecomment-445556737
+	mergeServiceFiles {
+		path = "META-INF/services"
+		include "org.eclipse.jetty.http.HttpFieldPreEncoder"
+	}
 }
 
 runShadow {
-    environment "J2D_TRACE_LEVEL", "4"
-    args "-c config"
-    doFirst {
-        jvmArgs = [
-            "--patch-module", "java.desktop=libs/marlin-0.9.4.8-Unsafe-OpenJDK11.jar",
-            "-Dsun.java2d.d3d=true",
-            "-Dsun.java2d.opengl=false",
-            "-Dsun.java2d.accthreshold=0",
-            "-Dsun.java2d.translaccel=true",
-            "-Dsun.java2d.ddforcevram=true",
-            "-Dsun.java2d.ddscale=true",
-            "-Dsun.java2d.ddblit=true",
-            "-Dsun.java2d.renderer.log=true",
-            "-Dsun.java2d.renderer.useLogger=true",
-            "-Dsun.java2d.renderer.profile=speed",
-            "-Dsun.java2d.renderer.useThreadLocal=true",
-            "-Dsun.java2d.renderer.useFastMath=true",
-            "-Dsun.java2d.render.bufferSize=65536",
-            "-Dsun.java2d.renderer.pixelWidth=256",
-            "-Dsun.java2d.renderer.pixelHeight=256",
-            "-Dsun.java2d.renderer.tileSize_log2=8",
-            "-Dsun.java2d.renderer.tileWidth_log2=8",
-            "-Dawt.useSystemAAFontSettings=on"
-        ]
-    }
+	environment "J2D_TRACE_LEVEL", "4"
+	args "-c config"
+	doFirst {
+		jvmArgs = [
+			// https://github.com/bourgesl/marlin-renderer/releases
+			"--patch-module", "java.desktop=libs/marlin-0.9.4.8-Unsafe-OpenJDK11.jar",
+			"-Dsun.java2d.d3d=true",
+			"-Dsun.java2d.opengl=false",
+			"-Dsun.java2d.accthreshold=0",
+			"-Dsun.java2d.translaccel=true",
+			"-Dsun.java2d.ddforcevram=true",
+			"-Dsun.java2d.ddscale=true",
+			"-Dsun.java2d.ddblit=true",
+			"-Dsun.java2d.renderer.log=true",
+			"-Dsun.java2d.renderer.useLogger=true",
+			"-Dsun.java2d.renderer.profile=speed",
+			"-Dsun.java2d.renderer.useThreadLocal=true",
+			"-Dsun.java2d.renderer.useFastMath=true",
+			"-Dsun.java2d.render.bufferSize=65536",
+			"-Dsun.java2d.renderer.pixelWidth=256",
+			"-Dsun.java2d.renderer.pixelHeight=256",
+			"-Dsun.java2d.renderer.tileSize_log2=8",
+			"-Dsun.java2d.renderer.tileWidth_log2=8",
+			"-Dawt.useSystemAAFontSettings=on"
+		]
+	}
 }
 
 java {
@@ -112,10 +111,5 @@ java {
         languageVersion.set(JavaLanguageVersion.of(11))
     }
 }
-
-//java {
-//    sourceCompatibility = JavaVersion.VERSION_11
-//    targetCompatibility = JavaVersion.VERSION_11
-//}
 
 gradleLint.rules = ["all-dependency"]

@@ -58,13 +58,15 @@
  *         some code optimizations
  * 0.21.1: fix "IllegalStateException" on /updatemapstyle request (nono303)
  * 0.21.2: Adopt some changes from "styles" branch:
- *		   Handle UTF-8 characters in config file correctly
- *		   Automatically enable built-in world map if map definition is missing or empty
- *		   Remove request query parameters x, y and z and log invalid tile request paths
- *		   Assign default file extension .png if file extension missing in tile request path
+ *         Handle UTF-8 characters in config file correctly
+ *         Automatically enable built-in world map if map definition is missing or empty
+ *         Remove request query parameters x, y and z and log invalid tile request paths
+ *         Assign default file extension .png if file extension missing in tile request path
  * 0.21.3.0: Refactored server using config files only
- *			 Initial version (nono303)
- *			 Fixes, improvements, extensions (JFritzle)
+ *           Initial version (nono303)
+ *           Fixes, improvements, extensions (JFritzle)
+ * 0.21.3.1: Fixes, improvements, extensions (JFritzle)
+ * 0.21.3.2: Updates "build.gradle" -> shrink JAR file size significantly (nono303)
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
@@ -124,7 +126,7 @@ public class MapsforgeSrv {
 		mapsforgeConfig = new MapsforgeConfig(args);
 
 		logger.info("################ STARTING SERVER ################");
-		{	// Begin of local scope 
+		{	// Begin of local scope
 		XmlConfiguration xmlConfiguration = null;
 		String jettyXML = null;
 		Resource resource = null;
