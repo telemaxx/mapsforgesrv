@@ -39,9 +39,9 @@ Server configuration file `server.poperties` recognizes the following parameters
 | `host` | IP address to listen on<br>Default: unset = listen on all interfaces
 | `port` | TCP port to listen on<br>Default: `8486`
 | `cache-control` | Browser cache TTL<br>Default: `0`
-| `terminate` | Accept terminate request<br>Default: `false`
+| `terminate` | Accept terminate request (from loopback addresses only!)<br>Default: `false`
 | `outofrange_tms` | URL pattern of an external TMS server<br>used to redirect for out-of-range tiles<br>e.g. https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png<br>Default: unset = no redirection
-| `requestlog-format` | Output format of logged server requests<br>Empty value suppresses request logging!<br>Default: `"%{client}a - %u %t '%r' %s %O '%{Referer}i' '%{User-Agent}i' '%C'"`<br>For description of format syntax see [here](https://javadoc.io/doc/org.eclipse.jetty/jetty-server/latest/org.eclipse.jetty.server/org/eclipse/jetty/server/CustomRequestLog.html).  
+| `requestlog-format` | Output format of logged server requests<br>Empty value suppresses request logging!<br>Default: `"From %{client}a Get %U%q Status %s Size %O bytes Time %{ms}T ms"`<br>For description of format syntax see [here](https://javadoc.io/doc/org.eclipse.jetty/jetty-server/latest/org.eclipse.jetty.server/org/eclipse/jetty/server/CustomRequestLog.html).  
 
 Task configuration files recognize the following parameters:
 
