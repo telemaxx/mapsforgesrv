@@ -132,6 +132,8 @@ public class MapsforgeHandler extends AbstractHandler {
 				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, extmsg);
 			} catch (IOException e1) {
 				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			} catch (IllegalStateException e2) {
+				logger.warn(request.getRequestURI()+"?"+request.getQueryString()+" : "+e2.getMessage()); //$NON-NLS-1$
 			}
 		}
 	}

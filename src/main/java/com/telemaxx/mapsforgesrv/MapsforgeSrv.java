@@ -66,7 +66,7 @@
  *           Initial version (nono303)
  *           Fixes, improvements, extensions (JFritzle)
  * 0.21.3.1: Fixes, improvements, extensions (JFritzle)
- * 0.21.3.2: Updates "build.gradle" -> shrink JAR file size significantly (nono303)
+ * 0.21.4.0: Update build.gradle, use gradle 8.11, shrink JAR size to 1/3
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
