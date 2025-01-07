@@ -23,7 +23,7 @@ public abstract class PropertiesParser {
 	 * FIXED VALUES *
 	 ****************/
 
-	public final static String 		VERSION = "0.21.4.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	public final static String 		VERSION = "0.23.0.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 
 	public final static String 		TILE_EXTENSION = "png"; //$NON-NLS-1$
 	// false: use default value true: exit(1)
@@ -38,8 +38,8 @@ public abstract class PropertiesParser {
 
 	// true:  More precise at tile edges but much slower / false: Less precise at tile edges but much faster
 	public final static boolean 	HILLSHADING_INTERPOLATION_OVERLAP = true;
-	public final static int 		HILLSHADING_CACHE = 128; // default is 4
-	public final static int 		HILLSHADING_NEIGHBOR_CACHE= 8; // default is 4
+
+	public final static int			AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
 
 	/******************
 	 * DEFAULT VALUES *
@@ -70,6 +70,7 @@ public abstract class PropertiesParser {
 	// MapsforgeTaskConfig.hillShadingArguments
 	public final static double[] 	DEFAULT_HILLSHADING_SIMPLE = { 0.1, 0.666 };
 	public final static	double 		DEFAULT_HILLSHADING_DIFFUSELIGHT = 50;
+	public final static	double[] 	DEFAULT_HILLSHADING_CLASY = { 0.5, 0, 80, Math.max(1,AVAILABLE_PROCESSORS/3), AVAILABLE_PROCESSORS, 1 };
 	// MapsforgeTaskConfig.hillShadingMagnitude
 	protected final static double 	DEFAULT_HILLSHADING_MAGNITUDE = 1.;
 

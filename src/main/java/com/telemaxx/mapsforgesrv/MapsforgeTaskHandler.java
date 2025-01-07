@@ -27,12 +27,16 @@ import org.mapsforge.core.model.Tile;
 import org.mapsforge.map.awt.graphics.AwtGraphicFactory;
 import org.mapsforge.map.datastore.MultiMapDataStore;
 import org.mapsforge.map.layer.cache.TileCache;
+import org.mapsforge.map.layer.hills.AClasyHillShading.ClasyParams;
 import org.mapsforge.map.layer.hills.DemFolderFS;
 import org.mapsforge.map.layer.hills.DiffuseLightShadingAlgorithm;
+import org.mapsforge.map.layer.hills.HiResClasyHillShading;
 import org.mapsforge.map.layer.hills.HillsRenderConfig;
 import org.mapsforge.map.layer.hills.MemoryCachingHgtReaderTileSource;
 import org.mapsforge.map.layer.hills.ShadingAlgorithm;
+import org.mapsforge.map.layer.hills.SimpleClasyHillShading;
 import org.mapsforge.map.layer.hills.SimpleShadingAlgorithm;
+import org.mapsforge.map.layer.hills.StandardClasyHillShading;
 import org.mapsforge.map.layer.labels.TileBasedLabelStore;
 import org.mapsforge.map.layer.renderer.DatabaseRenderer;
 import org.mapsforge.map.layer.renderer.RendererJob;
@@ -45,6 +49,7 @@ import org.mapsforge.map.rendertheme.XmlRenderThemeStyleLayer;
 import org.mapsforge.map.rendertheme.XmlRenderThemeStyleMenu;
 import org.mapsforge.map.rendertheme.XmlThemeResourceProvider;
 import org.mapsforge.map.rendertheme.rule.RenderThemeFuture;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +66,6 @@ public class MapsforgeTaskHandler {
 	private final TileBasedLabelStore labelStore;
 	private final TileCache tileCache;
 	private final MultiMapDataStore multiMapDataStore;
-
 	private final File themeFile;
 	private final String themeFileStyle;
 	private final boolean renderLabels;
@@ -122,7 +126,7 @@ public class MapsforgeTaskHandler {
 			if (mapFilesSize > 0) map.restrictToZoomRange((byte)0, (byte)9);
 			multiMapDataStore.addMapDataStore(map, true, true);
 		}
-		
+
 		DemFolderFS demFolderFS = null;
 		if (demFolder != null) demFolderFS = new DemFolderFS(demFolder);
 
@@ -135,19 +139,13 @@ public class MapsforgeTaskHandler {
 			renderLabels = false;
 			cacheLabels = false;
 			colorLookupTable = new int[256];
-			int pixelValue,gray,dist,alpha;
-			int range = (int)(30*mapsforgeTaskConfig.getHillShadingMagnitude()); // gray value range
-			if (range > 120) range = 120;	// maximum value range is 120
-			int base = 248-range; // obviously base gray value depending on hillshading magnitude
+			int pixelValue,gray,alpha;
 			int index = 256;
+			// Mapsforge >= 0.22.0: Mapsforge hillshading bitmap calculation changed
 			while (index-- > 0) {
 				gray = index;
-				dist = gray-base;				// distance to base gray value
-				alpha = Math.abs(dist) * 2;		// alpha value is 2 * abs(distance) to base gray value
-				if (alpha > 255) alpha = 255;	// limit alpha to fully opaque
-				pixelValue = alpha << 24;		// black pixel with variable alpha transparency
-				if (dist > 0)					// present gray value lighter than base gray:
-					pixelValue |= 0x00ffffff;	// white pixel with variable alpha transparency
+				alpha = 255-gray;
+				pixelValue = alpha << 24;
 				colorLookupTable[index] = pixelValue;
 			}
 		} else {
@@ -188,21 +186,43 @@ public class MapsforgeTaskHandler {
 			if (hillShadingAlgorithm.equals("simple")) {
 				shadingAlgorithm = new SimpleShadingAlgorithm(mapsforgeTaskConfig.getHillShadingArguments()[0],
 						mapsforgeTaskConfig.getHillShadingArguments()[1]);
-			} else {
+			} else if (hillShadingAlgorithm.equals("diffuselight")) {
 				shadingAlgorithm = new DiffuseLightShadingAlgorithm(
 						(float) mapsforgeTaskConfig.getHillShadingArguments()[0]);
+			} else if (hillShadingAlgorithm.equals("stdasy") ||
+					hillShadingAlgorithm.equals("hiresasy") ||
+					hillShadingAlgorithm.equals("simplasy")) {
+				ClasyParams clasyParams = new ClasyParams();
+				clasyParams.setMinSlope((float) mapsforgeTaskConfig.getHillShadingArguments()[1]);
+				clasyParams.setMaxSlope((float) mapsforgeTaskConfig.getHillShadingArguments()[2]);
+				clasyParams.setAsymmetryFactor((float) mapsforgeTaskConfig.getHillShadingArguments()[0]);
+				clasyParams.setReadingThreadsCount((int) mapsforgeTaskConfig.getHillShadingArguments()[3]);
+				clasyParams.setComputingThreadsCount((int) mapsforgeTaskConfig.getHillShadingArguments()[4]);
+				clasyParams.setPreprocess(mapsforgeTaskConfig.getHillShadingArguments()[5] == 1);
+				switch (hillShadingAlgorithm) {
+					case "hiresasy": 
+						shadingAlgorithm = new HiResClasyHillShading(clasyParams);
+						break;
+					case "stdasy": 
+						shadingAlgorithm = new StandardClasyHillShading(clasyParams);
+						break;
+					case "simplasy": 
+						shadingAlgorithm = new SimpleClasyHillShading(clasyParams);
+						break;
+				}
+			} else {
+				throw new Exception("Unknown HillShadingAlgorithm '"+hillShadingAlgorithm+"'");
 			}
 
 			MemoryCachingHgtReaderTileSource tileSource = new MemoryCachingHgtReaderTileSource(
-					demFolderFS, shadingAlgorithm, mapsforgeHandler.getGraphicFactory());
-			tileSource.setEnableInterpolationOverlap(MapsforgeConfig.HILLSHADING_INTERPOLATION_OVERLAP);
-			tileSource.setMainCacheSize(MapsforgeConfig.HILLSHADING_CACHE);
-			if (MapsforgeConfig.HILLSHADING_INTERPOLATION_OVERLAP)
-				tileSource.setNeighborCacheSize(MapsforgeConfig.HILLSHADING_NEIGHBOR_CACHE);
+					demFolderFS, shadingAlgorithm, mapsforgeHandler.getGraphicFactory(),
+					MapsforgeConfig.HILLSHADING_INTERPOLATION_OVERLAP);
 			tileSource.applyConfiguration(true); // true for allow parallel
 
 			hillsRenderConfig = new HillsRenderConfig(tileSource);
-			hillsRenderConfig.setMaginuteScaleFactor((float) mapsforgeTaskConfig.getHillShadingMagnitude());
+			// Mapsforge >= 0.22.0: RenderThemeHandler.java raised default magnitude from 64 to 128
+			// For look-and-feel backward compatibility, specified MagnitudeScaleFactor must be divided by 2
+			hillsRenderConfig.setMagnitudeScaleFactor((float) (0.5*mapsforgeTaskConfig.getHillShadingMagnitude()));
 			hillsRenderConfig.indexOnThread();
 		}
 
@@ -257,7 +277,7 @@ public class MapsforgeTaskHandler {
 		};
 
 		xmlRenderTheme = null;
-		for (MyInternalRenderTheme enumItem : new ArrayList<MyInternalRenderTheme>(EnumSet.allOf(MyInternalRenderTheme.class))) {
+		for (MyMapsforgeThemes enumItem : new ArrayList<MyMapsforgeThemes>(EnumSet.allOf(MyMapsforgeThemes.class))) {
 			if (enumItem.toString().equals(themeFile.getPath())) {
 				xmlRenderTheme = enumItem;	// Internal render theme
 				break;
@@ -419,11 +439,7 @@ public class MapsforgeTaskHandler {
 				int[] newPixelArray = newDataBuffer.getData();
 				while (pixelCount-- > 0) {
 					pixelValue = pixelArray[pixelCount];
-					if (pixelValue == 0xffffffff) { // 'nodata' hillshading value
-						newPixelArray[pixelCount] = 0x00000000; // fully transparent pixel
-					} else { // get gray value of pixel from blue value of pixel
-						newPixelArray[pixelCount] = colorLookupTable[pixelValue & 0xff];
-					}
+					newPixelArray[pixelCount] = colorLookupTable[pixelValue & 0xff];
 				}
 				image = newImage; // return transparent overlay image instead of original image
 			} else if (colorLookupTable != null) { // apply gamma correction and/or contrast-stretching
@@ -478,7 +494,7 @@ public class MapsforgeTaskHandler {
 	 * Display all styles contained in theme
 	 * Disable task if defined style does not exist
 	 */
-	protected void showStyleNames() throws Exception {
+	private void showStyleNames() throws Exception {
 		MapsforgeStyleParser mapStyleParser = new MapsforgeStyleParser();
 		InputStream inputStream = xmlRenderTheme.getRenderThemeAsStream();
 		List<Style> styles = mapStyleParser.readXML(inputStream);
@@ -509,16 +525,18 @@ public class MapsforgeTaskHandler {
 		}
 	}
 
-	// Enumeration of tile server's internal rendering themes
-	// (copied and extended from InternalRenderTheme enumeration)
+	// Enumeration of all tile server's internal rendering themes
+	// (copied and extended from org/mapsforge/map/rendertheme/internal/MapsforgeThemes)
 	// Using StreamRenderThemes throws exception when calling "updateRenderThemeFuture" within "handle"
-	private enum MyInternalRenderTheme implements XmlRenderTheme {
+	private enum MyMapsforgeThemes implements XmlRenderTheme {
 		DEFAULT("/assets/mapsforge/default.xml"),
 		OSMARENDER("/assets/mapsforge/osmarender.xml"),
+		MOTORIDER("/assets/mapsforge/motorider.xml"),
+		MOTORIDER_DARK("/assets/mapsforge/motorider-dark.xml"),
 		HILLSHADING("/assets/mapsforgesrv/hillshading.xml");
 		private XmlRenderThemeMenuCallback menuCallback;
 		private final String path;
-		MyInternalRenderTheme(String path) {
+		MyMapsforgeThemes(String path) {
 			this.path = path;
 		}
 		@Override
