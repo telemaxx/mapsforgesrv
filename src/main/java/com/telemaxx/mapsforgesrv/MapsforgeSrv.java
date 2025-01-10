@@ -72,6 +72,8 @@
  *           Adjust to changed Mapsforge hillshading requirements
  *           Support new internal render themes "MOTORIDER" and "MOTORIDER_DARK"
  * 0.23.0.0: Prepare for Mapsforge version 0.23.0 (nono303)
+ * 0.23.0.1: Implement AdaptiveClasyHillShading as adaptasy (nono303)
+ *           Skip render theme callback for theme file without styles (JFritzle)
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;

@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import org.mapsforge.map.awt.graphics.AwtGraphicFactory;
 import org.mapsforge.map.datastore.MultiMapDataStore;
 import org.mapsforge.map.layer.cache.TileCache;
 import org.mapsforge.map.layer.hills.AClasyHillShading.ClasyParams;
+import org.mapsforge.map.layer.hills.AdaptiveClasyHillShading;
 import org.mapsforge.map.layer.hills.DemFolderFS;
 import org.mapsforge.map.layer.hills.DiffuseLightShadingAlgorithm;
 import org.mapsforge.map.layer.hills.HiResClasyHillShading;
@@ -189,17 +191,20 @@ public class MapsforgeTaskHandler {
 			} else if (hillShadingAlgorithm.equals("diffuselight")) {
 				shadingAlgorithm = new DiffuseLightShadingAlgorithm(
 						(float) mapsforgeTaskConfig.getHillShadingArguments()[0]);
-			} else if (hillShadingAlgorithm.equals("stdasy") ||
-					hillShadingAlgorithm.equals("hiresasy") ||
-					hillShadingAlgorithm.equals("simplasy")) {
+			} else if (Arrays.stream(new String[] {"adaptasy","stdasy","hiresasy","simplasy"}).anyMatch(hillShadingAlgorithm::equals)) {
 				ClasyParams clasyParams = new ClasyParams();
+				clasyParams.setAsymmetryFactor((float) mapsforgeTaskConfig.getHillShadingArguments()[0]);
 				clasyParams.setMinSlope((float) mapsforgeTaskConfig.getHillShadingArguments()[1]);
 				clasyParams.setMaxSlope((float) mapsforgeTaskConfig.getHillShadingArguments()[2]);
-				clasyParams.setAsymmetryFactor((float) mapsforgeTaskConfig.getHillShadingArguments()[0]);
 				clasyParams.setReadingThreadsCount((int) mapsforgeTaskConfig.getHillShadingArguments()[3]);
 				clasyParams.setComputingThreadsCount((int) mapsforgeTaskConfig.getHillShadingArguments()[4]);
 				clasyParams.setPreprocess(mapsforgeTaskConfig.getHillShadingArguments()[5] == 1);
 				switch (hillShadingAlgorithm) {
+					case "adaptasy": 
+						shadingAlgorithm = new AdaptiveClasyHillShading(clasyParams,MapsforgeConfig.HILLSHADING_ADAPTIVE_HQ);
+						((AdaptiveClasyHillShading)shadingAlgorithm).setAdaptiveZoomEnabled(MapsforgeConfig.HILLSHADING_ADAPTIVE_ZOOM_ENABLED);
+						((AdaptiveClasyHillShading)shadingAlgorithm).setCustomQualityScale(MapsforgeConfig.HILLSHADING_ADAPTIVE_CUSTOM_QUALITY_SCALE);
+						break;
 					case "hiresasy": 
 						shadingAlgorithm = new HiResClasyHillShading(clasyParams);
 						break;
@@ -236,6 +241,7 @@ public class MapsforgeTaskHandler {
 		XmlRenderThemeMenuCallback callBack = new XmlRenderThemeMenuCallback() {
 			@Override
 			public Set<String> getCategories(XmlRenderThemeStyleMenu styleMenu) {
+				logger.info("XmlRenderThemeMenuCallback callBack");
 				String id = null;
 				if (themeFileStyle != null) {
 					id = themeFileStyle;
@@ -285,20 +291,26 @@ public class MapsforgeTaskHandler {
 		};
 
 		if (xmlRenderTheme == null) {
-			countDownLatch = new CountDownLatch(1);
 			try {
-				xmlRenderTheme = new ExternalRenderTheme(themeFile, callBack);	// External render theme
-				showStyleNames();
+				xmlRenderTheme = new ExternalRenderTheme(themeFile);	// External render theme
 			} catch (Exception e) {
-				countDownLatch.countDown();
 				logger.error("Defined theme file '"+themeFile+"' does not exist or cannot be read: Task "+name+" disabled"); //$NON-NLS-1$
 				taskEnabled = false;
 				return;
 			}
+			switch (showStyleNames()) {
+			case 1: 
+				xmlRenderTheme.setMenuCallback(callBack);
+				countDownLatch = new CountDownLatch(1);
+				break;
+			case -1:
+				logger.error("Defined style '" + themeFileStyle+"' not available: Task " + name + " disabled"); //$NON-NLS-1$
+				taskEnabled = false;
+				return;
+			};
 		}
-
+		
 		updateRenderThemeFuture();
-
 		countDownLatch.await();
 		logger.info("--------------------------------------------------"); //$NON-NLS-1$
 	}
@@ -492,13 +504,16 @@ public class MapsforgeTaskHandler {
 
 	/**
 	 * Display all styles contained in theme
-	 * Disable task if defined style does not exist
+	 * Return  1: either requested style or default style was set
+	 * Return  0: theme does not contain styles 
+	 * Return -1: requested style does not exist in theme
 	 */
-	private void showStyleNames() throws Exception {
+	private int showStyleNames() throws Exception {
 		MapsforgeStyleParser mapStyleParser = new MapsforgeStyleParser();
 		InputStream inputStream = xmlRenderTheme.getRenderThemeAsStream();
 		List<Style> styles = mapStyleParser.readXML(inputStream);
 		inputStream.close();
+		if (styles.size() == 0) return 0;
 		Boolean selectedStyleExists = false;
 		String defaultStyle = mapStyleParser.getDefaultStyle();
 		int maxlen = 0;
@@ -516,12 +531,12 @@ public class MapsforgeTaskHandler {
 		}
 		if (themeFileStyle == null) {
 			logger.info("Used      : " + defaultStyle); //$NON-NLS-1$
+			return 1;
 		} else if (selectedStyleExists) {
 			logger.info("Used      : " + themeFileStyle); //$NON-NLS-1$
+			return 1;
 		} else {
-			logger.error("Defined style '" + themeFileStyle+"' not available: Task " + name + " disabled"); //$NON-NLS-1$
-			taskEnabled = false;
-			return;
+			return -1;
 		}
 	}
 

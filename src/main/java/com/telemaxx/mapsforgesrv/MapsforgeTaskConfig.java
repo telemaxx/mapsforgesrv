@@ -153,7 +153,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 		String hillShadingOption = retrieveConfigValue("hillshading-algorithm"); //$NON-NLS-1$
 		if (hillShadingOption != null) {
 			hillShadingOption = hillShadingOption.trim();
-			Pattern P = Pattern.compile("(simple)(?:\\((-?\\d+\\.?\\d*|-?\\d*\\.?\\d+),(\\d+\\.?\\d*|\\d*\\.?\\d+)\\))?|(diffuselight)(?:\\((\\d+\\.?\\d*|\\d*\\.?\\d+)\\))?|(hiresasy|stdasy|simplasy)(?:\\((\\d+\\.?\\d*|\\d*\\.?\\d+),(\\d+\\.?\\d*|\\d*\\.?\\d+),(\\d+\\.?\\d*|\\d*\\.?\\d+),(\\d+),(\\d+),(true|false)\\))?");
+			Pattern P = Pattern.compile("(simple)(?:\\((-?\\d+\\.?\\d*|-?\\d*\\.?\\d+),(\\d+\\.?\\d*|\\d*\\.?\\d+)\\))?|(diffuselight)(?:\\((\\d+\\.?\\d*|\\d*\\.?\\d+)\\))?|(hiresasy|stdasy|simplasy|adaptasy)(?:\\((\\d+\\.?\\d*|\\d*\\.?\\d+),(\\d+\\.?\\d*|\\d*\\.?\\d+),(\\d+\\.?\\d*|\\d*\\.?\\d+),(\\d+),(\\d+),(true|false)\\))?");
 			Matcher m = P.matcher(hillShadingOption);
 			if (m.matches()) {
 				if (m.group(1) != null) {
@@ -177,7 +177,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 					}
 					hillShadingAlgorithmName = hillShadingAlgorithm + "(heightAngle: " + (int)hillShadingArguments[0] + ")";
 				} else if (m.group(6) != null) {
-					hillShadingAlgorithm = new String(m.group(6)); // ShadingAlgorithm = stdasy | simplasy | hiresasy
+					hillShadingAlgorithm = new String(m.group(6)); // ShadingAlgorithm = stdasy | simplasy | hiresasy | adaptasy
 					hillShadingArguments = new double[6];
 					if (m.group(7) != null) {
 						hillShadingArguments[0] = Double.parseDouble(m.group(7));
