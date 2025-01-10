@@ -241,7 +241,6 @@ public class MapsforgeTaskHandler {
 		XmlRenderThemeMenuCallback callBack = new XmlRenderThemeMenuCallback() {
 			@Override
 			public Set<String> getCategories(XmlRenderThemeStyleMenu styleMenu) {
-				logger.info("XmlRenderThemeMenuCallback callBack");
 				String id = null;
 				if (themeFileStyle != null) {
 					id = themeFileStyle;
