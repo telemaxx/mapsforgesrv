@@ -74,6 +74,7 @@
  * 0.23.0.0: Prepare for Mapsforge version 0.23.0 (nono303)
  * 0.23.0.1: Implement AdaptiveClasyHillShading as adaptasy (nono303)
  *           Skip render theme callback for theme file without styles (JFritzle)
+ *           If available, show styles and overlays for internal render themes too
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;

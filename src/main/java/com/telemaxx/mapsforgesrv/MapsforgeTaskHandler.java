@@ -238,7 +238,7 @@ public class MapsforgeTaskHandler {
 			databaseRenderer.put("hs", new DatabaseRenderer(multiMapDataStore, mapsforgeHandler.getGraphicFactory(), tileCache,
 					labelStore, renderLabels, cacheLabels, hillsRenderConfig));
 
-		XmlRenderThemeMenuCallback callBack = new XmlRenderThemeMenuCallback() {
+		XmlRenderThemeMenuCallback menuCallBack = new XmlRenderThemeMenuCallback() {
 			@Override
 			public Set<String> getCategories(XmlRenderThemeStyleMenu styleMenu) {
 				String id = null;
@@ -297,18 +297,20 @@ public class MapsforgeTaskHandler {
 				taskEnabled = false;
 				return;
 			}
-			switch (showStyleNames()) {
-			case 1: 
-				xmlRenderTheme.setMenuCallback(callBack);
-				countDownLatch = new CountDownLatch(1);
-				break;
-			case -1:
-				logger.error("Defined style '" + themeFileStyle+"' not available: Task " + name + " disabled"); //$NON-NLS-1$
-				taskEnabled = false;
-				return;
-			};
 		}
-		
+
+		// Does style menu exist? yes: set callback, no: no callback
+		switch (showStyleNames()) {
+		case 1:
+			xmlRenderTheme.setMenuCallback(menuCallBack);
+			countDownLatch = new CountDownLatch(1);
+			break;
+		case -1:
+			logger.error("Defined style '" + themeFileStyle+"' not available: Task " + name + " disabled"); //$NON-NLS-1$
+			taskEnabled = false;
+			return;
+		};
+
 		updateRenderThemeFuture();
 		countDownLatch.await();
 		logger.info("--------------------------------------------------"); //$NON-NLS-1$
@@ -502,7 +504,7 @@ public class MapsforgeTaskHandler {
 	}
 
 	/**
-	 * Display all styles contained in theme
+	 * Show all styles of theme
 	 * Return  1: either requested style or default style was set
 	 * Return  0: theme does not contain styles 
 	 * Return -1: requested style does not exist in theme
