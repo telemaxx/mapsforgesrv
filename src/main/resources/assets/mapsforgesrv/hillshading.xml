@@ -3,5 +3,5 @@
     map-background="#FFFFFF" map-background-outside="#FFFFFF"
     version="5" xmlns="http://mapsforge.org/renderTheme"
     xsi:schemaLocation="http://mapsforge.org/renderTheme https://raw.githubusercontent.com/mapsforge/mapsforge/master/resources/renderTheme.xsd">
-<hillshading zoom-min="7" zoom-max="18" magnitude="64"/>
+<hillshading zoom-min="7" zoom-max="18" magnitude="128"/>
 </rendertheme>

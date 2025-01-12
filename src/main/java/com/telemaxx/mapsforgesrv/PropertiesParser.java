@@ -12,6 +12,7 @@ import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Properties;
 
+import org.mapsforge.map.layer.hills.AThreadedHillShading;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,7 @@ public abstract class PropertiesParser {
 	 * FIXED VALUES *
 	 ****************/
 
-	public final static String 		VERSION = "0.21.4.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	public final static String 		VERSION = "0.23.0.1"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 
 	public final static String 		TILE_EXTENSION = "png"; //$NON-NLS-1$
 	// false: use default value true: exit(1)
@@ -38,8 +39,6 @@ public abstract class PropertiesParser {
 
 	// true:  More precise at tile edges but much slower / false: Less precise at tile edges but much faster
 	public final static boolean 	HILLSHADING_INTERPOLATION_OVERLAP = true;
-	public final static int 		HILLSHADING_CACHE = 128; // default is 4
-	public final static int 		HILLSHADING_NEIGHBOR_CACHE= 8; // default is 4
 
 	/******************
 	 * DEFAULT VALUES *
@@ -70,8 +69,19 @@ public abstract class PropertiesParser {
 	// MapsforgeTaskConfig.hillShadingArguments
 	public final static double[] 	DEFAULT_HILLSHADING_SIMPLE = { 0.1, 0.666 };
 	public final static	double 		DEFAULT_HILLSHADING_DIFFUSELIGHT = 50;
+	public final static	double[] 	DEFAULT_HILLSHADING_CLASY = { 0.5, 0, 80, 
+		Math.max(1,AThreadedHillShading.AvailableProcessors/3), AThreadedHillShading.AvailableProcessors, 1 };
 	// MapsforgeTaskConfig.hillShadingMagnitude
 	protected final static double 	DEFAULT_HILLSHADING_MAGNITUDE = 1.;
+
+	/* Adaptative clear asymmetry hillshading fixed properties */
+	// Whether to enable the use of high-quality (bicubic) algorithm for larger zoom levels. Disabling will reduce memory usage at high zoom levels.
+	public final static boolean		HILLSHADING_ADAPTIVE_HQ = true;
+	// true to let the algorithm decide which zoom levels are supported (default); false to obey values as set in the render theme.
+	public final static boolean		HILLSHADING_ADAPTIVE_ZOOM_ENABLED = true;
+	// Set a new custom quality scale value for hill shading rendering.A lower value means lower quality.Sometimes this can be useful to improve the performance of hill shading on high-dpi devices. 
+	// There is usually no reason to set this to a value higher than 1 (the default), although it is allowed,since it makes no sense to have hill shading rendered at a higher resolution than the device's display. 
+	public final static int			HILLSHADING_ADAPTIVE_CUSTOM_QUALITY_SCALE = 1;
 
 	/***********
 	 * PRIVATE *

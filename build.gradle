@@ -34,15 +34,21 @@ sourceSets {
 }
 
 dependencies {
-	def mapsforgeVersion = "+"
+	def mapsforgeVersion = "0.23.0"
 	// https://mvnrepository.com/artifact/org.eclipse.jetty.http2/http2-server
 	def jettyVersion = "11.0.24"
 	def slf4j = "+"
 
-	implementation "org.mapsforge:mapsforge-core:${mapsforgeVersion}"
-	implementation "org.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
-	implementation "org.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
-	runtimeOnly    "org.mapsforge:mapsforge-themes:${mapsforgeVersion}"
+//	implementation "org.mapsforge:mapsforge-core:${mapsforgeVersion}"
+//	implementation "org.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
+//	implementation "org.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
+//	runtimeOnly    "org.mapsforge:mapsforge-themes:${mapsforgeVersion}"
+
+	implementation "com.github.mapsforge.mapsforge:mapsforge-core:${mapsforgeVersion}"
+	implementation "com.github.mapsforge.mapsforge:mapsforge-map:${mapsforgeVersion}"
+	implementation "com.github.mapsforge.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
+	implementation "com.github.mapsforge.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
+	runtimeOnly    "com.github.mapsforge.mapsforge:mapsforge-themes:${mapsforgeVersion}"
 
 	implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
 	runtimeOnly    "org.eclipse.jetty.http2:http2-server:${jettyVersion}"
@@ -107,9 +113,9 @@ runShadow {
 }
 
 java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
-    }
+	toolchain {
+		languageVersion.set(JavaLanguageVersion.of(11))
+	}
 }
 
 gradleLint.rules = ["all-dependency"]

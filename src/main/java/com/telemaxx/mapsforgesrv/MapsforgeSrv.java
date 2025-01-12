@@ -66,7 +66,15 @@
  *           Initial version (nono303)
  *           Fixes, improvements, extensions (JFritzle)
  * 0.21.3.1: Fixes, improvements, extensions (JFritzle)
- * 0.21.4.0: Update build.gradle, use gradle 8.11, shrink JAR size to 1/3
+ * 0.21.4.0: Updates "build.gradle" -> shrink JAR file size significantly (nono303)
+ * 0.22.0.0: Prepare for Mapsforge version 0.22.0 (JFritzle)
+ *           New asymmetry hillshading (nono303)
+ *           Adjust to changed Mapsforge hillshading requirements
+ *           Support new internal render themes "MOTORIDER" and "MOTORIDER_DARK"
+ * 0.23.0.0: Prepare for Mapsforge version 0.23.0 (nono303)
+ * 0.23.0.1: Implement AdaptiveClasyHillShading as adaptasy (nono303)
+ *           Skip render theme callback for theme file without styles (JFritzle)
+ *           If available, show styles and overlays for internal render themes too
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
