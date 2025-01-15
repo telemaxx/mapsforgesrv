@@ -32,6 +32,8 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	protected String hillShadingAlgorithm = null;
 	protected String hillShadingAlgorithmName = null;
 	protected double hillShadingMagnitude;
+	protected Integer hillShadingZoomMin = null;
+	protected Integer hillShadingZoomMax = null;
 	private int blackValue;
 	private double gammaValue;
 	private String checkSum = null;
@@ -131,9 +133,11 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 		parseThemeFile();
 		themeFileStyle = parseString(null, "style", null, "Theme style"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseThemeOverlays();
-		demFolder = parseFile("demfolder", FOLDER, true, "DEM", "undefined");
+		demFolder = parseFile("demfolder", FOLDER, true, "DEM folder", "undefined");
 		parseHillShading();
 		hillShadingMagnitude = (double) parseNumber(DEFAULT_HILLSHADING_MAGNITUDE, "hillshading-magnitude", 0., 4., "Hillshading magnitude",false); //$NON-NLS-1$ //$NON-NLS-2$
+		hillShadingZoomMin = (Integer) parseNumber("Integer", "hillshading-zoom-min", 0, 20, "Hillshading minimum zoom",false); //$NON-NLS-1$ //$NON-NLS-2$
+		hillShadingZoomMax = (Integer) parseNumber("Integer", "hillshading-zoom-max", 0, 20, "Hillshading maximum zoom",false); //$NON-NLS-1$ //$NON-NLS-2$
 		blackValue = (int) parseNumber(DEFAULT_BLACK, "contrast-stretch", 0, 254, "Contrast stretch",false); //$NON-NLS-1$ //$NON-NLS-2$
 		gammaValue = (double) parseNumber(DEFAULT_GAMMA, "gamma-correction", 0., null, "Gamma correction",true); //$NON-NLS-1$ //$NON-NLS-2$
 		deviceScale = (float) parseNumber(DEFAULT_DEVICESCALE, "device-scale", 0., null, "Device scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
@@ -194,7 +198,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 						hillShadingArguments[4] = DEFAULT_HILLSHADING_CLASY[4];
 						hillShadingArguments[5] = DEFAULT_HILLSHADING_CLASY[5];
 					}
-					hillShadingAlgorithmName = hillShadingAlgorithm + "(asymmetryFactor: " + hillShadingArguments[0] + 
+					hillShadingAlgorithmName = hillShadingAlgorithm + "(asymmetryFactor: " + hillShadingArguments[0] +
 							", minSlope: " + (int)hillShadingArguments[1] +
 							", maxSlope: " + (int)hillShadingArguments[2] +
 							", readingThreadsCount: " + (int)hillShadingArguments[3] +
@@ -239,6 +243,14 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 
 	public double[] getHillShadingArguments() {
 		return this.hillShadingArguments;
+	}
+
+	public Integer getHillShadingZoomMin() {
+		return this.hillShadingZoomMin;
+	}
+
+	public Integer getHillShadingZoomMax() {
+		return this.hillShadingZoomMax;
 	}
 
 	public String getThemeFileStyle() {
