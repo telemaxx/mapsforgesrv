@@ -82,7 +82,7 @@ public abstract class PropertiesParser {
 	// Whether to enable the use of high-quality (bicubic) algorithm for larger zoom levels. Disabling will reduce memory usage at high zoom levels.
 	public final static boolean		HILLSHADING_ADAPTIVE_HQ = true;
 	// true to let the algorithm decide which zoom levels are supported (default); false to obey values as set in the render theme.
-	public final static boolean		HILLSHADING_ADAPTIVE_ZOOM_DISABLED = false;
+	public final static boolean		HILLSHADING_ADAPTIVE_ZOOM_ENABLED = false;
 	// Set a new custom quality scale value for hill shading rendering.A lower value means lower quality.Sometimes this can be useful to improve the performance of hill shading on high-dpi devices.
 	// There is usually no reason to set this to a value higher than 1 (the default), although it is allowed,since it makes no sense to have hill shading rendered at a higher resolution than the device's display.
 	public final static int			HILLSHADING_ADAPTIVE_CUSTOM_QUALITY_SCALE = 1;

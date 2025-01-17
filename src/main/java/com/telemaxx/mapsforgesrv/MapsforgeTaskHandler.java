@@ -205,7 +205,7 @@ public class MapsforgeTaskHandler {
 				switch (hillShadingAlgorithm) {
 					case "adaptasy":
 						shadingAlgorithm = new AdaptiveClasyHillShading(clasyParams,MapsforgeConfig.HILLSHADING_ADAPTIVE_HQ);
-						((AdaptiveClasyHillShading)shadingAlgorithm).setAdaptiveZoomEnabled(MapsforgeConfig.HILLSHADING_ADAPTIVE_ZOOM_DISABLED);
+						((AdaptiveClasyHillShading)shadingAlgorithm).setAdaptiveZoomEnabled(MapsforgeConfig.HILLSHADING_ADAPTIVE_ZOOM_ENABLED);
 						((AdaptiveClasyHillShading)shadingAlgorithm).setCustomQualityScale(MapsforgeConfig.HILLSHADING_ADAPTIVE_CUSTOM_QUALITY_SCALE);
 						break;
 					case "hiresasy":
