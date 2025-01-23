@@ -258,6 +258,7 @@ public abstract class PropertiesParser {
 
 	protected File parseFile(String configValue, String fileOrFolder, boolean checkFolderNotEmpty, String msgHeader,
 			String msgDefault) throws Exception {
+		msgHeader = parsePadMsg(msgHeader + " " + fileOrFolder);
 		File target = null;
 		String configString = retrieveConfigValue(configValue); // $NON-NLS-1$
 		if (configString != null) {
@@ -265,23 +266,23 @@ public abstract class PropertiesParser {
 			if (fileOrFolder == FILE) {
 				if (!target.isFile()) {
 					target = null;
-					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' not a file");
+					parseError(msgHeader, "'" + configString + "' not a file");
 				}
 			} else if (fileOrFolder == FOLDER) {
 				if (!target.isDirectory()) {
 					target = null;
-					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' not a folder");
+					parseError(msgHeader, "'" + configString + "' not a folder");
 				} else if (checkFolderNotEmpty && target.listFiles().length == 0) {
 					target = null;
-					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' empty folder");
+					parseError(msgHeader, "'" + configString + "' empty folder");
 				}
 			} else {
 				throw new Exception("fileOrFolder '" + fileOrFolder + "' not in [file|folder]"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			if (target != null)
-				logger.info(parsePadMsg(msgHeader + " " + fileOrFolder) + ": defined [" + target.getPath() + "]"); //$NON-NLS-1$
+				logger.info(msgHeader + ": defined [" + target.getPath() + "]"); //$NON-NLS-1$
 		} else {
-			logger.info(parsePadMsg(msgHeader) + ": default [" + msgDefault + "]"); //$NON-NLS-1$
+			logger.info(msgHeader + ": default [" + msgDefault + "]"); //$NON-NLS-1$
 		}
 		return target;
 	}

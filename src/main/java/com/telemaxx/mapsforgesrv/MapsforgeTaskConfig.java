@@ -133,7 +133,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 		parseThemeFile();
 		themeFileStyle = parseString(null, "style", null, "Theme style"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseThemeOverlays();
-		demFolder = parseFile("demfolder", FOLDER, true, "DEM folder", "undefined");
+		demFolder = parseFile("demfolder", FOLDER, true, "DEM", "undefined");
 		parseHillShading();
 		hillShadingMagnitude = (double) parseNumber(DEFAULT_HILLSHADING_MAGNITUDE, "hillshading-magnitude", 0., 4., "Hillshading magnitude",false); //$NON-NLS-1$ //$NON-NLS-2$
 		hillShadingZoomMin = (Integer) parseNumber("Integer", "hillshading-zoom-min", 0, 20, "Hillshading minimum zoom",false); //$NON-NLS-1$ //$NON-NLS-2$
