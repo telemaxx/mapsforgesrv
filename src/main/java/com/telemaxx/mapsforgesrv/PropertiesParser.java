@@ -24,7 +24,7 @@ public abstract class PropertiesParser {
 	 * FIXED VALUES *
 	 ****************/
 
-	public final static String 		VERSION = "0.23.0.1"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	public final static String 		VERSION = "0.23.0.2"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 
 	public final static String 		TILE_EXTENSION = "png"; //$NON-NLS-1$
 	// false: use default value true: exit(1)
@@ -69,18 +69,22 @@ public abstract class PropertiesParser {
 	// MapsforgeTaskConfig.hillShadingArguments
 	public final static double[] 	DEFAULT_HILLSHADING_SIMPLE = { 0.1, 0.666 };
 	public final static	double 		DEFAULT_HILLSHADING_DIFFUSELIGHT = 50;
-	public final static	double[] 	DEFAULT_HILLSHADING_CLASY = { 0.5, 0, 80, 
+	public final static	double[] 	DEFAULT_HILLSHADING_CLASY = { 0.5, 0, 80,
 		Math.max(1,AThreadedHillShading.AvailableProcessors/3), AThreadedHillShading.AvailableProcessors, 1 };
 	// MapsforgeTaskConfig.hillShadingMagnitude
 	protected final static double 	DEFAULT_HILLSHADING_MAGNITUDE = 1.;
 
-	/* Adaptative clear asymmetry hillshading fixed properties */
+	// Render theme's built-in hillshading default zoom levels
+	public final static int 	    DEFAULT_HILLSHADING_ZOOM_MIN =  9;
+	public final static int 	    DEFAULT_HILLSHADING_ZOOM_MAX = 17;
+
+	/* Adaptive clear asymmetry hillshading fixed properties */
 	// Whether to enable the use of high-quality (bicubic) algorithm for larger zoom levels. Disabling will reduce memory usage at high zoom levels.
 	public final static boolean		HILLSHADING_ADAPTIVE_HQ = true;
 	// true to let the algorithm decide which zoom levels are supported (default); false to obey values as set in the render theme.
-	public final static boolean		HILLSHADING_ADAPTIVE_ZOOM_ENABLED = true;
-	// Set a new custom quality scale value for hill shading rendering.A lower value means lower quality.Sometimes this can be useful to improve the performance of hill shading on high-dpi devices. 
-	// There is usually no reason to set this to a value higher than 1 (the default), although it is allowed,since it makes no sense to have hill shading rendered at a higher resolution than the device's display. 
+	public final static boolean		HILLSHADING_ADAPTIVE_ZOOM_ENABLED = false;
+	// Set a new custom quality scale value for hill shading rendering.A lower value means lower quality.Sometimes this can be useful to improve the performance of hill shading on high-dpi devices.
+	// There is usually no reason to set this to a value higher than 1 (the default), although it is allowed,since it makes no sense to have hill shading rendered at a higher resolution than the device's display.
 	public final static int			HILLSHADING_ADAPTIVE_CUSTOM_QUALITY_SCALE = 1;
 
 	/***********
@@ -147,44 +151,57 @@ public abstract class PropertiesParser {
 	 * excludeInRange: true (minValue < value < maxValue) accepted excludeInRange:
 	 * false (minValue <= value <= maxValue) accepted
 	 */
-	protected Number parseNumber(Number defaultValue, String configValue, Number minValue, Number maxValue,
+	protected Number parseNumber(Object defaultValue, String configValue, Number minValue, Number maxValue,
 			String msgHeader, boolean excludeInRange) throws Exception {
 		msgHeader = parsePadMsg(msgHeader);
-		Number target = defaultValue;
+		String targetClass;
+		Number target;
+		if (defaultValue instanceof String) {
+			targetClass = (String) defaultValue;
+			target = null;
+		} else {
+			targetClass = defaultValue.getClass().getSimpleName();
+			target = (Number) defaultValue;
+		}
 		String configString = retrieveConfigValue(configValue); // $NON-NLS-1$
 		if (configString != null) {
 			try {
 				configString = configString.trim();
 				String operator;
-				if (defaultValue instanceof Long)
+				switch (targetClass) {
+				case "Long":
 					target = Long.parseLong(configString);
-				else if (defaultValue instanceof Integer)
+					break;
+				case "Integer":
 					target = Integer.parseInt(configString);
-				else if (defaultValue instanceof Double)
+					break;
+				case "Double":
 					target = Double.parseDouble(configString);
-				else if (defaultValue instanceof Float)
+					break;
+				case "Float":
 					target = Float.parseFloat(configString);
+					break;
+				}				
 				if (minValue != null && (target.doubleValue() < minValue.doubleValue()
 						|| (excludeInRange && target.doubleValue() == minValue.doubleValue()))) {
 					operator = "' < '";
 					if (excludeInRange)
 						operator = "' <= '";
 					parseError(msgHeader, "'" + target + operator + minValue + "' ");
-					target = defaultValue;
 				} else if (maxValue != null && (target.doubleValue() > maxValue.doubleValue()
 						|| (excludeInRange && target.doubleValue() == maxValue.doubleValue()))) {
 					operator = "' > '";
 					if (excludeInRange)
 						operator = "' >= '";
 					parseError(msgHeader, "'" + target + operator + maxValue + "' ");
-					target = defaultValue;
 				} else {
 					logger.info(msgHeader + ": defined [" + target + "]"); //$NON-NLS-1$
 				}
 			} catch (NumberFormatException e) {
 				parseError(msgHeader, "'" + configString + "' not a number ");
-				target = defaultValue;
 			}
+		} else if (defaultValue instanceof String) {
+			logger.info(msgHeader + ": default [undefined]"); //$NON-NLS-1$
 		} else {
 			logger.info(msgHeader + ": default [" + target + "]"); //$NON-NLS-1$
 		}
@@ -209,6 +226,19 @@ public abstract class PropertiesParser {
 		}
 		return target;
 	}
+	
+	protected boolean parseBoolean(Boolean defaultValue, String configValue, String msgHeader) throws Exception {
+		msgHeader = parsePadMsg(msgHeader);
+		boolean target = defaultValue;
+		String configString = retrieveConfigValue(configValue); // $NON-NLS-1$
+		if (configString != null) {
+			target = Boolean.parseBoolean(configString.trim());
+			logger.info(msgHeader + ": defined [" + target + "]"); //$NON-NLS-1$
+		} else {
+			logger.info(msgHeader + ": default [" + target + "]"); //$NON-NLS-1$
+		}
+		return target;
+	}
 
 	protected boolean parseHasOption(String configValue, String msgHeader) throws Exception {
 		msgHeader = parsePadMsg(msgHeader);
@@ -228,6 +258,7 @@ public abstract class PropertiesParser {
 
 	protected File parseFile(String configValue, String fileOrFolder, boolean checkFolderNotEmpty, String msgHeader,
 			String msgDefault) throws Exception {
+		msgHeader = parsePadMsg(msgHeader + " " + fileOrFolder);
 		File target = null;
 		String configString = retrieveConfigValue(configValue); // $NON-NLS-1$
 		if (configString != null) {
@@ -235,23 +266,23 @@ public abstract class PropertiesParser {
 			if (fileOrFolder == FILE) {
 				if (!target.isFile()) {
 					target = null;
-					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' not a file");
+					parseError(msgHeader, "'" + configString + "' not a file");
 				}
 			} else if (fileOrFolder == FOLDER) {
 				if (!target.isDirectory()) {
 					target = null;
-					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' not a folder");
+					parseError(msgHeader, "'" + configString + "' not a folder");
 				} else if (checkFolderNotEmpty && target.listFiles().length == 0) {
 					target = null;
-					parseError(parsePadMsg(msgHeader + " " + fileOrFolder), "'" + configString + "' empty folder");
+					parseError(msgHeader, "'" + configString + "' empty folder");
 				}
 			} else {
 				throw new Exception("fileOrFolder '" + fileOrFolder + "' not in [file|folder]"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			if (target != null)
-				logger.info(parsePadMsg(msgHeader + " " + fileOrFolder) + ": defined [" + target.getPath() + "]"); //$NON-NLS-1$
+				logger.info(msgHeader + ": defined [" + target.getPath() + "]"); //$NON-NLS-1$
 		} else {
-			logger.info(parsePadMsg(msgHeader) + ": default [" + msgDefault + "]"); //$NON-NLS-1$
+			logger.info(msgHeader + ": default [" + msgDefault + "]"); //$NON-NLS-1$
 		}
 		return target;
 	}

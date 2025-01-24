@@ -75,6 +75,7 @@
  * 0.23.0.1: Implement AdaptiveClasyHillShading as adaptasy (nono303)
  *           Skip render theme callback for theme file without styles (JFritzle)
  *           If available, show styles and overlays for internal render themes too
+ * 0.23.0.2: Allow overriding built-in hillshading zoom levels (JFritzle)
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;

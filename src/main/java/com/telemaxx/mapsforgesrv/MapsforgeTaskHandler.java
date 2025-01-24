@@ -2,11 +2,13 @@ package com.telemaxx.mapsforgesrv;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +47,7 @@ import org.mapsforge.map.layer.renderer.RendererJob;
 import org.mapsforge.map.model.DisplayModel;
 import org.mapsforge.map.reader.MapFile;
 import org.mapsforge.map.rendertheme.ExternalRenderTheme;
+import org.mapsforge.map.rendertheme.StreamRenderTheme;
 import org.mapsforge.map.rendertheme.XmlRenderTheme;
 import org.mapsforge.map.rendertheme.XmlRenderThemeMenuCallback;
 import org.mapsforge.map.rendertheme.XmlRenderThemeStyleLayer;
@@ -140,10 +143,10 @@ public class MapsforgeTaskHandler {
 			labelStore = null;
 			renderLabels = false;
 			cacheLabels = false;
+			// Mapsforge >= 0.22.0: hillshading bitmap calculation changed
 			colorLookupTable = new int[256];
 			int pixelValue,gray,alpha;
 			int index = 256;
-			// Mapsforge >= 0.22.0: Mapsforge hillshading bitmap calculation changed
 			while (index-- > 0) {
 				gray = index;
 				alpha = 255-gray;
@@ -200,18 +203,18 @@ public class MapsforgeTaskHandler {
 				clasyParams.setComputingThreadsCount((int) mapsforgeTaskConfig.getHillShadingArguments()[4]);
 				clasyParams.setPreprocess(mapsforgeTaskConfig.getHillShadingArguments()[5] == 1);
 				switch (hillShadingAlgorithm) {
-					case "adaptasy": 
+					case "adaptasy":
 						shadingAlgorithm = new AdaptiveClasyHillShading(clasyParams,MapsforgeConfig.HILLSHADING_ADAPTIVE_HQ);
 						((AdaptiveClasyHillShading)shadingAlgorithm).setAdaptiveZoomEnabled(MapsforgeConfig.HILLSHADING_ADAPTIVE_ZOOM_ENABLED);
 						((AdaptiveClasyHillShading)shadingAlgorithm).setCustomQualityScale(MapsforgeConfig.HILLSHADING_ADAPTIVE_CUSTOM_QUALITY_SCALE);
 						break;
-					case "hiresasy": 
+					case "hiresasy":
 						shadingAlgorithm = new HiResClasyHillShading(clasyParams);
 						break;
-					case "stdasy": 
+					case "stdasy":
 						shadingAlgorithm = new StandardClasyHillShading(clasyParams);
 						break;
-					case "simplasy": 
+					case "simplasy":
 						shadingAlgorithm = new SimpleClasyHillShading(clasyParams);
 						break;
 				}
@@ -299,8 +302,35 @@ public class MapsforgeTaskHandler {
 			}
 		}
 
-		// Does style menu exist? yes: set callback, no: no callback
-		switch (showStyleNames()) {
+		InputStream inputStream = xmlRenderTheme.getRenderThemeAsStream();
+		byte[] renderThemeBytes = inputStream.readAllBytes();
+		String renderThemeString = new String(renderThemeBytes, StandardCharsets.UTF_8);
+		inputStream.close();
+
+		// Let render theme's built-in hillshading zoom levels override
+		Pattern hsPattern = Pattern.compile("(.*)(<hillshading\\s.*?>)(.*)",Pattern.DOTALL);
+		Matcher hsMatcher = hsPattern.matcher(renderThemeString);
+		if (hsMatcher.matches()) {	// Built-in hillshading found
+			String hsProperty = hsMatcher.group(2);
+			Pattern p = Pattern.compile(".*zoom-min=\"(\\d+)\".*");
+			Matcher m = p.matcher(hsProperty);
+			int hsZoomMin = m.matches() ? Integer.parseInt(m.group(1)) : MapsforgeTaskConfig.DEFAULT_HILLSHADING_ZOOM_MIN;
+			if (mapsforgeTaskConfig.getHillShadingZoomMin() != null) hsZoomMin = mapsforgeTaskConfig.getHillShadingZoomMin();
+			p = Pattern.compile(".*zoom-max=\"(\\d+)\".*");
+			m = p.matcher(hsProperty);
+			int hsZoomMax = m.matches() ? Integer.parseInt(m.group(1)) : MapsforgeTaskConfig.DEFAULT_HILLSHADING_ZOOM_MAX;
+			if (mapsforgeTaskConfig.getHillShadingZoomMax() != null) hsZoomMax = mapsforgeTaskConfig.getHillShadingZoomMax();
+			hsProperty = "<hillshading zoom-min=\"" + hsZoomMin + "\" zoom-max=\"" + hsZoomMax + "\" magnitude=\"128\" />";
+			renderThemeString = hsMatcher.group(1) + hsProperty + hsMatcher.group(3);
+			renderThemeBytes = renderThemeString.getBytes(StandardCharsets.UTF_8);
+			String relativePathPrefix = xmlRenderTheme.getRelativePathPrefix();
+			inputStream = new ByteArrayInputStream(renderThemeBytes);
+			xmlRenderTheme = new StreamRenderTheme(relativePathPrefix, inputStream);
+			inputStream.close();
+		}
+
+		// Does render theme has a style menu? yes: set callback, no: no callback
+		switch (showStyleNames(renderThemeBytes)) {
 		case 1:
 			xmlRenderTheme.setMenuCallback(menuCallBack);
 			countDownLatch = new CountDownLatch(1);
@@ -506,12 +536,12 @@ public class MapsforgeTaskHandler {
 	/**
 	 * Show all styles of theme
 	 * Return  1: either requested style or default style was set
-	 * Return  0: theme does not contain styles 
+	 * Return  0: theme does not contain styles
 	 * Return -1: requested style does not exist in theme
 	 */
-	private int showStyleNames() throws Exception {
+	private int showStyleNames(byte[] renderThemeBytes) throws Exception {
 		MapsforgeStyleParser mapStyleParser = new MapsforgeStyleParser();
-		InputStream inputStream = xmlRenderTheme.getRenderThemeAsStream();
+		InputStream inputStream = new ByteArrayInputStream(renderThemeBytes);
 		List<Style> styles = mapStyleParser.readXML(inputStream);
 		inputStream.close();
 		if (styles.size() == 0) return 0;
