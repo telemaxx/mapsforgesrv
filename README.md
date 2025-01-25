@@ -97,6 +97,11 @@ http://127.0.0.1:60815/14/8584/5595.png?task=Map
 <br>
 
 -------------
+### Build and distribution instructions
+- can be found in the [HOWTO](https://github.com/telemaxx/mapsforgesrv/blob/tasks/HOWTO.md)
+
+
+-------------
 ### Contributors
 - r_x created this tile server as part of mobac project https://sourceforge.net/projects/mobac/
 - Thomas Th. @telemaxx: converted the mapserver server part in own git project with gradle nature.
