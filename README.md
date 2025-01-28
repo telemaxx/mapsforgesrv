@@ -30,7 +30,7 @@ Configuration requirements:
 * Case-sensitive server task name = task file name with file extension cut off.
 
 Each configuration file can contain
-* Parameter assignment lines of type `name=value` or `name="value"`
+* Parameter assignment lines of type `name=value`
 * Comment lines starting with character `#`
 * Separator lines containing white spaces only
 
@@ -43,7 +43,7 @@ Server configuration file `server.properties` recognizes the following parameter
 | `cache-control` | Browser cache TTL<br>Default: `0`
 | `terminate` | Accept terminate request (from loopback addresses only!)<br>Default: `false`
 | `outofrange_tms` | URL pattern of an external TMS server<br>used to redirect for out-of-range tiles<br>e.g. https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png<br>Default: unset = no redirection
-| `requestlog-format` | Output format of logged server requests<br>Default: `"From %{client}a Get %U%q Status %s Size %O bytes Time %{ms}T ms"`<br>Empty value `""` suppresses request logging!<br>For description of format syntax see [here](https://javadoc.io/doc/org.eclipse.jetty/jetty-server/latest/org.eclipse.jetty.server/org/eclipse/jetty/server/CustomRequestLog.html).  
+| `requestlog-format` | Output format of logged server requests<br>Default: `From %{client}a Get %U%q Status %s Size %O bytes Time %{ms}T ms`<br>Empty value suppresses request logging!<br>For description of format syntax see [here](https://javadoc.io/doc/org.eclipse.jetty/jetty-server/latest/org.eclipse.jetty.server/org/eclipse/jetty/server/CustomRequestLog.html).  
 
 Task configuration files recognize the following parameters:
 
