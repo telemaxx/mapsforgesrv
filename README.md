@@ -30,7 +30,7 @@ Configuration requirements:
 * Case-sensitive server task name = task file name with file extension cut off.
 
 Each configuration file can contain
-* Parameter assignment lines of type `name=value` or `name="value"`
+* Parameter assignment lines of type `name=value`
 * Comment lines starting with character `#`
 * Separator lines containing white spaces only
 
