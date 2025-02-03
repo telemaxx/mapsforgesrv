@@ -76,6 +76,7 @@
  *           Skip render theme callback for theme file without styles (JFritzle)
  *           If available, show styles and overlays for internal render themes too
  * 0.23.0.2: Allow overriding built-in hillshading zoom levels (JFritzle)
+ * 0.23.0.3: Decrease built-in world map's priority against user defined maps (JFritzle)
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
