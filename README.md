@@ -41,8 +41,8 @@ Server configuration file `server.properties` recognizes the following parameter
 | `host` | IP address to listen on<br>Default: unset = listen on all interfaces
 | `port` | TCP port to listen on<br>Default: `8486`
 | `cache-control` | Browser cache TTL<br>Default: `0`
-| `terminate` | Accept terminate request (from loopback addresses only!)<br>Default: `false`
-| `outofrange_tms` | URL pattern of an external TMS server<br>used to redirect for out-of-range tiles<br>e.g. https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png<br>Default: unset = no redirection
+| `terminate` | Accept terminate request to shutdown server gracefully (from loopback addresses only!)<br>Default: `false`<br>Termination request URL: http://127.0.0.1:port/terminate,<br>where port has to be replaced by value of parameter `port`
+| `outofrange_tms` | URL pattern of an external TMS server used to redirect for out-of-range tiles<br>e.g. https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png<br>Default: unset = no redirection<br>Note 1: Server returns redirection URL and HTTP status code 302 to client. It is up to the client to handle redirection.<br>Note 2: When built-in world map is appended to map files, redirection never occurs.
 | `requestlog-format` | Output format of logged server requests<br>Default: `From %{client}a Get %U%q Status %s Size %O bytes Time %{ms}T ms`<br>Empty value suppresses request logging!<br>For description of format syntax see [here](https://javadoc.io/doc/org.eclipse.jetty/jetty-server/latest/org.eclipse.jetty.server/org/eclipse/jetty/server/CustomRequestLog.html).  
 
 Task configuration files recognize the following parameters:
@@ -95,6 +95,9 @@ URL example for requesting tiles from a task configured by the `Map.properties` 
 http://127.0.0.1:60815/14/8584/5595.png?task=Map
 ```
 <br>
+After reading a task `.properties` file, server immediately initializes and starts task's own task handler. As long as there are no incoming client requests for that task, the task handler does nothing but waits.  
+
+Each task handler independently from other task handlers renders tiles using the parameter set from its `.properties` file. Tiles are requested by task's unique request URL. Thus, different tasks do never conflict.
 
 -------------
 ### Build and distribution instructions
