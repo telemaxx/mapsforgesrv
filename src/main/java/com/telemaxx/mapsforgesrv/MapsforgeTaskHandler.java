@@ -123,13 +123,19 @@ public class MapsforgeTaskHandler {
 				multiMapDataStore.addMapDataStore(map, true, true);
 			});
 		}
-		// Append built-in world.map
+		// Append built-in world.map with background map priority
 		if (mapsforgeTaskConfig.getAppendWorldMap()) {
 			FileChannel mapFileChannel = FileChannel.open(MapsforgeConfig.worldMapPath, StandardOpenOption.READ);
 			MapFile map = new MapFile(mapFileChannel);
 			logger.info("'(built-in)" + System.getProperty("file.separator") + "world.map'");
-			if (mapFilesSize > 0) map.restrictToZoomRange((byte)0, (byte)9);
-			multiMapDataStore.addMapDataStore(map, true, true);
+			if (mapFilesSize > 0) {
+				MultiMapDataStore worldMapDataStore = new MultiMapDataStore();
+				worldMapDataStore.setPriority(-1);
+				worldMapDataStore.addMapDataStore(map, true, true);
+				multiMapDataStore.addMapDataStore(worldMapDataStore, true, true);
+			} else {
+				multiMapDataStore.addMapDataStore(map, true, true);
+			}
 		}
 
 		DemFolderFS demFolderFS = null;
