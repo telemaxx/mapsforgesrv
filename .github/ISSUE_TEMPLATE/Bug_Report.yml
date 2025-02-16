@@ -32,8 +32,8 @@ body:
       label: Version
       description: What version of our software are you running?
       options:
-        - Java 11 Branch(Default)
-        - Java 8 Branch
+        - Branch tasks(Default)
+        - Branch master
     validations:
       required: true
   - type: textarea
