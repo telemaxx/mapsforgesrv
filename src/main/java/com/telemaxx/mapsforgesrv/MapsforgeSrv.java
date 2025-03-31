@@ -77,6 +77,11 @@
  *           If available, show styles and overlays for internal render themes too
  * 0.23.0.2: Allow overriding built-in hillshading zoom levels (JFritzle)
  * 0.23.0.3: Decrease built-in world map's priority against user defined maps (JFritzle)
+ * 0.24.1.0: Raise version to 0.24.1.0 (JFritzle)
+ *           mapsforge 0.24.1
+ *           jetty 11.0.25
+ *           gradle 8.13
+ *           fix build.gradle deprecated warning
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
