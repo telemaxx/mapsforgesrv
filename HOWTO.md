@@ -29,7 +29,7 @@
 
 ### GRADLE
 
-> **Gradle** tasks can be triggered in Eclipse by **Gradle Tasks** or run in **terminal**
+> **Gradle** tasks can be triggered by Eclipse's **Gradle Tasks** or run in **terminal**
 
  - #### [options](https://docs.gradle.org/current/userguide/command_line_interface.html)
 
