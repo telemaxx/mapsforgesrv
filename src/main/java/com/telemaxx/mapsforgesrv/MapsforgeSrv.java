@@ -82,6 +82,10 @@
  *           jetty 11.0.25
  *           gradle 8.13
  *           fix build.gradle deprecated warning
+ * 0.25.0.0: Raise version to 0.25.0.0 (JFritzle)
+ *           mapsforge 0.25.0
+ *           Remove no longer existing internal render theme "MOTORIDER_DARK"
+ *           Support new internal render theme "BIKER"
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
