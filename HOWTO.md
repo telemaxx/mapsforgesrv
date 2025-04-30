@@ -3,7 +3,7 @@
 - ### prerequisite
 
   - Eclipse IDE for Java Developers
-    - Java SDK_(Preferences > Java > Installed JREs)_
+    - Java SDK _(Preferences > Java > Installed JREs)_
   - [Buildship: Eclipse Plug-ins for Gradle](https://projects.eclipse.org/projects/tools.buildship)
     - _Build Scans might be disabled in Preferences > Gradle_
   - An Eclipse workspace which doesn't already contain a project named **mapsforgesrv**
@@ -15,20 +15,21 @@
 
 - ### configure
 
-  > Before launching Gradle tasks, please check configuration files in `/config`:
+  > Before launching _Gradle Tasks_, please check configuration files:
 
-  - `server.properties`
+  - `config/server.properties` _(required)_
     
-  - `/tasks/*.properties` _(except `default.properties`)_
+  - `config/tasks/*.properties` _(optional)_
     - `mapfiles` path(s) must exist on your system if you want to use them
     - `demfolder` path must exist on your system if you want renderer with hillshading
     - `themefile` path must exist on your system.  
   
-  - _(you can simply suffix files with`.disabled` to avoid loading them)_
+  - _Files not having file extension `.properties` are ignored.  
+  Changing file extension to anything else avoids loading them._
 
 ### GRADLE
 
-> Tasks can be triggered by **Eclipse** or **terminal**
+> **Gradle** tasks can be triggered by Eclipse's **Gradle Tasks** or run in **terminal**
 
  - #### [options](https://docs.gradle.org/current/userguide/command_line_interface.html)
 
@@ -38,7 +39,7 @@
 
    > **shadowJar** 
 
-      - ex. `gradlew --warning-mode none --console=verbose --parallel --max-workers %NUMBER_OF_PROCESSORS% shadowJar 2>&1`
+      - run `gradlew --warning-mode none --console=verbose --parallel --max-workers %NUMBER_OF_PROCESSORS% shadowJar 2>&1`
 
    Distribution jar released is **/dist/mapsforgesrv-fatjar.jar**
 
@@ -47,5 +48,5 @@
 
    > **runShadow** 
 
-      - ex. `gradlew --warning-mode none --console=verbose --parallel --max-workers %NUMBER_OF_PROCESSORS% runShadow 2>&1`
+      - run `gradlew --warning-mode none --console=verbose --parallel --max-workers %NUMBER_OF_PROCESSORS% runShadow 2>&1`
 

@@ -584,7 +584,7 @@ public class MapsforgeTaskHandler {
 		DEFAULT("/assets/mapsforge/default.xml"),
 		OSMARENDER("/assets/mapsforge/osmarender.xml"),
 		MOTORIDER("/assets/mapsforge/motorider.xml"),
-		MOTORIDER_DARK("/assets/mapsforge/motorider-dark.xml"),
+		BIKER("/assets/mapsforge/biker.xml"),
 		HILLSHADING("/assets/mapsforgesrv/hillshading.xml");
 		private XmlRenderThemeMenuCallback menuCallback;
 		private final String path;
