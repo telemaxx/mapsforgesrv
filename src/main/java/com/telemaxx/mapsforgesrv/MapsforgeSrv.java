@@ -86,6 +86,9 @@
  *           mapsforge 0.25.0
  *           Remove no longer existing internal render theme "MOTORIDER_DARK"
  *           Support new internal render theme "BIKER"
+ * 0.26.1.0: Raise version to 0.26.1.0 (JFritzle)
+ *           mapsforge 0.26.1
+ *           Support new internal render themes "DARK" and "INDIGO"
  ******************************************************************************/
 
 package com.telemaxx.mapsforgesrv;
