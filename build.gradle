@@ -55,7 +55,7 @@ dependencies {
 	implementation "org.slf4j:jul-to-slf4j:${slf4j}"
 	implementation "org.slf4j:slf4j-api:${slf4j}"
 
-	implementation "commons-cli:commons-cli:1.10.0"
+	implementation "commons-cli:commons-cli:1.9.0"
 	implementation "org.apache.commons:commons-lang3:+"
 	implementation "com.github.marschall:memoryfilesystem:+"
 }
