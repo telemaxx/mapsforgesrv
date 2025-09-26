@@ -101,6 +101,13 @@ public class MapsforgeTaskHandler {
 		this.mapsforgeHandler = mapsforgeHandler;
 		this.mapsforgeConfig = mapsforgeHandler.getMapsforgeConfig();
 		this.mapsforgeTaskConfig = mapsforgeTaskConfig;
+		
+		DisplayModel.setDeviceScaleFactor(mapsforgeTaskConfig.getDeviceScale());
+		DisplayModel.textScale = mapsforgeTaskConfig.getTextScale();
+		DisplayModel.symbolScale = mapsforgeTaskConfig.getSymbolScale();
+		DisplayModel.lineScale = mapsforgeTaskConfig.getLineScale();
+		displayModel = new DisplayModel();
+		displayModel.setUserScaleFactor(mapsforgeTaskConfig.getUserScale());
 
 		int mapFilesSize = mapsforgeTaskConfig.getMapFiles().size();
 		String hillShadingAlgorithm = mapsforgeTaskConfig.getHillShadingAlgorithm();
@@ -184,13 +191,6 @@ public class MapsforgeTaskHandler {
 				}
 			}
 		}
-
-		DisplayModel.setDeviceScaleFactor(mapsforgeTaskConfig.getDeviceScale());
-		DisplayModel.textScale = mapsforgeTaskConfig.getTextScale();
-		DisplayModel.symbolScale = mapsforgeTaskConfig.getSymbolScale();
-		DisplayModel.lineScale = mapsforgeTaskConfig.getLineScale();
-		displayModel = new DisplayModel();
-		displayModel.setUserScaleFactor(mapsforgeTaskConfig.getUserScale());
 
 		if (hillShadingAlgorithm != null && demFolder != null) { // hillshading
 			ShadingAlgorithm shadingAlgorithm = null;
@@ -583,8 +583,10 @@ public class MapsforgeTaskHandler {
 	private enum MyMapsforgeThemes implements XmlRenderTheme {
 		DEFAULT("/assets/mapsforge/default.xml"),
 		OSMARENDER("/assets/mapsforge/osmarender.xml"),
-		MOTORIDER("/assets/mapsforge/motorider.xml"),
 		BIKER("/assets/mapsforge/biker.xml"),
+		DARK("/assets/mapsforge/dark.xml"),
+		INDIGO("/assets/mapsforge/indigo.xml"),
+		MOTORIDER("/assets/mapsforge/motorider.xml"),
 		HILLSHADING("/assets/mapsforgesrv/hillshading.xml");
 		private XmlRenderThemeMenuCallback menuCallback;
 		private final String path;

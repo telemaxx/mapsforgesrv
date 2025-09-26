@@ -52,7 +52,7 @@ Task configuration files recognize the following parameters:
 | `mapfiles` | Comma-separated list of map file paths with file extension `.map`<br>Default: unset = built-in world map automatically used
 | `worldmap` | Append built-in world map to list `mapfiles` of map files<br>Default: `false`
 | `language` | Preferred language if supported by map file<br>(ISO 639-1 or ISO 639-2 if an ISO 639-1 code doesn't exist)<br>Default: unset = primary available map language used
-| `themefile` | Theme file path with file extension `.xml`<br>or one of built-in Mapsforge themes<br>`DEFAULT`, `OSMARENDER`, `MOTORIDER` or `BIKER`<br>used for rendering<br>Default: built-in Mapsforge theme `OSMARENDER`
+| `themefile` | Theme file path with file extension `.xml`<br>or one of built-in Mapsforge themes<br>`DEFAULT`, `OSMARENDER`, `BIKER`, `MOTORIDER`, `DARK` or `INDIGO`<br>used for rendering<br>Default: built-in Mapsforge theme `OSMARENDER`
 | `style` | Theme file's style used for rendering<br>Default: unset =  theme file's built-in default style
 | `overlays` | Comma-separated list of style's overlays <br>to be enabled for rendering<br>Default: unset = style's overlays enabled by default
 | `demfolder` | Folder path containing DEM (Digital Elevation Model) data files<br>with file extension `.hgt` required by hillshading<br>Alternatively, `.hgt` files can be embedded in `.zip` archives with same name,<br>e.g. archive N49E008.zip containing one file N49E008.hgt<br>Default: unset = no hillshading
