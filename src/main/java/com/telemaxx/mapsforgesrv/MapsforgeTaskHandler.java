@@ -336,7 +336,7 @@ public class MapsforgeTaskHandler {
 		}
 
 		// Does render theme has a style menu? yes: set callback, no: no callback
-		switch (showStyleNames(renderThemeBytes)) {
+		switch (showStyleNames(renderThemeBytes, themeFileStyle)) {
 		case 1:
 			xmlRenderTheme.setMenuCallback(menuCallBack);
 			countDownLatch = new CountDownLatch(1);
@@ -545,7 +545,7 @@ public class MapsforgeTaskHandler {
 	 * Return  0: theme does not contain styles
 	 * Return -1: requested style does not exist in theme
 	 */
-	private int showStyleNames(byte[] renderThemeBytes) throws Exception {
+	private static int showStyleNames(byte[] renderThemeBytes, String themeFileStyle) throws Exception {
 		MapsforgeStyleParser mapStyleParser = new MapsforgeStyleParser();
 		InputStream inputStream = new ByteArrayInputStream(renderThemeBytes);
 		List<Style> styles = mapStyleParser.readXML(inputStream);
@@ -580,7 +580,7 @@ public class MapsforgeTaskHandler {
 	// Enumeration of all tile server's internal rendering themes
 	// (copied and extended from org/mapsforge/map/rendertheme/internal/MapsforgeThemes)
 	// Using StreamRenderThemes throws exception when calling "updateRenderThemeFuture" within "handle"
-	private enum MyMapsforgeThemes implements XmlRenderTheme {
+	public static enum MyMapsforgeThemes implements XmlRenderTheme {
 		DEFAULT("/assets/mapsforge/default.xml"),
 		OSMARENDER("/assets/mapsforge/osmarender.xml"),
 		BIKER("/assets/mapsforge/biker.xml"),
