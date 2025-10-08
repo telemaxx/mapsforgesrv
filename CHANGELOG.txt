@@ -152,9 +152,10 @@ Move changelog from MapsforgeSrv.java header to CHANGELOG.txt
 PropertiesParser:
 Raise version to 0.26.1.1 (JFritzle)
 MapsforgeTaskHandler:
-private enum MyMapsforgeThemes -> public static enum MyMapsforgeThemes
 private int showStyleNames -> private static int showStyleNames
+private enum MyMapsforgeThemes -> private enum MapsforgeSrvThemes
+Decoupling internal server's internal render themes from Mapsforge internal render themes
 MapsforgeTaskConfig:
-Create list of available internal render themes dynamically
+Create list of available Mapsforge internal render themes dynamically
 
 

@@ -9,6 +9,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.mapsforge.map.rendertheme.XmlRenderTheme;
+import org.mapsforge.map.rendertheme.internal.MapsforgeThemes;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,17 +53,16 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 		String configValue = "themefile";
 		String configString = retrieveConfigValue(configValue);
 		String msgHeader = "Theme";
-		List<String> internalThemes = new ArrayList<String>();
 
-		for (MapsforgeTaskHandler.MyMapsforgeThemes enumItem :
-			new ArrayList<MapsforgeTaskHandler.MyMapsforgeThemes>(EnumSet.allOf(MapsforgeTaskHandler.MyMapsforgeThemes.class))) {
-			internalThemes.add(enumItem.toString());
+		List<String> internalRenderThemes = new ArrayList<String>();
+		for (XmlRenderTheme enumItem : new ArrayList<XmlRenderTheme>(EnumSet.allOf(MapsforgeThemes.class))) {
+			internalRenderThemes.add(enumItem.toString());
 		};
 
 		if (configString == null) {
 			themeFile = new File("OSMARENDER");
 			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": default [OSMARENDER]"); //$NON-NLS-1$
-		} else if (internalThemes.contains(configString.trim())) {
+		} else if (internalRenderThemes.contains(configString.trim())) {
 			configString = configString.trim();
 			themeFile = new File(configString);
 			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": defined ["+configString+"]"); //$NON-NLS-1$
