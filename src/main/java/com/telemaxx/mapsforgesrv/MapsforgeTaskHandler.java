@@ -47,6 +47,7 @@ import org.mapsforge.map.layer.renderer.RendererJob;
 import org.mapsforge.map.model.DisplayModel;
 import org.mapsforge.map.reader.MapFile;
 import org.mapsforge.map.rendertheme.ExternalRenderTheme;
+import org.mapsforge.map.rendertheme.internal.MapsforgeThemes;
 import org.mapsforge.map.rendertheme.StreamRenderTheme;
 import org.mapsforge.map.rendertheme.XmlRenderTheme;
 import org.mapsforge.map.rendertheme.XmlRenderThemeMenuCallback;
@@ -150,7 +151,7 @@ public class MapsforgeTaskHandler {
 
 		if (hillShadingOverlay) {
 			logger.info("No map -> hillshading overlay with alpha transparency only!");
-			themeFile = new File("HILLSHADING");
+			themeFile = new File("HillShadingOverlay");
 			themeFileStyle = null;
 			tileCache = null;
 			labelStore = null;
@@ -290,10 +291,14 @@ public class MapsforgeTaskHandler {
 			}
 		};
 
+		ArrayList<XmlRenderTheme> internalRenderThemes = new ArrayList<XmlRenderTheme>();
+		internalRenderThemes.addAll(new ArrayList<XmlRenderTheme>(EnumSet.allOf(MapsforgeSrvThemes.class)));	// Server's internal render themes
+		internalRenderThemes.addAll(new ArrayList<XmlRenderTheme>(EnumSet.allOf(MapsforgeThemes.class)));		// Mapsforge internal render themes
+
 		xmlRenderTheme = null;
-		for (MyMapsforgeThemes enumItem : new ArrayList<MyMapsforgeThemes>(EnumSet.allOf(MyMapsforgeThemes.class))) {
+		for (XmlRenderTheme enumItem : internalRenderThemes) {
 			if (enumItem.toString().equals(themeFile.getPath())) {
-				xmlRenderTheme = enumItem;	// Internal render theme
+				xmlRenderTheme = enumItem;
 				break;
 			};
 		};
@@ -336,7 +341,7 @@ public class MapsforgeTaskHandler {
 		}
 
 		// Does render theme has a style menu? yes: set callback, no: no callback
-		switch (showStyleNames(renderThemeBytes)) {
+		switch (showStyleNames(renderThemeBytes, themeFileStyle)) {
 		case 1:
 			xmlRenderTheme.setMenuCallback(menuCallBack);
 			countDownLatch = new CountDownLatch(1);
@@ -545,7 +550,7 @@ public class MapsforgeTaskHandler {
 	 * Return  0: theme does not contain styles
 	 * Return -1: requested style does not exist in theme
 	 */
-	private int showStyleNames(byte[] renderThemeBytes) throws Exception {
+	private static int showStyleNames(byte[] renderThemeBytes, String themeFileStyle) throws Exception {
 		MapsforgeStyleParser mapStyleParser = new MapsforgeStyleParser();
 		InputStream inputStream = new ByteArrayInputStream(renderThemeBytes);
 		List<Style> styles = mapStyleParser.readXML(inputStream);
@@ -578,19 +583,12 @@ public class MapsforgeTaskHandler {
 	}
 
 	// Enumeration of all tile server's internal rendering themes
-	// (copied and extended from org/mapsforge/map/rendertheme/internal/MapsforgeThemes)
 	// Using StreamRenderThemes throws exception when calling "updateRenderThemeFuture" within "handle"
-	private enum MyMapsforgeThemes implements XmlRenderTheme {
-		DEFAULT("/assets/mapsforge/default.xml"),
-		OSMARENDER("/assets/mapsforge/osmarender.xml"),
-		BIKER("/assets/mapsforge/biker.xml"),
-		DARK("/assets/mapsforge/dark.xml"),
-		INDIGO("/assets/mapsforge/indigo.xml"),
-		MOTORIDER("/assets/mapsforge/motorider.xml"),
-		HILLSHADING("/assets/mapsforgesrv/hillshading.xml");
+	private enum MapsforgeSrvThemes implements XmlRenderTheme {
+		HillShadingOverlay("/assets/mapsforgesrv/hillshading.xml");
 		private XmlRenderThemeMenuCallback menuCallback;
 		private final String path;
-		MyMapsforgeThemes(String path) {
+		MapsforgeSrvThemes(String path) {
 			this.path = path;
 		}
 		@Override
@@ -618,4 +616,5 @@ public class MapsforgeTaskHandler {
 		public void setResourceProvider(XmlThemeResourceProvider resourceProvider) {
 		}
 	}
+
 }

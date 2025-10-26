@@ -43,7 +43,7 @@ dependencies {
 	implementation "com.github.mapsforge.mapsforge:mapsforge-map:${mapsforgeVersion}"
 	implementation "com.github.mapsforge.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
 	implementation "com.github.mapsforge.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
-	runtimeOnly    "com.github.mapsforge.mapsforge:mapsforge-themes:${mapsforgeVersion}"
+	implementation "com.github.mapsforge.mapsforge:mapsforge-themes:${mapsforgeVersion}"
 
 	implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
 	runtimeOnly    "org.eclipse.jetty.http2:http2-server:${jettyVersion}"
