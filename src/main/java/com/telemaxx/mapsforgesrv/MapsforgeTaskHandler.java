@@ -88,7 +88,6 @@ public class MapsforgeTaskHandler {
 
 	private MapsforgeHandler mapsforgeHandler;
 	private MapsforgeConfig mapsforgeConfig;
-	private MapsforgeTaskConfig mapsforgeTaskConfig;
 
 	private CountDownLatch countDownLatch = new CountDownLatch(0);
 
@@ -101,7 +100,6 @@ public class MapsforgeTaskHandler {
 		this.name = name;
 		this.mapsforgeHandler = mapsforgeHandler;
 		this.mapsforgeConfig = mapsforgeHandler.getMapsforgeConfig();
-		this.mapsforgeTaskConfig = mapsforgeTaskConfig;
 		
 		DisplayModel.setDeviceScaleFactor(mapsforgeTaskConfig.getDeviceScale());
 		DisplayModel.textScale = mapsforgeTaskConfig.getTextScale();
@@ -415,16 +413,6 @@ public class MapsforgeTaskHandler {
 			throw new ServletException("Failed to parse \"textScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
 		}
 
-		float requestedUserScale = mapsforgeTaskConfig.getUserScale();
-		try {
-			String tmp = request.getParameter("userScale"); //$NON-NLS-1$
-			if (tmp != null) {
-				requestedUserScale = Float.parseFloat(tmp);
-			}
-		} catch (Exception e) {
-			throw new ServletException("Failed to parse \"userScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
-		}
-
 		boolean requestedTransparent = MapsforgeConfig.DEFAULT_TRANSPARENT;
 		try {
 			String tmp = request.getParameter("transparent"); //$NON-NLS-1$
@@ -454,15 +442,6 @@ public class MapsforgeTaskHandler {
 				throw new ServletException("Failed to parse \"hillshading\" property: " + e.getMessage(), e); //$NON-NLS-1$
 			}
 			if (hillsRenderConfig != null && enable_hs) engine = "hs";
-
-			// requestedUserScale = 2.0f; // Uncomment for testing purpose only!
-//			Calling "displayModel.setUserScaleFactor" alone has no visible impact on rendering.
-//			Starting new "renderThemeFuture" afterwards helps, but can significantly impact rendering performance
-//			if different TMS clients take turns requesting different userScale values !!!
-			if (displayModel.getUserScaleFactor() != requestedUserScale) {
-				displayModel.setUserScaleFactor (requestedUserScale);
-				updateRenderThemeFuture();
-			}
 
 			RendererJob job = new RendererJob(tile, multiMapDataStore, renderThemeFuture, displayModel,
 				requestedTextScale, requestedTransparent, false);

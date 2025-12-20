@@ -89,21 +89,7 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 
 			if (path.equals("/updatemapstyle")) { //$NON-NLS-1$
-				StringBuffer updatedThemes = new StringBuffer();
-				for(String key : tasksHandler.keySet()) {
-					tasksHandler.get(key).updateRenderThemeFuture();
-					updatedThemes.append(key+" updated<br>");
-				}
-				updatedThemes.append("<br>Nb Threads: "+Thread.getAllStackTraces().size()+"<br>");
-				for(Thread th : Thread.getAllStackTraces().keySet())
-					if(th.getName().startsWith("RenderThemeFuture"))
-						updatedThemes.append(th.getName()+" updated<br>");
-				response.setHeader("Cache-Control", "private, no-cache");
-				response.setHeader("Pragma", "no-cache");
-				response.setContentType("text/html;charset=utf-8");
 				response.setStatus(HttpServletResponse.SC_OK);
-				baseRequest.setHandled(true);
-				response.getWriter().println("<html><body><h1>updatemapstyle</h1>"+updatedThemes.toString()+"</body></html>");
 				response.flushBuffer();
 				return;
 			}
