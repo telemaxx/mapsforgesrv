@@ -250,7 +250,7 @@ public class MapsforgeTaskHandler {
 
 		updateRenderThemeFuture(false);
 	}
-	
+
 	protected XmlRenderThemeMenuCallback menuCallBack = new XmlRenderThemeMenuCallback() {
 		@Override
 		public Set<String> getCategories(XmlRenderThemeStyleMenu styleMenu) {
@@ -300,19 +300,21 @@ public class MapsforgeTaskHandler {
 		internalRenderThemes.addAll(new ArrayList<XmlRenderTheme>(EnumSet.allOf(MapsforgeSrvThemes.class)));	// Server's internal render themes
 		internalRenderThemes.addAll(new ArrayList<XmlRenderTheme>(EnumSet.allOf(MapsforgeThemes.class)));		// Mapsforge internal render themes
 
-		boolean internalRenderTheme = true;
+		boolean internalRenderTheme = false;
 		xmlRenderTheme = null;
 		for (XmlRenderTheme enumItem : internalRenderThemes) {
 			if (enumItem.toString().equals(themeFile.getPath())) {
 				xmlRenderTheme = enumItem;
+				internalRenderTheme = true;
 				break;
 			};
 		};
 
+		if (update && internalRenderTheme) return false;
+
 		if (xmlRenderTheme == null) {
 			try {
 				xmlRenderTheme = new ExternalRenderTheme(themeFile);	// External render theme
-				internalRenderTheme = false;
 			} catch (Exception e) {
 				logger.error("Defined theme file '"+themeFile+"' does not exist or cannot be read: Task "+name+" disabled"); //$NON-NLS-1$
 				taskEnabled = false;
@@ -347,7 +349,7 @@ public class MapsforgeTaskHandler {
 			inputStream.close();
 		}
 
-		if (update && !internalRenderTheme) logger.info("################ UPDATING TASK '"+name+"' ################"); //$NON-NLS-1$
+		if (update) logger.info("################ UPDATING TASK '"+name+"' ################");
 
 		// Does render theme has a style menu? yes: set callback, no: no callback
 		switch (showStyleNames(renderThemeBytes, themeFileStyle)) {
@@ -361,12 +363,6 @@ public class MapsforgeTaskHandler {
 			return false;
 		};
 
-		
-		if (update && internalRenderTheme) {
-			countDownLatch.countDown();
-			return false;			
-		}
-		
 		renderThemeFuture = new RenderThemeFuture(mapsforgeHandler.getGraphicFactory(), xmlRenderTheme, displayModel);
 		String tname = "RenderThemeFuture-"+name;
 		for (Thread t : Thread.getAllStackTraces().keySet()) {

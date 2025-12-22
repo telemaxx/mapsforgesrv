@@ -162,4 +162,4 @@ Create list of available Mapsforge internal render themes dynamically
 PropertiesParser:
 Raise version to 0.26.1.2 (JFritzle)
 MapsforgeHandler & MapsforgeTaskHandler:
-Fixed "updatemapstyle" URL request not working
+Fixed "updatemapstyle" request not working
