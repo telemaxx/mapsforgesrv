@@ -88,6 +88,7 @@ public class MapsforgeTaskHandler {
 
 	private MapsforgeHandler mapsforgeHandler;
 	private MapsforgeConfig mapsforgeConfig;
+	private MapsforgeTaskConfig mapsforgeTaskConfig;
 
 	private CountDownLatch countDownLatch = new CountDownLatch(0);
 
@@ -100,6 +101,7 @@ public class MapsforgeTaskHandler {
 		this.name = name;
 		this.mapsforgeHandler = mapsforgeHandler;
 		this.mapsforgeConfig = mapsforgeHandler.getMapsforgeConfig();
+		this.mapsforgeTaskConfig = mapsforgeTaskConfig;
 		
 		DisplayModel.setDeviceScaleFactor(mapsforgeTaskConfig.getDeviceScale());
 		DisplayModel.textScale = mapsforgeTaskConfig.getTextScale();
@@ -246,53 +248,59 @@ public class MapsforgeTaskHandler {
 			databaseRenderer.put("hs", new DatabaseRenderer(multiMapDataStore, mapsforgeHandler.getGraphicFactory(), tileCache,
 					labelStore, renderLabels, cacheLabels, hillsRenderConfig));
 
-		XmlRenderThemeMenuCallback menuCallBack = new XmlRenderThemeMenuCallback() {
-			@Override
-			public Set<String> getCategories(XmlRenderThemeStyleMenu styleMenu) {
-				String id = null;
-				if (themeFileStyle != null) {
-					id = themeFileStyle;
-				} else {
-					id = styleMenu.getDefaultValue();
-				}
-
-				XmlRenderThemeStyleLayer baseLayer = styleMenu.getLayer(id);
-				Set<String> result = baseLayer.getCategories();
-				logger.info("----------------- THEME OVERLAYS -----------------"); //$NON-NLS-1$
-				String[] enabled = {"Disabled","Enabled "};
-				int maxlen = 0;
-				for (XmlRenderThemeStyleLayer overlay : baseLayer.getOverlays()) {
-					int strlen = overlay.getId().length();
-					if (strlen > maxlen) maxlen = strlen;
-				}
-				for (XmlRenderThemeStyleLayer overlay : baseLayer.getOverlays()) {
-					String overlayId = overlay.getId();
-					boolean overlayEnabled = false;
-					String[] themeFileOverlays = mapsforgeTaskConfig.getThemeFileOverlays();
-					if (themeFileOverlays == null) {
-						overlayEnabled = overlay.isEnabled();
-					} else {
-						for (int i = 0; i < themeFileOverlays.length; i++) {
-							if (themeFileOverlays[i].equals(overlayId))
-								overlayEnabled = true;
-						}
-					}
-					logger.info(enabled[overlayEnabled?1:0] + "  : " + String.format("%-" + maxlen + "s", overlayId) +
-							" --> " + overlay.getTitle(mapsforgeTaskConfig.getPreferredLanguage()));
-					if (overlayEnabled) {
-						result.addAll(overlay.getCategories());
-					}
-				}
-
-				countDownLatch.countDown();
-				return result;
+		updateRenderThemeFuture(false);
+	}
+	
+	protected XmlRenderThemeMenuCallback menuCallBack = new XmlRenderThemeMenuCallback() {
+		@Override
+		public Set<String> getCategories(XmlRenderThemeStyleMenu styleMenu) {
+			String id = null;
+			if (themeFileStyle != null) {
+				id = themeFileStyle;
+			} else {
+				id = styleMenu.getDefaultValue();
 			}
-		};
+
+			XmlRenderThemeStyleLayer baseLayer = styleMenu.getLayer(id);
+			Set<String> result = baseLayer.getCategories();
+			logger.info("----------------- THEME OVERLAYS -----------------"); //$NON-NLS-1$
+			String[] enabled = {"Disabled","Enabled "};
+			int maxlen = 0;
+			for (XmlRenderThemeStyleLayer overlay : baseLayer.getOverlays()) {
+				int strlen = overlay.getId().length();
+				if (strlen > maxlen) maxlen = strlen;
+			}
+			for (XmlRenderThemeStyleLayer overlay : baseLayer.getOverlays()) {
+				String overlayId = overlay.getId();
+				boolean overlayEnabled = false;
+				String[] themeFileOverlays = mapsforgeTaskConfig.getThemeFileOverlays();
+				if (themeFileOverlays == null) {
+					overlayEnabled = overlay.isEnabled();
+				} else {
+					for (int i = 0; i < themeFileOverlays.length; i++) {
+						if (themeFileOverlays[i].equals(overlayId))
+							overlayEnabled = true;
+					}
+				}
+				logger.info(enabled[overlayEnabled?1:0] + "  : " + String.format("%-" + maxlen + "s", overlayId) +
+						" --> " + overlay.getTitle(mapsforgeTaskConfig.getPreferredLanguage()));
+				if (overlayEnabled) {
+					result.addAll(overlay.getCategories());
+				}
+			}
+
+			countDownLatch.countDown();
+			return result;
+		}
+	};
+
+	protected boolean updateRenderThemeFuture(boolean update) throws Exception {
 
 		ArrayList<XmlRenderTheme> internalRenderThemes = new ArrayList<XmlRenderTheme>();
 		internalRenderThemes.addAll(new ArrayList<XmlRenderTheme>(EnumSet.allOf(MapsforgeSrvThemes.class)));	// Server's internal render themes
 		internalRenderThemes.addAll(new ArrayList<XmlRenderTheme>(EnumSet.allOf(MapsforgeThemes.class)));		// Mapsforge internal render themes
 
+		boolean internalRenderTheme = true;
 		xmlRenderTheme = null;
 		for (XmlRenderTheme enumItem : internalRenderThemes) {
 			if (enumItem.toString().equals(themeFile.getPath())) {
@@ -304,10 +312,11 @@ public class MapsforgeTaskHandler {
 		if (xmlRenderTheme == null) {
 			try {
 				xmlRenderTheme = new ExternalRenderTheme(themeFile);	// External render theme
+				internalRenderTheme = false;
 			} catch (Exception e) {
 				logger.error("Defined theme file '"+themeFile+"' does not exist or cannot be read: Task "+name+" disabled"); //$NON-NLS-1$
 				taskEnabled = false;
-				return;
+				return false;
 			}
 		}
 
@@ -338,6 +347,8 @@ public class MapsforgeTaskHandler {
 			inputStream.close();
 		}
 
+		if (update && !internalRenderTheme) logger.info("################ UPDATING TASK '"+name+"' ################"); //$NON-NLS-1$
+
 		// Does render theme has a style menu? yes: set callback, no: no callback
 		switch (showStyleNames(renderThemeBytes, themeFileStyle)) {
 		case 1:
@@ -345,17 +356,17 @@ public class MapsforgeTaskHandler {
 			countDownLatch = new CountDownLatch(1);
 			break;
 		case -1:
-			logger.error("Defined style '" + themeFileStyle+"' not available: Task " + name + " disabled"); //$NON-NLS-1$
+			logger.error("Defined style '" + themeFileStyle + "' not available: Task " + name + " disabled"); //$NON-NLS-1$
 			taskEnabled = false;
-			return;
+			return false;
 		};
 
-		updateRenderThemeFuture();
-		countDownLatch.await();
-		logger.info("--------------------------------------------------"); //$NON-NLS-1$
-	}
-
-	protected void updateRenderThemeFuture() {
+		
+		if (update && internalRenderTheme) {
+			countDownLatch.countDown();
+			return false;			
+		}
+		
 		renderThemeFuture = new RenderThemeFuture(mapsforgeHandler.getGraphicFactory(), xmlRenderTheme, displayModel);
 		String tname = "RenderThemeFuture-"+name;
 		for (Thread t : Thread.getAllStackTraces().keySet()) {
@@ -365,7 +376,11 @@ public class MapsforgeTaskHandler {
 			}
 		}
 		new Thread(null,renderThemeFuture,tname).start();
-	}
+			
+		countDownLatch.await();
+		logger.info("--------------------------------------------------"); //$NON-NLS-1$
+		return true;
+}
 
 	protected void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String path = request.getPathInfo();

@@ -159,8 +159,7 @@ MapsforgeTaskConfig:
 Create list of available Mapsforge internal render themes dynamically
 
 0.26.1.2
-To avoid exceptions and/or server no longer responding:
-- removed undocumented "updatemapstyle" URL request
-- removed undocumented "userScale" optional URL parameter
-
-
+PropertiesParser:
+Raise version to 0.26.1.2 (JFritzle)
+MapsforgeHandler & MapsforgeTaskHandler:
+Fixed "updatemapstyle" URL request not working
