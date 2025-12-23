@@ -1,6 +1,6 @@
-# mapsforgesrv
+# MapsforgeSrv
 
-### mapsforgesrv project was originally cloned from the [MOBAC](http://mobac.sourceforge.net) project
+### This project was originally cloned from the [MOBAC](http://mobac.sourceforge.net) (Mobile Atlas Creator) project [MapsforgeSrv](https://sourceforge.net/p/mobac/code/HEAD/tree/trunk/tools/MapsforgeSrv).
 
 The MapsforgeSrv is a local [webserver](http://wiki.openstreetmap.org/wiki/Mapsforge) providing rendered Mapsforge map tiles.  
 The tiles are always rendered on the fly when requested.
@@ -11,22 +11,22 @@ The JAR file is developed and built with Java development kit (JDK) version 11 a
 The JAR file contains everything needed to run.
 
 Some graphical user interfaces to configure interactively and run MapsforgeSrv can be found at https://github.com/JFritzle.  
-In particular, there are convenient interfaces between MapsforgeSrv and the QMapShack or MyTourbook map applications.
+In particular, there are convenient interfaces between MapsforgeSrv and the map applications _QMapShack_ or _MyTourbook_.
 
 
-Command line parameters:
+#### Command line parameters:
 
 	-c   [config]		Configuration folder (default: none)
 	-h   [help]  		Print the help text and exit 
 
-Run mapsforge tile server:
+#### Run mapsforge tile server:
 
 	java -jar <Path>/mapsforgesrv-fatjar.jar -c <Configuration folder>
 
-Configuration requirements:
+#### Configuration requirements:
 * Configuration folder must contain a server configuration file `server.properties` and a subfolder `tasks`.
 * Subfolder `tasks` can contain several task configuration files with file extension `.properties`.
-* Each task configuration files configures a separate server task to be processed concurrently.<br>While server is running, task files and thus tasks can be added, modified or deleted on the fly.
+* Each task configuration files configures a separate server task to be processed concurrently.
 * Case-sensitive server task name = task file name with file extension cut off.
 
 Each configuration file can contain
@@ -34,27 +34,28 @@ Each configuration file can contain
 * Comment lines starting with character `#`
 * Separator lines containing white spaces only
 
-Server configuration file `server.properties` recognizes the following parameters:
+#### Server configuration file `server.properties` parameters:
 
 | Name | Description |
 | ---- | ----------- |
 | `host` | IP address to listen on<br>Default: unset = listen on all interfaces
 | `port` | TCP port to listen on<br>Default: `8486`
 | `cache-control` | Browser cache TTL<br>Default: `0`
-| `terminate` | Accept terminate request to shutdown server gracefully (from loopback addresses only!)<br>Default: `false`<br>Termination request URL: http://127.0.0.1:port/terminate,<br>where port has to be replaced by value of parameter `port`
+| `terminate` | Accept administrative `terminate` request to shutdown server gracefully <br>Default: `false`
+| `admin_anywhere` | In addition to loopback addresses only, accept administrative requests `terminate` and `updatemapstyle` from any IP address<br>Default: `false`
 | `outofrange_tms` | URL pattern of an external TMS server used to redirect for out-of-range tiles<br>e.g. https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png<br>Default: unset = no redirection<br>Note 1: Server returns redirection URL and HTTP status code 302 to client. It is up to the client to handle redirection.<br>Note 2: When built-in world map is appended to map files, redirection never occurs.
 | `requestlog-format` | Output format of logged server requests<br>Default: `From %{client}a Get %U%q Status %s Size %O bytes Time %{ms}T ms`<br>Empty value suppresses request logging!<br>For description of format syntax see [here](https://javadoc.io/doc/org.eclipse.jetty/jetty-server/latest/org.eclipse.jetty.server/org/eclipse/jetty/server/CustomRequestLog.html).  
 
-Task configuration files recognize the following parameters:
+#### Task configuration file parameters:
 
 | Name | Description |
 | ---- | ----------- |
 | `mapfiles` | Comma-separated list of map file paths with file extension `.map`<br>Default: unset = built-in world map automatically used
 | `worldmap` | Append built-in world map to list `mapfiles` of map files<br>Default: `false`
 | `language` | Preferred language if supported by map file<br>(ISO 639-1 or ISO 639-2 if an ISO 639-1 code doesn't exist)<br>Default: unset = primary available map language used
-| `themefile` | Theme file path with file extension `.xml`<br>or one of built-in Mapsforge themes<br>`DEFAULT`, `OSMARENDER`, `BIKER`, `MOTORIDER`, `DARK` or `INDIGO`<br>used for rendering<br>Default: built-in Mapsforge theme `OSMARENDER`
-| `style` | Theme file's style used for rendering<br>Default: unset =  theme file's built-in default style
-| `overlays` | Comma-separated list of style's overlays <br>to be enabled for rendering<br>Default: unset = style's overlays enabled by default
+| `themefile` | File path with file extension `.xml` of external theme file<br>or name of built-in Mapsforge theme to use for rendering.<br>Currently known built-in Mapsforge themes:<br>`DEFAULT`, `OSMARENDER`, `BIKER`, `MOTORIDER`, `DARK` or `INDIGO`<br>Built-in themes may change depending on Mapsforge version.<br>Default: built-in Mapsforge theme `OSMARENDER`
+| `style` | Theme's style used for rendering<br>Default: unset = theme's built-in default style
+| `overlays` | Comma-separated list of style's overlays <br>to be enabled for rendering<br>Default: unset = style's overlays enabled in theme by default
 | `demfolder` | Folder path containing DEM (Digital Elevation Model) data files<br>with file extension `.hgt` required by hillshading<br>Alternatively, `.hgt` files can be embedded in `.zip` archives with same name,<br>e.g. archive N49E008.zip containing one file N49E008.hgt<br>Default: unset = no hillshading
 | `hillshading-algorithm` | One of hillshading algorithms used for hillshading<br>`simple(linearity,scale)`<br>`diffuselight(angle)`<br> `stdasy(asymmetryFactor,minSlope,maxSlope,readingThreadsCount,computingThreadsCount,preprocess)`<br>`simplasy(asymmetryFactor,minSlope,maxSlope,readingThreadsCount,computingThreadsCount,preprocess)`<br>`hiresasy(asymmetryFactor,minSlope,maxSlope,readingThreadsCount,computingThreadsCount,preprocess)`<br>`adaptasy(asymmetryFactor,minSlope,maxSlope,readingThreadsCount,computingThreadsCount,preprocess)`<br>Hillshading algorithm name without parentheses and parameters is valid too!<br>Default: unset = no hillshading<br>Parameter defaults:<br>linearity = 0.1, scale = 0.666, angle = 50.,<br>asymmetryFactor = 0.5, minSlope = 0, maxSlope = 80,<br>readingThreadsCount = max(1,AVAILABLE_PROCESSORS/3),<br>computingThreadsCount = AVAILABLE_PROCESSORS,<br>preprocess = true<br>Parameter ranges:<br>0. ≤ linearity ≤ 4., 0. ≤ scale, 0. ≤ angle ≤ 90.,<br>0. ≤ asymmetryFactor ≤ 1., 0 ≤ minSlope < maxSlope ≤ 100,<br>readingThreadsCount ≥ 0, computingThreadsCount ≥ 0, preprocess = {false\|true}
 | `hillshading-magnitude` | Hillshading's gray value magnitude scaling, 0. ≤ value ≤ 4.<br>Value < 1. = brighter gray, value > 1. = darker gray<br>Default: `1.` = unscaled gray values
@@ -68,13 +69,13 @@ Task configuration files recognize the following parameters:
 | `user-scale` | Overall scale factor > 0. to scale all map elements<br>Scales value of `text-scale` and `symbol-scale` and `line-scale`<br>Default: `1.` = no overall scaling
 | `device-scale` | Device scale factor > 0.<br>Default: `1.` = no device scaling
 
-Hillshading requirements:
+#### Hillshading requirements:
 * Must be enabled in theme file
 * Parameter `demfolder` must be set
 * Parameter `hillshading-algorithm` must be set
-* If parameter `mapfiles` is set, hillshading is applied to rendered map tiles,<br>if parameter `mapfiles` is not set, alpha transparent overlay tiles are rendered
+* If parameter `mapfiles` is set, hillshading is applied to rendered map tiles.<br>If parameter `mapfiles` is not set, alpha transparent overlay tiles are rendered
 
-URLs to request tiles from tiles server:  
+#### URLs to request tiles from tiles server:  
 ```
 scheme://address:port/zoom/x/y.format?task=name
 ```
@@ -83,7 +84,7 @@ scheme://address:port/zoom/x/y.format?task=name
 | -----| ----------- |
 | scheme | protocol either _http_ or _https_ |
 | address | tile server's IP address |
-| port | tcp port to request tiles |
+| port | tile server's TCP port to request tiles |
 | zoom | zoom level of requested tile |
 | x | tile number in x direction (longitude) |
 | y | tile number in y direction (latitude) |
@@ -94,10 +95,24 @@ URL example for requesting tiles from a task configured by the `Map.properties` 
 ```
 http://127.0.0.1:60815/14/8584/5595.png?task=Map
 ```
-<br>
-After reading a task `.properties` file, server immediately initializes and starts task's own task handler. As long as there are no incoming client requests for that task, the task handler does nothing but waits.  
+#### Administrative server requests:  
+```
+scheme://address:port/request
+```
+| Request | Description |
+| -----| ----------- |
+| `terminate` | Gracefully shutdown server |
+| `updatemapstyle` | Force server to reload theme files with file extension `.xml` from file system and update associated tasks (required if the file content has been changed) |
 
-Each task handler independently from other task handlers renders tiles using the parameter set from its `.properties` file. Tiles are requested by task's unique request URL. Thus, different tasks do never conflict.
+By default, administrative requests are accepted from loopback addresses only. But this behavior can be overridden by the server property `admin_anywhere` to accept administrative requests from any IP address.  
+
+#### How it works:
+
+After reading a task `.properties` file, server immediately initializes and starts each task's own task handler. As long as there are no incoming client requests for that task, the task handler does nothing but wait.  
+
+While server is running, task files and thus tasks can be added, modified or deleted on the fly.  
+
+Independently from other task handlers, each task handler renders tiles using the parameter set from it's own `.properties` file. Tiles are requested by task's unique request URL. Thus, different tasks do never conflict.  
 
 -------------
 ### Build and distribution instructions
