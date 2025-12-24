@@ -136,7 +136,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 		logger.info("################ TASK '"+taskName+"' PROPERTIES ################");
 		parseResetError();
 		parseMapFiles();
-		appendWorldMap = parseHasOption("worldmap", "Append built-in world map");
+		appendWorldMap = parseBoolean(DEFAULT_APPENDWORLDMAP,"worldmap", "Append built-in world map");
 		preferredLanguage = parseString(null, "language", null, "Preferred map language"); //$NON-NLS-1$ //$NON-NLS-2$
 		parseThemeFile();
 		themeFileStyle = parseString(null, "style", null, "Theme style"); //$NON-NLS-1$ //$NON-NLS-2$

@@ -42,7 +42,7 @@ public class MapsforgeHandler extends AbstractHandler {
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeHandler.class);
 
 	private final TreeSet<String> KNOWN_PARAMETER_NAMES = new TreeSet<>(Arrays.asList(
-			new String[] { "textScale", "userScale", "transparent", "tileRenderSize", "hillshading", "task" })); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+			new String[] { "textScale", "transparent", "tileRenderSize", "hillshading", "task" })); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 
 	protected final GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
 
@@ -70,8 +70,8 @@ public class MapsforgeHandler extends AbstractHandler {
 		try {
 			if (path.equals("/terminate")) { //$NON-NLS-1$
 				// Accept terminate request from loopback addresses only!
-				if (baseRequest.getHttpChannel().getRemoteAddress().getAddress().isLoopbackAddress()
-						&& mapsforgeConfig.getAcceptTerminate()) {
+				if ((baseRequest.getHttpChannel().getRemoteAddress().getAddress().isLoopbackAddress()
+						|| mapsforgeConfig.getAcceptAdminAnywhere()) && mapsforgeConfig.getAcceptTerminate()) {
 					response.setContentLength(0);
 					response.setStatus(HttpServletResponse.SC_OK);
 					response.flushBuffer();
@@ -89,22 +89,30 @@ public class MapsforgeHandler extends AbstractHandler {
 			}
 
 			if (path.equals("/updatemapstyle")) { //$NON-NLS-1$
-				StringBuffer updatedThemes = new StringBuffer();
-				for(String key : tasksHandler.keySet()) {
-					tasksHandler.get(key).updateRenderThemeFuture();
-					updatedThemes.append(key+" updated<br>");
+				// Accept updatemapstyle request from loopback addresses only!
+				if (baseRequest.getHttpChannel().getRemoteAddress().getAddress().isLoopbackAddress()
+						|| mapsforgeConfig.getAcceptAdminAnywhere()) {
+					StringBuffer updatedThemes = new StringBuffer();
+					updatedThemes.append("Task count: "+tasksHandler.size()+"<br>");
+					for(String key : tasksHandler.keySet()) {
+						if (tasksHandler.get(key).updateRenderThemeFuture(true)) {
+							updatedThemes.append("Task "+key+" updated<br>");
+						}
+					}
+					updatedThemes.append("<br>Thread count: "+Thread.getAllStackTraces().size()+"<br>");
+					for(Thread th : Thread.getAllStackTraces().keySet())
+						if(th.getName().startsWith("RenderThemeFuture"))
+							updatedThemes.append("Thread "+th.getName()+" restarted<br>");
+					response.setHeader("Cache-Control", "private, no-cache");
+					response.setHeader("Pragma", "no-cache");
+					response.setContentType("text/html;charset=utf-8");
+					response.setStatus(HttpServletResponse.SC_OK);
+					baseRequest.setHandled(true);
+					response.getWriter().println("<html><body><h1>updatemapstyle</h1>"+updatedThemes.toString()+"</body></html>");
+					response.flushBuffer();
+				} else {
+					response.sendError(HttpServletResponse.SC_FORBIDDEN);
 				}
-				updatedThemes.append("<br>Nb Threads: "+Thread.getAllStackTraces().size()+"<br>");
-				for(Thread th : Thread.getAllStackTraces().keySet())
-					if(th.getName().startsWith("RenderThemeFuture"))
-						updatedThemes.append(th.getName()+" updated<br>");
-				response.setHeader("Cache-Control", "private, no-cache");
-				response.setHeader("Pragma", "no-cache");
-				response.setContentType("text/html;charset=utf-8");
-				response.setStatus(HttpServletResponse.SC_OK);
-				baseRequest.setHandled(true);
-				response.getWriter().println("<html><body><h1>updatemapstyle</h1>"+updatedThemes.toString()+"</body></html>");
-				response.flushBuffer();
 				return;
 			}
 
