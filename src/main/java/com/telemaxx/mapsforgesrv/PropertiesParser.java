@@ -51,7 +51,13 @@ public abstract class PropertiesParser {
 
 	// MapsforgeConfig.cacheControl
 	protected final static long 	DEFAULT_CACHECONTROL = 0;
+	// MapsforgeConfig.terminate
+	protected final static boolean 	DEFAULT_TERMINATE = false;
+	// MapsforgeConfig.adminAnywhere
+	protected final static boolean 	DEFAULT_ADMINANYWHERE = false;
 
+	// MapsforgeTaskConfig.appendWorldMap
+	protected final static boolean 	DEFAULT_APPENDWORLDMAP = false;
 	// MapsforgeTaskConfig.gammaValue
 	protected final static double 	DEFAULT_GAMMA = 1.;
 	// MapsforgeTaskConfig.blackValue
@@ -228,30 +234,19 @@ public abstract class PropertiesParser {
 	}
 
 	protected boolean parseBoolean(Boolean defaultValue, String configValue, String msgHeader) throws Exception {
-		msgHeader = parsePadMsg(msgHeader);
+		msgHeader = parsePadMsg(msgHeader);		
 		boolean target = defaultValue;
 		String configString = retrieveConfigValue(configValue); // $NON-NLS-1$
 		if (configString != null) {
-			target = Boolean.parseBoolean(configString.trim());
-			logger.info(msgHeader + ": defined [" + target + "]"); //$NON-NLS-1$
-		} else {
-			logger.info(msgHeader + ": default [" + target + "]"); //$NON-NLS-1$
-		}
-		return target;
-	}
-
-	protected boolean parseHasOption(String configValue, String msgHeader) throws Exception {
-		msgHeader = parsePadMsg(msgHeader);
-		boolean target = false;
-		if (configProperties != null) {
-			target = configProperties.getProperty(configValue) != null;
-		} else {
-			throw new Exception("configFile is NULL");
-		}
-		if (target) {
+			configString = configString.trim();
+			if (configString.equals("")) {
+				target = true;	// positional parameter is always true (compatibility!)
+			} else {
+				target = Boolean.parseBoolean(configString);				
+			}
 			logger.info(msgHeader + ": defined [" + String.valueOf(target) + "]"); //$NON-NLS-1$
 		} else {
-			logger.info(msgHeader + ": default [false]"); //$NON-NLS-1$
+			logger.info(msgHeader + ": default [" + String.valueOf(target) + "]"); //$NON-NLS-1$
 		}
 		return target;
 	}

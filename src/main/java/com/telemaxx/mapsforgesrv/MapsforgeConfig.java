@@ -132,8 +132,8 @@ public class MapsforgeConfig extends PropertiesParser{
 		parseResetError();
 		cacheControl = (long) parseNumber(DEFAULT_CACHECONTROL, "cache-control", 0, null, "Browser cache ttl",false); //$NON-NLS-1$ //$NON-NLS-2$
 		outOfRangeTms = parseString(null, "outofrange_tms", null, "Out of range TMS url"); //$NON-NLS-1$ //$NON-NLS-2$
-		acceptTerminate = parseHasOption("terminate", "Accept terminate request");
-		acceptAdminAnywhere = parseHasOption("admin_anywhere", "Accept administrative requests from anywhere");
+		acceptTerminate = parseBoolean(DEFAULT_TERMINATE,"terminate", "Accept terminate request");
+		acceptAdminAnywhere = parseBoolean(DEFAULT_ADMINANYWHERE,"admin_anywhere", "Admin requests anywhere");
 		//requestLogFormat = parseString("%{client}a - %u %t '%r' %s %O '%{Referer}i' '%{User-Agent}i' '%C'", "requestlog-format", null, "Request log format"); //$NON-NLS-1$ //$NON-NLS-2$
 		requestLogFormat = parseString("From %{client}a Get %U%q Status %s Size %O bytes Time %{ms}T ms", "requestlog-format", null, "Request log format"); //$NON-NLS-1$ //$NON-NLS-2$
 		if (parseGetError()) {

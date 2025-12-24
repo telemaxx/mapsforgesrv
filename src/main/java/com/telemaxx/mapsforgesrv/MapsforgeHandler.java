@@ -42,7 +42,7 @@ public class MapsforgeHandler extends AbstractHandler {
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeHandler.class);
 
 	private final TreeSet<String> KNOWN_PARAMETER_NAMES = new TreeSet<>(Arrays.asList(
-			new String[] { "textScale", "userScale", "transparent", "tileRenderSize", "hillshading", "task" })); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+			new String[] { "textScale", "transparent", "tileRenderSize", "hillshading", "task" })); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 
 	protected final GraphicFactory graphicFactory = AwtGraphicFactory.INSTANCE;
 
