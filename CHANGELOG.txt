@@ -167,3 +167,9 @@ Fixed "updatemapstyle" request not working
 Restrict "updatemapstyle" request to loopback addresses only
 Readme:
 Updated
+
+0.27.0.0
+mapsforge 0.27.0
+gradle 9.3.0
+PropertiesParser:
+Raise version to 0.27.0.0 (JFritzle)
