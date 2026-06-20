@@ -415,11 +415,9 @@ public class MapsforgeTaskHandler {
 		float requestedTextScale = 1.0f; // Original text scaling comes from config value
 		try {
 			String tmp = request.getParameter("textScale"); //$NON-NLS-1$
-			if (tmp != null) {
-//				Override text scaling from config value by text scaling from HTTP request
-//				Final text scaling = textScale * requestedTextScale
-				requestedTextScale = Float.parseFloat(tmp) / DisplayModel.textScale;
-			}
+//			Override text scaling from config value by text scaling from HTTP request
+//			Final text scaling = textScale * requestedTextScale
+			if (tmp != null) requestedTextScale = Float.parseFloat(tmp) / DisplayModel.textScale;
 		} catch (Exception e) {
 			throw new ServletException("Failed to parse \"textScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
 		}
@@ -427,9 +425,7 @@ public class MapsforgeTaskHandler {
 		boolean requestedTransparent = MapsforgeConfig.DEFAULT_TRANSPARENT;
 		try {
 			String tmp = request.getParameter("transparent"); //$NON-NLS-1$
-			if (tmp != null) {
-				requestedTransparent = Boolean.parseBoolean(tmp);
-			}
+			if (tmp != null) requestedTransparent = Boolean.parseBoolean(tmp);
 		} catch (Exception e) {
 			throw new ServletException("Failed to parse \"transparent\" property: " + e.getMessage(), e); //$NON-NLS-1$
 		}
@@ -441,6 +437,7 @@ public class MapsforgeTaskHandler {
 		} catch (Exception e) {
 			throw new ServletException("Failed to parse \"tileRenderSize\" property: " + e.getMessage(), e); //$NON-NLS-1$
 		}
+		requestedTileRenderSize = (int) Math.round(requestedTileRenderSize * mapsforgeTaskConfig.getTileScale());
 
 		TileBitmap tileBitmap = null;
 		Tile tile = new Tile(x, y, (byte) z, requestedTileRenderSize);
