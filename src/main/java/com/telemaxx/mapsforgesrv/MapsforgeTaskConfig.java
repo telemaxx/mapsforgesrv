@@ -31,6 +31,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	private float textScale;
 	private float symbolScale;
 	private float lineScale;
+	private float tileScale;
 	protected double[] hillShadingArguments;
 	protected String hillShadingAlgorithm = null;
 	protected String hillShadingAlgorithmName = null;
@@ -148,11 +149,12 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 		hillShadingZoomMax = (Integer) parseNumber("Integer", "hillshading-zoom-max", 0, 20, "Hillshading maximum zoom",false); //$NON-NLS-1$ //$NON-NLS-2$
 		blackValue = (int) parseNumber(DEFAULT_BLACK, "contrast-stretch", 0, 254, "Contrast stretch",false); //$NON-NLS-1$ //$NON-NLS-2$
 		gammaValue = (double) parseNumber(DEFAULT_GAMMA, "gamma-correction", 0., null, "Gamma correction",true); //$NON-NLS-1$ //$NON-NLS-2$
-		deviceScale = (float) parseNumber(DEFAULT_DEVICESCALE, "device-scale", 0., null, "Device scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
-		userScale = (float) parseNumber(DEFAULT_USERSCALE, "user-scale", 0., null, "User scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
-		textScale = (float) parseNumber(DEFAULT_TEXTSCALE, "text-scale", 0., null, "Text scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
-		symbolScale = (float) parseNumber(DEFAULT_SYMBOLSCALE, "symbol-scale", 0., null, "Symbol scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
-		lineScale = (float) parseNumber(DEFAULT_LINESCALE, "line-scale", 0., null, "Line scale factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		deviceScale = (float) parseNumber(DEFAULT_DEVICESCALE, "device-scale", 0., null, "Device scaling factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		userScale = (float) parseNumber(DEFAULT_USERSCALE, "user-scale", 0., null, "User scaling factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		textScale = (float) parseNumber(DEFAULT_TEXTSCALE, "text-scale", 0., null, "Text scaling factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		symbolScale = (float) parseNumber(DEFAULT_SYMBOLSCALE, "symbol-scale", 0., null, "Symbol scaling factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		lineScale = (float) parseNumber(DEFAULT_LINESCALE, "line-scale", 0., null, "Line scaling factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		tileScale = (float) parseNumber(DEFAULT_TILESCALE, "tile-scale", 0., null, "Tile scaling factor",true); //$NON-NLS-1$ //$NON-NLS-2$
 		if (parseGetError()) {
 			logger.error("Properties parsing error(s) - task '" + taskName + "' disabled"); //$NON-NLS-1$
 			checkSum = null;
@@ -299,6 +301,10 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 
 	public double getGammaValue() {
 		return this.gammaValue;
+	}
+
+	public float getTileScale() {
+		return this.tileScale;
 	}
 
 	public String getCheckSum() {

@@ -24,7 +24,7 @@ public abstract class PropertiesParser {
 	 * FIXED VALUES *
 	 ****************/
 
-	public final static String 		VERSION = "0.28.0.0"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
+	public final static String 		VERSION = "0.28.0.1"; // starting with eg 0.13, the mapsforge version //$NON-NLS-1$
 
 	public final static String 		TILE_EXTENSION = "png"; //$NON-NLS-1$
 	protected static final String 	FILE = "file"; //$NON-NLS-1$
@@ -71,6 +71,8 @@ public abstract class PropertiesParser {
 	protected final static float	DEFAULT_SYMBOLSCALE = 1.0f;
 	// MapsforgeTaskConfig.lineScale
 	protected final static float	DEFAULT_LINESCALE = 1.0f;
+	// MapsforgeTaskConfig.tileScale
+	protected final static float	DEFAULT_TILESCALE = 1.0f;
 	// MapsforgeTaskConfig.hillShadingArguments
 	public final static double[] 	DEFAULT_HILLSHADING_SIMPLE = { 0.1, 0.666 };
 	public final static	double 		DEFAULT_HILLSHADING_DIFFUSELIGHT = 50;

@@ -179,3 +179,11 @@ mapsforge 0.28.0
 gradle 9.5.0
 PropertiesParser:
 Raise version to 0.28.0.0 (JFritzle)
+
+0.28.0.1
+PropertiesParser:
+Raise version to 0.28.0.1 (JFritzle)
+MapsforgeTaskConfig:
+New task property "tile-scale"
+MapsforgeTaskHandler:
+Multiply tile size by "tile-scale" value 

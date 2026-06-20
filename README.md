@@ -63,11 +63,12 @@ Each configuration file can contain
 | `hillshading-zoom-max` | Hillshading's maximum zoom level, 0 ≤ value ≤ 20<br>Default: unset = theme's built-in value or default value used
 | `contrast-stretch` | Contrast stretching of color value, 0 ≤ value ≤ 254 to increase<br>contrast by raising black level from 0 towards white level 255 <br>Default: `0` = no contrast stretching
 | `gamma-correction` | Gamma correction value > 0. for nonlinear luminance mapping<br>Default: `1.` = no gamma correction
-| `text-scale` | Text scale factor > 0. to scale size of labels on map<br>Default: `1.` = no text size scaling
-| `symbol-scale` | Symbol scale factor > 0. to scale size of symbols on map<br>Default: `1.` = no symbol size scaling
-| `line-scale` | Line scale factor > 0. to scale thickness of lines on map<br>Default: `1.` = no line thickness scaling
-| `user-scale` | Overall scale factor > 0. to scale all map elements<br>Scales value of `text-scale` and `symbol-scale` and `line-scale`<br>Default: `1.` = no overall scaling
-| `device-scale` | Device scale factor > 0.<br>Default: `1.` = no device scaling
+| `text-scale` | Text scaling factor > 0. to scale size of labels on map<br>Default: `1.` = no text size scaling
+| `symbol-scale` | Symbol scaling factor > 0. to scale size of symbols on map<br>Default: `1.` = no symbol size scaling
+| `line-scale` | Line scaling factor > 0. to scale thickness of lines on map<br>Default: `1.` = no line thickness scaling
+| `user-scale` | Overall scaling factor > 0. to scale all map elements<br>Scales value of `text-scale` and `symbol-scale` and `line-scale`<br>Default: `1.` = no overall scaling
+| `device-scale` | Device scaling factor > 0.<br>Default: `1.` = no device scaling
+| `tile-scale` | Tile scaling factor > 0.<br>Default: `1.` = no tile scaling<br>Final tiles are `256 * tile-scale` pixels per direction. 
 
 #### Hillshading requirements:
 * Must be enabled in theme file
