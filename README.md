@@ -6,8 +6,8 @@ The MapsforgeSrv is a local [webserver](http://wiki.openstreetmap.org/wiki/Mapsf
 The tiles are always rendered on the fly when requested.
 
 Source of this tile server is located at branch _tasks_ of [mapsforgesrv](https://github.com/telemaxx/mapsforgesrv) project.  
-The JAR file `mapsforgesrv-fatjar.jar` can be downloaded from assets of _<release\>\_for\_java11\_tasks_ at [releases](https://github.com/telemaxx/mapsforgesrv/releases).   
-The JAR file is developed and built with Java development kit (JDK) version 11 and needs Java runtime environment (JRE) version 11 or higher to run.  
+The JAR file `mapsforgesrv-fatjar.jar` can be downloaded from assets at [releases](https://github.com/telemaxx/mapsforgesrv/releases).   
+The JAR file is developed and built with Java development kit (JDK) version 17 and needs Java runtime environment (JRE) version 17 or higher to run.  
 The JAR file contains everything needed to run.
 
 Some graphical user interfaces to configure interactively and run MapsforgeSrv can be found at https://github.com/JFritzle.  

@@ -186,4 +186,12 @@ Raise version to 0.28.0.1 (JFritzle)
 MapsforgeTaskConfig:
 New task property "tile-scale"
 MapsforgeTaskHandler:
-Multiply tile size by "tile-scale" value 
+Multiply tile size by "tile-scale" value
+
+0.29.0.0
+mapsforge 0.29.0
+gradle 9.7.0
+Java runtime environment (JRE) version 17 or newer required
+Added marlin-0.9.4.9-Unsafe-OpenJDK17.jar to libs
+PropertiesParser:
+Raise version to 0.29.0.0 (JFritzle)
