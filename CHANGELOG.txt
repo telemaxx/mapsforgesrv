@@ -195,3 +195,14 @@ Java runtime environment (JRE) version 17 or newer required
 Added marlin-0.9.4.9-Unsafe-OpenJDK17.jar to libs
 PropertiesParser:
 Raise version to 0.29.0.0 (JFritzle)
+
+0.30.0.0
+mapsforge 0.30.0
+gradle 9.7.1
+PropertiesParser:
+Raise version to 0.30.0.0 (JFritzle)
+MapsforgeTaskHandler:
+Styles now parsed by render theme menu callback, making XML parser obsolete
+Log output now synchronized by RenderThemeFuture class procedure
+MapsforgeStyleParser:
+XML parser no longer referenced -> file moved from folder "src" to "test"
