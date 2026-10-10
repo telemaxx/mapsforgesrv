@@ -62,10 +62,10 @@ public class MapsforgeSrv {
 	public MapsforgeSrv(String[] args) throws Exception {
 
 		/* IMPORTANT: the output of following line is used by other programs like guis. never change this syntax */
-		logger.info("MapsforgeSrv - a mapsforge tile server. " + "version: " + PropertiesParser.VERSION); //$NON-NLS-1$ //$NON-NLS-2$
+		logger.info("MapsforgeSrv - a mapsforge tile server. " + "version: " + PropertiesParser.VERSION);
 
 		Runtime.Version runtimeVersion = Runtime.version();
-		logger.info("Java runtime version: " + runtimeVersion); //$NON-NLS-1$
+		logger.info("Java runtime version: " + runtimeVersion);
 
 		logger.debug("Current dir [user.dir]: " + System.getProperty("user.dir"));
 
@@ -85,11 +85,11 @@ public class MapsforgeSrv {
 		} else {
 			jettyXML = MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL;
 		}
-		file = new File(mapsforgeConfig.getConfigDirectory()+jettyXML);
+		file = new File(mapsforgeConfig.getConfigDirectory() + jettyXML);
 		if (file.isFile()) {
 			resource = Resource.newResource(file);
 		} else {
-			resource = Resource.newSystemResource("assets/mapsforgesrv/"+jettyXML);
+			resource = Resource.newSystemResource("assets/mapsforgesrv/" + jettyXML);
 		}
 		path = Files.createTempFile(memoryFileSystem.getPath(""), null, ".xml");
 		overrideResource(resource,path);
@@ -101,11 +101,11 @@ public class MapsforgeSrv {
 		queuedThreadPool.setStopTimeout(0);
 
 		jettyXML = MapsforgeConfig.FILECONFIG_JETTY;
-		file = new File(mapsforgeConfig.getConfigDirectory()+jettyXML);
+		file = new File(mapsforgeConfig.getConfigDirectory() + jettyXML);
 		if (file.isFile()) {
 			resource = Resource.newResource(file);
 		} else {
-			resource = Resource.newSystemResource("assets/mapsforgesrv/"+jettyXML);
+			resource = Resource.newSystemResource("assets/mapsforgesrv/" + jettyXML);
 		}
 		path = Files.createTempFile(memoryFileSystem.getPath(""), null, ".xml");
 		overrideResource(resource,path);
@@ -137,9 +137,9 @@ public class MapsforgeSrv {
 
 		try {
 			server.start();
-			logger.info("Started " +server.getThreadPool().toString());
+			logger.info("Started " + server.getThreadPool().toString());
 		} catch (BindException e) {
-			logger.error("Stopping server", e); //$NON-NLS-1$
+			logger.error("Stopping server", e);
 			System.exit(1);
 		}
 		server.join();
