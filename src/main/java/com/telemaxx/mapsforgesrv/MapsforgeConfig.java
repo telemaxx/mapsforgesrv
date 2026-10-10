@@ -45,7 +45,7 @@ public class MapsforgeConfig extends PropertiesParser{
 	public static BufferedImage BI_NOCONTENT;
 	public static Path worldMapPath;
 
-	private final static String taskFileNameRegex = "^[a-zA-Z0-9]+([_+-.]?[a-zA-Z0-9]+)*.properties$"; //$NON-NLS-1$
+	private final static String taskFileNameRegex = "^[a-zA-Z0-9]+([_+-.]?[a-zA-Z0-9]+)*.properties$";
 
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeConfig.class);
 
@@ -75,26 +75,28 @@ public class MapsforgeConfig extends PropertiesParser{
 	 */
 	private void initOptions(String[] args) throws Exception {
 		Options options = new Options();
-		options.addOption(Option.builder("c") //$NON-NLS-1$
-				.longOpt("config") //$NON-NLS-1$
-				.desc("Config directory including at least "+FILECONFIG_SERVER+" and "+DIRCONFIG_TASKS+", optionally "+FILECONFIG_JETTY+", "+FILECONFIG_JETTY_THREADPOOL+", "+FILECONFIG_JETTY_THREADPOOL_VR) //$NON-NLS-1$
+		options.addOption(Option.builder("c")
+				.longOpt("config")
+				.desc("Config directory including at least " + FILECONFIG_SERVER +
+					" and " + DIRCONFIG_TASKS + ", optionally " + FILECONFIG_JETTY +
+					", " + FILECONFIG_JETTY_THREADPOOL + ", " + FILECONFIG_JETTY_THREADPOOL_VR)
 				.required(false).hasArg(true).build());
-		options.addOption(Option.builder("h") //$NON-NLS-1$
-				.longOpt("help") //$NON-NLS-1$
-				.desc("Print this help text and exit") //$NON-NLS-1$
+		options.addOption(Option.builder("h")
+				.longOpt("help")
+				.desc("Print this help text and exit")
 				.required(false).hasArg(false).build());
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
 		formatter.setWidth(132);
 		try {
 			configCmd = parser.parse(options, args);
-			if (configCmd.hasOption("help")) { //$NON-NLS-1$
-				formatter.printHelp("mapsforgesrv", options); //$NON-NLS-1$
+			if (configCmd.hasOption("help")) {
+				formatter.printHelp("mapsforgesrv", options);
 				System.exit(0);
 			}
 		} catch (ParseException e) {
 			logger.error(e.getMessage());
-			formatter.printHelp("mapsforgesrv", options); //$NON-NLS-1$
+			formatter.printHelp("mapsforgesrv", options);
 			System.exit(1);
 		}
 		String config = configCmd.getOptionValue("config");
@@ -104,21 +106,21 @@ public class MapsforgeConfig extends PropertiesParser{
 				configDirectory = config+System.getProperty("file.separator");
 				String configFile = configDirectory+FILECONFIG_SERVER;
 				if (!new File(configFile).isFile()) {
-					logger.error("Required config file '"+configFile+"' doesn't exist: exiting"); //$NON-NLS-1$
+					logger.error("Required config file '" + configFile + "' doesn't exist: exiting");
 					System.exit(1);
 				}
 				taskDirectory = configDirectory+DIRCONFIG_TASKS;
 				if (!new File(taskDirectory).isDirectory()) {
-					logger.error("Tasks directory '"+taskDirectory+"' doesn't exist: exiting"); //$NON-NLS-1$
+					logger.error("Tasks directory '" + taskDirectory + "' doesn't exist: exiting");
 					System.exit(1);
 				}
 				readConfig(new File(configDirectory+FILECONFIG_SERVER));
 			} else {
-				logger.error("Config '"+config+"' set with -c is not a directory: exiting"); //$NON-NLS-1$
+				logger.error("Config '" + config + "' set with -c is not a directory: exiting");
 				System.exit(1);
 			}
 		} else {
-			logger.error("Config directory not set with -c: exiting"); //$NON-NLS-1$
+			logger.error("Config directory not set with -c: exiting");
 			System.exit(1);
 		}
 	}
@@ -130,14 +132,14 @@ public class MapsforgeConfig extends PropertiesParser{
 	private void initConfig() throws Exception {
 		logger.info("################## SERVER PROPERTIES ##################");
 		parseResetError();
-		cacheControl = (long) parseNumber(DEFAULT_CACHECONTROL, "cache-control", 0, null, "Browser cache ttl",false); //$NON-NLS-1$ //$NON-NLS-2$
-		outOfRangeTms = parseString(null, "outofrange_tms", null, "Out of range TMS url"); //$NON-NLS-1$ //$NON-NLS-2$
+		cacheControl = (long) parseNumber(DEFAULT_CACHECONTROL, "cache-control", 0, null, "Browser cache ttl",false);
+		outOfRangeTms = parseString(null, "outofrange_tms", null, "Out of range TMS url");
 		acceptTerminate = parseBoolean(DEFAULT_TERMINATE,"terminate", "Accept terminate request");
 		acceptAdminAnywhere = parseBoolean(DEFAULT_ADMINANYWHERE,"admin_anywhere", "Admin requests anywhere");
-		//requestLogFormat = parseString("%{client}a - %u %t '%r' %s %O '%{Referer}i' '%{User-Agent}i' '%C'", "requestlog-format", null, "Request log format"); //$NON-NLS-1$ //$NON-NLS-2$
-		requestLogFormat = parseString("From %{client}a Get %U%q Status %s Size %O bytes Time %{ms}T ms", "requestlog-format", null, "Request log format"); //$NON-NLS-1$ //$NON-NLS-2$
+		//requestLogFormat = parseString("%{client}a - %u %t '%r' %s %O '%{Referer}i' '%{User-Agent}i' '%C'", "requestlog-format", null, "Request log format");
+		requestLogFormat = parseString("From %{client}a Get %U%q Status %s Size %O bytes Time %{ms}T ms", "requestlog-format", null, "Request log format");
 		if (parseGetError()) {
-			logger.error("Properties parsing error(s) - exiting"); //$NON-NLS-1$
+			logger.error("Properties parsing error(s) - exiting");
 			System.exit(1);
 		}
 		parseTasks();
@@ -156,11 +158,12 @@ public class MapsforgeConfig extends PropertiesParser{
 			}};
 		File[] taskFiles = new File(taskDirectory).listFiles(filenameFilter);
 		if(taskFiles.length == 0) {
-			logger.error("Tasks directory "+taskDirectory+" does not yet contain any properties files named "+taskFileNameRegex); //$NON-NLS-1$
+			logger.error("Tasks directory " + taskDirectory +
+				" does not yet contain any properties files named " + taskFileNameRegex);
 		}
 		for (File taskFile : taskFiles) {
 			String taskFileName = taskFile.getName();
-			String taskName = taskFileName.replaceFirst("[.][^.]+$", ""); //$NON-NLS-1$
+			String taskName = taskFileName.replaceFirst("[.][^.]+$", "");
 			mapsforgeTaskConfig = new MapsforgeTaskConfig(taskName, taskFile);
 			if (mapsforgeTaskConfig.getCheckSum() != null)
 				tasksConfig.put(taskName, mapsforgeTaskConfig);
@@ -229,7 +232,7 @@ public class MapsforgeConfig extends PropertiesParser{
 						}
 						poll = key.reset();
 					}
-					logger.error("Config directory "+configPath+" no longer watchable: exiting"); //$NON-NLS-1$
+					logger.error("Config directory " + configPath + " no longer watchable: exiting");
 					System.exit(1);
 				} catch (Exception e) {}
 			}
@@ -273,7 +276,7 @@ public class MapsforgeConfig extends PropertiesParser{
 		try {
 			return tasksConfig.get(task);
 		} catch(Exception e) {
-			throw new Exception("Task '"+task+"' doesn't exist");
+			throw new Exception("Task '" + task + "' doesn't exist");
 		}
 	}
 

@@ -52,7 +52,6 @@ Each configuration file can contain
 | ---- | ----------- |
 | `mapfiles` | Comma-separated list of map file paths with file extension `.map`<br>Default: unset = built-in world map automatically used
 | `worldmap` | Append built-in world map to list `mapfiles` of map files<br>Default: `false`
-| `neighbour-labels` | Place each tile's labels from its 3×3 neighbourhood of tiles, so a label crossing a tile border is drawn whole on both tiles, whichever server process renders them and in whatever order<br>Without it, labels crossing a border are kept consistent only with neighbours the same process has already rendered, so behind a load balancer or with several server processes a label can be cut off at the border<br>Note: Rendering reads the neighbouring tiles' labels too and is slower, mostly at low zoom levels; the `textScale` request parameter does not apply to labels<br>Default: `false`
 | `language` | Preferred language if supported by map file<br>(ISO 639-1 or ISO 639-2 if an ISO 639-1 code doesn't exist)<br>Default: unset = primary available map language used
 | `themefile` | File path with file extension `.xml` of external theme file<br>or name of built-in Mapsforge theme to use for rendering.<br>Currently known built-in Mapsforge themes:<br>`DEFAULT`, `OSMARENDER`, `BIKER`, `MOTORIDER`, `DARK` or `INDIGO`<br>Built-in themes may change depending on Mapsforge version.<br>Default: built-in Mapsforge theme `OSMARENDER`
 | `style` | Theme's style used for rendering<br>Default: unset = theme's built-in default style
@@ -69,7 +68,8 @@ Each configuration file can contain
 | `line-scale` | Line scaling factor > 0. to scale thickness of lines on map<br>Default: `1.` = no line thickness scaling
 | `user-scale` | Overall scaling factor > 0. to scale all map elements<br>Scales value of `text-scale` and `symbol-scale` and `line-scale`<br>Default: `1.` = no overall scaling
 | `device-scale` | Device scaling factor > 0.<br>Default: `1.` = no device scaling
-| `tile-scale` | Tile scaling factor > 0.<br>Default: `1.` = no tile scaling<br>Final tiles are `256 * tile-scale` pixels per direction. 
+| `tile-scale` | Tile scaling factor > 0.<br>Default: `1.` = no tile scaling<br>Final tiles are `256 * tile-scale` pixels per direction.
+| `neighbour-labels` | Place each tile's labels from its 3×3 neighbourhood of tiles, so a label crossing a tile border is drawn whole on both tiles, whichever server process renders them and in whatever order<br>Without it, labels crossing a border are kept consistent only with neighbours the same process has already rendered, so behind a load balancer or with several server processes a label can be cut off at the border<br>Note: Rendering reads the neighbouring tiles' labels too and is slower, mostly at low zoom levels; the `textScale` request parameter does not apply to labels<br>Default: `false` 
 
 #### Hillshading requirements:
 * Must be enabled in theme file

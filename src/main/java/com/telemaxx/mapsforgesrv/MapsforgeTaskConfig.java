@@ -3,6 +3,7 @@ package com.telemaxx.mapsforgesrv;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -18,14 +19,13 @@ import org.slf4j.LoggerFactory;
 
 public class MapsforgeTaskConfig extends PropertiesParser{
 
-	private ArrayList<File> mapFiles = null;
+	private List<File> mapFiles = null;
 	private boolean appendWorldMap;
-	private boolean neighbourLabels;
 	private String preferredLanguage = null;
 	private File demFolder = null;
 	private File themeFile = null;
 	private String taskName = null;
-	private String[] themeFileOverlays = null;
+	private List<String> themeFileOverlays = null;
 	private String themeFileStyle = null;
 	private float deviceScale;
 	private float userScale;
@@ -41,6 +41,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	protected Integer hillShadingZoomMax = null;
 	private int blackValue;
 	private double gammaValue;
+	private boolean neighbourLabels;
 	private String checkSum = null;
 
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeTaskConfig.class);
@@ -63,11 +64,11 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 
 		if (configString == null) {
 			themeFile = new File("OSMARENDER");
-			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": default [OSMARENDER]"); //$NON-NLS-1$
+			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": default [OSMARENDER]");
 		} else if (internalRenderThemes.contains(configString.trim())) {
 			configString = configString.trim();
 			themeFile = new File(configString);
-			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": defined ["+configString+"]"); //$NON-NLS-1$
+			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": defined [" + configString + "]");
 		} else {
 			themeFile = parseFile(configValue, FILE, false, msgHeader, "OSMARENDER");
 			if (themeFile == null) themeFile = new File("OSMARENDER");
@@ -75,23 +76,23 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	}
 
 	private void parseThemeOverlays() throws Exception {
-		String msgHeader = parsePadMsg("Theme overlay(s)"); //$NON-NLS-1$
-		String optionValue = retrieveConfigValue("overlays"); //$NON-NLS-1$
+		String msgHeader = parsePadMsg("Theme overlay(s)");
+		String optionValue = retrieveConfigValue("overlays");
 		if (optionValue != null)
-			themeFileOverlays = StringUtils.stripAll(optionValue.trim().split(",")); //$NON-NLS-1$
-		if (themeFileOverlays != null && themeFileOverlays.length != 0) {
-			logger.info(msgHeader + ": defined [{" + String.join(",", themeFileOverlays) + "}]"); //$NON-NLS-1$
+			themeFileOverlays = Arrays.asList(StringUtils.stripAll(optionValue.trim().split(",")));
+		if (themeFileOverlays != null) {
+			logger.info(msgHeader + ": defined [{" + String.join(",", themeFileOverlays) + "}]");
 		} else {
-			logger.info(msgHeader + ": default [undefined]"); //$NON-NLS-1$
+			logger.info(msgHeader + ": default [undefined]");
 		}
 	}
 
 	private void parseMapFiles() throws Exception {
 		mapFiles = new ArrayList<File>();
-		String msgHeader = parsePadMsg("Map file(s)"); //$NON-NLS-1$
-		String mapFilePathsString = retrieveConfigValue("mapfiles"); //$NON-NLS-1$
+		String msgHeader = parsePadMsg("Map file(s)");
+		String mapFilePathsString = retrieveConfigValue("mapfiles");
 		if (mapFilePathsString != null) {
-			String[] mapFilePaths = mapFilePathsString.trim().split(","); //$NON-NLS-1$ //$NON-NLS-2$
+			String[] mapFilePaths = mapFilePathsString.trim().split(",");
 			List<File> mapsErr = new ArrayList<File>();
 			for (String path : mapFilePaths) {
 				File file = new File(path.trim());
@@ -118,47 +119,47 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 			if (mapsErr.size() > 0) {
 				mapFiles.removeAll(mapsErr);
 				mapFilesString = mapFiles.stream().map(File::getPath).collect(Collectors.joining(","));
-				String cnxNotAuth = "{" + mapsErr.stream().map(File::getPath).collect(Collectors.joining(",")) + "} not existing"; //$NON-NLS-2$ //$NON-NLS-3$
+				String cnxNotAuth = "{" + mapsErr.stream().map(File::getPath).collect(Collectors.joining(",")) + "} not existing";
 				if (mapFilePaths.length == 0) {
 					parseError(msgHeader, cnxNotAuth);
 				} else {
-					logger.info(msgHeader + ": defined [{" + mapFilesString + "}] - warn " + cnxNotAuth); //$NON-NLS-1$
+					logger.info(msgHeader + ": defined [{" + mapFilesString + "}] - warn " + cnxNotAuth);
 				}
 			} else {
 				mapFilesString = mapFiles.stream().map(File::getPath).collect(Collectors.joining(","));
-				logger.info(msgHeader + ": defined [{" + mapFilesString + "}]"); //$NON-NLS-1$
+				logger.info(msgHeader + ": defined [{" + mapFilesString + "}]");
 			}
 		} else {
-			logger.info(msgHeader + ": default [undefined]"); //$NON-NLS-1$
+			logger.info(msgHeader + ": default [undefined]");
 		}
 		if (mapFiles.size() == 0) configProperties.setProperty("worldmap", "");
 	}
 
 	private void initConfig() throws Exception {
-		logger.info("################ TASK '"+taskName+"' PROPERTIES ################");
+		logger.info("################ TASK '" + taskName + "' PROPERTIES ################");
 		parseResetError();
 		parseMapFiles();
 		appendWorldMap = parseBoolean(DEFAULT_APPENDWORLDMAP,"worldmap", "Append built-in world map");
-		neighbourLabels = parseBoolean(DEFAULT_NEIGHBOURLABELS, "neighbour-labels", "Labels from neighbour tiles");
-		preferredLanguage = parseString(null, "language", null, "Preferred map language"); //$NON-NLS-1$ //$NON-NLS-2$
+		preferredLanguage = parseString(null, "language", null, "Preferred map language");
 		parseThemeFile();
-		themeFileStyle = parseString(null, "style", null, "Theme style"); //$NON-NLS-1$ //$NON-NLS-2$
+		themeFileStyle = parseString(null, "style", null, "Theme style");
 		parseThemeOverlays();
 		demFolder = parseFile("demfolder", FOLDER, true, "DEM", "undefined");
 		parseHillShading();
-		hillShadingMagnitude = (double) parseNumber(DEFAULT_HILLSHADING_MAGNITUDE, "hillshading-magnitude", 0., 4., "Hillshading magnitude",false); //$NON-NLS-1$ //$NON-NLS-2$
-		hillShadingZoomMin = (Integer) parseNumber("Integer", "hillshading-zoom-min", 0, 20, "Hillshading minimum zoom",false); //$NON-NLS-1$ //$NON-NLS-2$
-		hillShadingZoomMax = (Integer) parseNumber("Integer", "hillshading-zoom-max", 0, 20, "Hillshading maximum zoom",false); //$NON-NLS-1$ //$NON-NLS-2$
-		blackValue = (int) parseNumber(DEFAULT_BLACK, "contrast-stretch", 0, 254, "Contrast stretch",false); //$NON-NLS-1$ //$NON-NLS-2$
-		gammaValue = (double) parseNumber(DEFAULT_GAMMA, "gamma-correction", 0., null, "Gamma correction",true); //$NON-NLS-1$ //$NON-NLS-2$
-		deviceScale = (float) parseNumber(DEFAULT_DEVICESCALE, "device-scale", 0., null, "Device scaling factor",true); //$NON-NLS-1$ //$NON-NLS-2$
-		userScale = (float) parseNumber(DEFAULT_USERSCALE, "user-scale", 0., null, "User scaling factor",true); //$NON-NLS-1$ //$NON-NLS-2$
-		textScale = (float) parseNumber(DEFAULT_TEXTSCALE, "text-scale", 0., null, "Text scaling factor",true); //$NON-NLS-1$ //$NON-NLS-2$
-		symbolScale = (float) parseNumber(DEFAULT_SYMBOLSCALE, "symbol-scale", 0., null, "Symbol scaling factor",true); //$NON-NLS-1$ //$NON-NLS-2$
-		lineScale = (float) parseNumber(DEFAULT_LINESCALE, "line-scale", 0., null, "Line scaling factor",true); //$NON-NLS-1$ //$NON-NLS-2$
-		tileScale = (float) parseNumber(DEFAULT_TILESCALE, "tile-scale", 0., null, "Tile scaling factor",true); //$NON-NLS-1$ //$NON-NLS-2$
+		hillShadingMagnitude = (double) parseNumber(DEFAULT_HILLSHADING_MAGNITUDE, "hillshading-magnitude", 0., 4., "Hillshading magnitude",false);
+		hillShadingZoomMin = (Integer) parseNumber("Integer", "hillshading-zoom-min", 0, 20, "Hillshading minimum zoom",false);
+		hillShadingZoomMax = (Integer) parseNumber("Integer", "hillshading-zoom-max", 0, 20, "Hillshading maximum zoom",false);
+		blackValue = (int) parseNumber(DEFAULT_BLACK, "contrast-stretch", 0, 254, "Contrast stretch",false);
+		gammaValue = (double) parseNumber(DEFAULT_GAMMA, "gamma-correction", 0., null, "Gamma correction",true);
+		deviceScale = (float) parseNumber(DEFAULT_DEVICESCALE, "device-scale", 0., null, "Device scaling factor",true);
+		userScale = (float) parseNumber(DEFAULT_USERSCALE, "user-scale", 0., null, "User scaling factor",true);
+		textScale = (float) parseNumber(DEFAULT_TEXTSCALE, "text-scale", 0., null, "Text scaling factor",true);
+		symbolScale = (float) parseNumber(DEFAULT_SYMBOLSCALE, "symbol-scale", 0., null, "Symbol scaling factor",true);
+		lineScale = (float) parseNumber(DEFAULT_LINESCALE, "line-scale", 0., null, "Line scaling factor",true);
+		tileScale = (float) parseNumber(DEFAULT_TILESCALE, "tile-scale", 0., null, "Tile scaling factor",true);
+		neighbourLabels = parseBoolean(DEFAULT_NEIGHBOURLABELS, "neighbour-labels", "Labels from neighbour tiles");
 		if (parseGetError()) {
-			logger.error("Properties parsing error(s) - task '" + taskName + "' disabled"); //$NON-NLS-1$
+			logger.error("Properties parsing error(s) - task '" + taskName + "' disabled");
 			checkSum = null;
 		}
 	}
@@ -166,7 +167,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	private void parseHillShading() throws Exception {
 		String msgHeader = parsePadMsg("Hillshading algorithm");
 		hillShadingArguments = null;
-		String hillShadingOption = retrieveConfigValue("hillshading-algorithm"); //$NON-NLS-1$
+		String hillShadingOption = retrieveConfigValue("hillshading-algorithm");
 		if (hillShadingOption != null) {
 			hillShadingOption = hillShadingOption.trim();
 			Pattern P = Pattern.compile("(simple)(?:\\((-?\\d+\\.?\\d*|-?\\d*\\.?\\d+),(\\d+\\.?\\d*|\\d*\\.?\\d+)\\))?|(diffuselight)(?:\\((\\d+\\.?\\d*|\\d*\\.?\\d+)\\))?|(hiresasy|stdasy|simplasy|adaptasy)(?:\\((\\d+\\.?\\d*|\\d*\\.?\\d+),(\\d+\\.?\\d*|\\d*\\.?\\d+),(\\d+\\.?\\d*|\\d*\\.?\\d+),(\\d+),(\\d+),(true|false)\\))?");
@@ -220,12 +221,12 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 				} else {
 					parseError(msgHeader, "'" + hillShadingOption + "' invalid");
 				}
-				logger.info(msgHeader + ": defined [" + hillShadingAlgorithmName +"]");	//$NON-NLS-3$
+				logger.info(msgHeader + ": defined [" + hillShadingAlgorithmName + "]");	
 			} else {
 				parseError(msgHeader, "'" + hillShadingOption + "' undefined");
 			}
 		} else {
-			logger.info(msgHeader + ": default [undefined]"); //$NON-NLS-1$
+			logger.info(msgHeader + ": default [undefined]");
 		}
 	}
 
@@ -239,10 +240,6 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 
 	public boolean getAppendWorldMap() {
 		return this.appendWorldMap;
-	}
-
-	public boolean getNeighbourLabels() {
-		return this.neighbourLabels;
 	}
 
 	public File getDemFolder() {
@@ -273,7 +270,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 		return this.themeFileStyle;
 	}
 
-	public String[] getThemeFileOverlays() {
+	public List<String> getThemeFileOverlays() {
 		return this.themeFileOverlays;
 	}
 
@@ -311,6 +308,10 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 
 	public float getTileScale() {
 		return this.tileScale;
+	}
+
+	public boolean getNeighbourLabels() {
+		return this.neighbourLabels;
 	}
 
 	public String getCheckSum() {

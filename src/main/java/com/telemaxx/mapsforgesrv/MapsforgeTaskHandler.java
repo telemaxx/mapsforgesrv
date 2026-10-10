@@ -68,23 +68,25 @@ public class MapsforgeTaskHandler {
 
 	final static Logger logger = LoggerFactory.getLogger(MapsforgeTaskHandler.class);
 
+	private final String taskName;
 	private final DisplayModel displayModel;
 	private final TileBasedLabelStore labelStore;
 	private final TileCache tileCache;
 	private final MultiMapDataStore multiMapDataStore;
+	private final String language;
 	private final File themeFile;
 	private final String themeFileStyle;
 	private final boolean renderLabels;
 	private final boolean cacheLabels;
 
 	private boolean taskEnabled = true;
+	private int themeStyleCheck;
 	private boolean hillShadingOverlay = false;
 	private HillsRenderConfig hillsRenderConfig = null;
-	private int styleCheck = 0;
 	private XmlRenderTheme xmlRenderTheme;
 	private RenderThemeFuture renderThemeFuture;
 	private int[] colorLookupTable = null;
-	private String taskName;
+
 	private volatile Rendering rendering = null;
 	private boolean neighbourLabels = false;
 
@@ -103,16 +105,17 @@ public class MapsforgeTaskHandler {
 	private MapsforgeConfig mapsforgeConfig;
 	private MapsforgeTaskConfig mapsforgeTaskConfig;
 
-	private static final Pattern requestPathPattern = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)(?:(?:\\.)(.*))?"); //$NON-NLS-1$
+	private static final Pattern requestPathPattern = Pattern.compile("/(\\d+)/(-?\\d+)/(-?\\d+)(?:(?:\\.)(.*))?");
 
 	public MapsforgeTaskHandler(MapsforgeHandler mapsforgeHandler, MapsforgeTaskConfig mapsforgeTaskConfig, String name) throws Exception {
 
-		logger.info("################ STARTING TASK '" + name + "' ################"); //$NON-NLS-1$
+		logger.info("################ STARTING TASK '" + name + "' ################");
 
 		this.taskName = name;
 		this.mapsforgeHandler = mapsforgeHandler;
 		this.mapsforgeConfig = mapsforgeHandler.getMapsforgeConfig();
 		this.mapsforgeTaskConfig = mapsforgeTaskConfig;
+		this.language = mapsforgeTaskConfig.getPreferredLanguage();
 		
 		DisplayModel.setDeviceScaleFactor(mapsforgeTaskConfig.getDeviceScale());
 		DisplayModel.textScale = mapsforgeTaskConfig.getTextScale();
@@ -130,23 +133,32 @@ public class MapsforgeTaskHandler {
 		if (mapFilesSize == 0) {
 			if (hillShadingAlgorithm != null && demFolder != null) hillShadingOverlay = true;
 		} else {
-			mapsforgeTaskConfig.getMapFiles().forEach(mapFile -> {
-				MapFile map = new MapFile(mapFile, mapsforgeTaskConfig.getPreferredLanguage());
+			List<File> mapFiles = mapsforgeTaskConfig.getMapFiles();
+			List<Integer> pathLen = new ArrayList<Integer>();
+			int maxlen = 0;
+			Pattern pattern = Pattern.compile(".\\p{M}*"); // Any single Unicode character
+			for (File mapFile : mapFiles) {
+				Matcher matcher = pattern.matcher(mapFile.getPath());
+				int strlen = 0;
+				while (matcher.find()) strlen++; // Count Unicode characters
+				pathLen.add(strlen);
+				if (strlen > maxlen) maxlen = strlen;
+			}
+			for (File mapFile : mapFiles) {
+				MapFile map = new MapFile(mapFile, language);
 				String[] mapLanguages = map.getMapLanguages();
-				String msgMap = "'" + mapFile + "' supported languages: ";
-				if (mapLanguages != null) {
-					logger.info(msgMap + "{" + String.join(",", mapLanguages) + "}");
-				} else {
-					logger.info(msgMap + "-");
-				}
+				int strlen = pathLen.remove(0);
+				String padding = String.format("%-" + (maxlen-strlen+1) + "s", " ");
+				logger.info("Map : '" + mapFile.getPath() + "'" + padding + "- Languages : "
+						+ (mapLanguages == null ? "-" : "{" + String.join(",", mapLanguages) + "}"));
 				multiMapDataStore.addMapDataStore(map, true, true);
-			});
+			}
 		}
 		// Append built-in world.map with background map priority
 		if (mapsforgeTaskConfig.getAppendWorldMap()) {
 			FileChannel mapFileChannel = FileChannel.open(MapsforgeConfig.worldMapPath, StandardOpenOption.READ);
 			MapFile map = new MapFile(mapFileChannel);
-			logger.info("'(built-in)" + System.getProperty("file.separator") + "world.map'");
+			logger.info("Map : '(built-in)" + System.getProperty("file.separator") + "world.map'");
 			if (mapFilesSize > 0) {
 				MultiMapDataStore worldMapDataStore = new MultiMapDataStore();
 				worldMapDataStore.setPriority(-1);
@@ -161,7 +173,7 @@ public class MapsforgeTaskHandler {
 		if (demFolder != null) demFolderFS = new DemFolderFS(demFolder);
 
 		if (hillShadingOverlay) {
-			logger.info("No map -> hillshading overlay with alpha transparency only!");
+			logger.info("-> Hillshading overlay map with alpha transparency");
 			themeFile = new File("HillShadingOverlay");
 			themeFileStyle = null;
 			tileCache = null;
@@ -204,7 +216,8 @@ public class MapsforgeTaskHandler {
 			}
 		}
 
-		if (hillShadingAlgorithm != null && demFolder != null) { // hillshading
+		if (hillShadingAlgorithm != null && demFolder != null) {
+			// hillshading
 			ShadingAlgorithm shadingAlgorithm = null;
 			if (hillShadingAlgorithm.equals("simple")) {
 				shadingAlgorithm = new SimpleShadingAlgorithm(mapsforgeTaskConfig.getHillShadingArguments()[0],
@@ -279,71 +292,50 @@ public class MapsforgeTaskHandler {
 		@Override
 		public Set<String> getCategories(XmlRenderThemeStyleMenu styleMenu) {
 			// Get available styles
-			List<String> styles = new ArrayList<>();
+			List<String> styleIds = new ArrayList<>();
 			Map<String, XmlRenderThemeStyleLayer> layers = styleMenu.getLayers();
 			for (Map.Entry<String, XmlRenderThemeStyleLayer> item : layers.entrySet()) {
-				if (item.getValue().isVisible() && !item.getValue().isEnabled()) styles.add(item.getKey());
+				if (item.getValue().isVisible()) styleIds.add(item.getKey());
 			}
 
 			// Show styles
-			String id = null;
-			if (themeFileStyle != null) {
-				id = themeFileStyle;
-			} else {
-				id = styleMenu.getDefaultValue();
-			}
-			Boolean selectedStyleExists = false;
+			logger.info("------------------ THEME STYLES ------------------");
 			String defaultStyle = styleMenu.getDefaultValue();
+			String themeStyle = themeFileStyle == null ? defaultStyle : themeFileStyle;
 			int maxlen = 0;
-			logger.info("------------------ THEME STYLES ------------------"); //$NON-NLS-1$
-			logger.info("Default   : " + defaultStyle); //$NON-NLS-1$
-			for (final String style : styles) {
-				int strlen = style.length();
+			for (String id : styleIds) {
+				int strlen = id.length();
 				if (strlen > maxlen) maxlen = strlen;
 			}
-			for (final String style : styles) {
-				if (style.equals(themeFileStyle)) selectedStyleExists = true;
-				logger.info("Available : " + String.format("%-" + maxlen + "s", style) + " --> " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-					+ styleMenu.getLayer(style).getTitle(mapsforgeTaskConfig.getPreferredLanguage()));
+			String format = "%-" + maxlen + "s";
+			logger.info("Default   : " + defaultStyle);
+			themeStyleCheck = -1;
+			for (String id : styleIds) {
+				logger.info("Available : " + String.format(format, id)
+					+ " --> " + styleMenu.getLayer(id).getTitle(language));
+				if (id.equals(themeStyle)) themeStyleCheck = 1;
 			}
-			if (themeFileStyle == null) {
-				logger.info("Used      : " + defaultStyle); //$NON-NLS-1$
-				styleCheck = 1;
-			} else if (selectedStyleExists) {
-				logger.info("Used      : " + themeFileStyle); //$NON-NLS-1$
-				styleCheck = 1;
-			} else {
-				styleCheck = -1;
-				return null;
-			}
+			if (themeStyleCheck < 0) return null;
+			logger.info("Used      : " + themeStyle);
 
 			// Show overlays
-			XmlRenderThemeStyleLayer baseLayer = styleMenu.getLayer(id);
-			Set<String> result = baseLayer.getCategories();
-			logger.info("----------------- THEME OVERLAYS -----------------"); //$NON-NLS-1$
-			String[] enabled = {"Disabled","Enabled "};
+			logger.info("----------------- THEME OVERLAYS -----------------");
+			XmlRenderThemeStyleLayer baseLayer = styleMenu.getLayer(themeStyle);
+			List<XmlRenderThemeStyleLayer> overlays = baseLayer.getOverlays();
 			maxlen = 0;
-			for (XmlRenderThemeStyleLayer overlay : baseLayer.getOverlays()) {
+			for (XmlRenderThemeStyleLayer overlay : overlays) {
 				int strlen = overlay.getId().length();
 				if (strlen > maxlen) maxlen = strlen;
 			}
-			for (XmlRenderThemeStyleLayer overlay : baseLayer.getOverlays()) {
-				String overlayId = overlay.getId();
-				boolean overlayEnabled = false;
-				String[] themeFileOverlays = mapsforgeTaskConfig.getThemeFileOverlays();
-				if (themeFileOverlays == null) {
-					overlayEnabled = overlay.isEnabled();
-				} else {
-					for (int i = 0; i < themeFileOverlays.length; i++) {
-						if (themeFileOverlays[i].equals(overlayId))
-							overlayEnabled = true;
-					}
-				}
-				logger.info(enabled[overlayEnabled?1:0] + "  : " + String.format("%-" + maxlen + "s", overlayId) +
-						" --> " + overlay.getTitle(mapsforgeTaskConfig.getPreferredLanguage()));
-				if (overlayEnabled) {
-					result.addAll(overlay.getCategories());
-				}
+			format = "%-" + maxlen + "s";
+			List<String> themeFileOverlays = mapsforgeTaskConfig.getThemeFileOverlays();
+			Set<String> result = baseLayer.getCategories();
+			for (XmlRenderThemeStyleLayer overlay : overlays) {
+				String id = overlay.getId();
+				boolean enabled = themeFileOverlays == null ? overlay.isEnabled() : themeFileOverlays.contains(id);
+				logger.info((enabled ? "Enabled " : "Disabled") + "  : " + String.format(format, id)
+					+ " --> " + overlay.getTitle(language));
+				if (enabled) result.addAll(overlay.getCategories());
 			}
 			return result;
 		}
@@ -369,9 +361,9 @@ public class MapsforgeTaskHandler {
 
 		if (xmlRenderTheme == null) {
 			try {
-				xmlRenderTheme = new ExternalRenderTheme(themeFile);	// External render theme
+				xmlRenderTheme = new ExternalRenderTheme(themeFile);
 			} catch (Exception e) {
-				logger.error("Defined theme file '" + themeFile + "' does not exist or cannot be read: Task '" + taskName + "' disabled"); //$NON-NLS-1$
+				logger.error("Defined theme file '" + themeFile + "' does not exist or cannot be read: Task '" + taskName + "' disabled");
 				taskEnabled = false;
 				return false;
 			}
@@ -385,7 +377,8 @@ public class MapsforgeTaskHandler {
 		// Let render theme's built-in hillshading zoom levels override
 		Pattern hsPattern = Pattern.compile("(.*)(<hillshading\\s.*?>)(.*)",Pattern.DOTALL);
 		Matcher hsMatcher = hsPattern.matcher(renderThemeString);
-		if (hsMatcher.matches()) {	// Built-in hillshading found
+		if (hsMatcher.matches()) {
+			// Built-in hillshading found
 			String hsProperty = hsMatcher.group(2);
 			Pattern p = Pattern.compile(".*zoom-min=\"(\\d+)\".*");
 			Matcher m = p.matcher(hsProperty);
@@ -417,25 +410,26 @@ public class MapsforgeTaskHandler {
 		}
 
 		// Start new thread, parse styles and overlays
-		styleCheck = 0;		// Theme has no style, value may get updated in menuCallBack
+		themeStyleCheck = 0;		// Theme has no style, value may get updated in menuCallBack
 		taskEnabled = true;
 		xmlRenderTheme.setMenuCallback(menuCallBack);
 		renderThemeFuture = new RenderThemeFuture(mapsforgeHandler.getGraphicFactory(), xmlRenderTheme, displayModel);
 		new Thread(null,renderThemeFuture,threadName).start();
 
+		// Wait until renderThemeFuture becomes ready
 		try {
-		    /* RenderTheme theme = */ renderThemeFuture.get();	// Wait until renderThemeFuture becomes ready
+ 		    /* RenderTheme theme = */ renderThemeFuture.get();
 		} catch (InterruptedException | ExecutionException e) {
 		    logger.error("Render theme exception: " + e.getMessage());
 		    taskEnabled = false;
 		}
 
-		if (styleCheck < 0 || (styleCheck == 0 && themeFileStyle != null)) {
-			logger.error("Requested style '" + themeFileStyle + "' not available: Task '" + taskName + "' disabled"); //$NON-NLS-1$
+		if (themeStyleCheck < 0 || (themeStyleCheck == 0 && themeFileStyle != null)) {
+			logger.error("Defined style '" + themeFileStyle + "' not available: Task '" + taskName + "' disabled");
 			taskEnabled = false;
 		}
 
-		logger.info("--------------------------------------------------"); //$NON-NLS-1$
+		logger.info("--------------------------------------------------");
 		if (!taskEnabled) {
 			renderThemeFuture.cancel(true);	// Thread cancelled due to error
 			renderThemeFuture = null;
@@ -454,13 +448,13 @@ public class MapsforgeTaskHandler {
 		String engine = "std";
 
 		if (!taskEnabled) {
-			logger.error("Task " + taskName + " disabled. Invalid tile request: " + path); //$NON-NLS-1$
+			logger.error("Task " + taskName + " disabled. Invalid tile request: " + path);
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			return;
 		}
 
 		int x, y, z;
-		String ext = MapsforgeConfig.TILE_EXTENSION; // $NON-NLS-1$
+		String ext = MapsforgeConfig.TILE_EXTENSION;
 		Matcher m = requestPathPattern.matcher(path);
 		if (m.matches()) {
 			x = Integer.parseInt(m.group(2));
@@ -468,45 +462,45 @@ public class MapsforgeTaskHandler {
 			z = Integer.parseInt(m.group(1));
 			if (m.group(4) != null) ext = m.group(4);
 		} else {
-			logger.error("Invalid tile request: " + path); //$NON-NLS-1$
+			logger.error("Invalid tile request: " + path);
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			return;
 		}
 		if (x < 0 || x >= (1 << z)) {
-			logger.error("Tile number x=" + x + " out of range!"); //$NON-NLS-1$
+			logger.error("Tile number x=" + x + " out of range!");
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			return;
 		}
 		if (y < 0 || y >= (1 << z)) {
-			logger.error("Tile number y=" + y + " out of range!"); //$NON-NLS-1$
+			logger.error("Tile number y=" + y + " out of range!");
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			return;
 		}
 
 		float requestedTextScale = 1.0f; // Original text scaling comes from config value
 		try {
-			String tmp = request.getParameter("textScale"); //$NON-NLS-1$
+			String tmp = request.getParameter("textScale");
 //			Override text scaling from config value by text scaling from HTTP request
 //			Final text scaling = textScale * requestedTextScale
 			if (tmp != null) requestedTextScale = Float.parseFloat(tmp) / DisplayModel.textScale;
 		} catch (Exception e) {
-			throw new ServletException("Failed to parse \"textScale\" property: " + e.getMessage(), e); //$NON-NLS-1$
+			throw new ServletException("Failed to parse \"textScale\" property: " + e.getMessage(), e);
 		}
 
 		boolean requestedTransparent = MapsforgeConfig.DEFAULT_TRANSPARENT;
 		try {
-			String tmp = request.getParameter("transparent"); //$NON-NLS-1$
+			String tmp = request.getParameter("transparent");
 			if (tmp != null) requestedTransparent = Boolean.parseBoolean(tmp);
 		} catch (Exception e) {
-			throw new ServletException("Failed to parse \"transparent\" property: " + e.getMessage(), e); //$NON-NLS-1$
+			throw new ServletException("Failed to parse \"transparent\" property: " + e.getMessage(), e);
 		}
 
 		int requestedTileRenderSize = MapsforgeConfig.DEFAULT_TILE_RENDERSIZE;
 		try {
-			String tmp = request.getParameter("tileRenderSize"); //$NON-NLS-1$
+			String tmp = request.getParameter("tileRenderSize");
 			if (tmp != null) requestedTileRenderSize = Integer.parseInt(tmp);
 		} catch (Exception e) {
-			throw new ServletException("Failed to parse \"tileRenderSize\" property: " + e.getMessage(), e); //$NON-NLS-1$
+			throw new ServletException("Failed to parse \"tileRenderSize\" property: " + e.getMessage(), e);
 		}
 		requestedTileRenderSize = (int) Math.round(requestedTileRenderSize * mapsforgeTaskConfig.getTileScale());
 
@@ -515,10 +509,10 @@ public class MapsforgeTaskHandler {
 		if (multiMapDataStore.supportsTile(tile)) {
 			boolean enable_hs = true;
 			try {
-				String tmp = request.getParameter("hillshading"); //$NON-NLS-1$
-				if (tmp != null) enable_hs = Integer.parseInt(tmp) != 0; //$NON-NLS-1$
+				String tmp = request.getParameter("hillshading");
+				if (tmp != null) enable_hs = Integer.parseInt(tmp) != 0;
 			} catch (Exception e) {
-				throw new ServletException("Failed to parse \"hillshading\" property: " + e.getMessage(), e); //$NON-NLS-1$
+				throw new ServletException("Failed to parse \"hillshading\" property: " + e.getMessage(), e);
 			}
 			if (hillsRenderConfig != null && enable_hs) engine = "hs";
 
@@ -528,10 +522,10 @@ public class MapsforgeTaskHandler {
 				requestedTextScale, requestedTransparent, false);
 
 //Synchronizing render jobs has no visible effect -> disabled
-//				synchronized (this) {
-				tileBitmap = current.renderers.get(engine).executeJob(job);
-				if (!hillShadingOverlay) tileCache.put(job, null);
-//				}
+//			synchronized (this) {
+			tileBitmap = current.renderers.get(engine).executeJob(job);
+			if (!hillShadingOverlay) tileCache.put(job, null);
+//			}
 		}
 
 		BufferedImage image;
@@ -570,7 +564,7 @@ public class MapsforgeTaskHandler {
 			String outOfRangeTms = mapsforgeConfig.getOutOfRangeTms();;
 			if(outOfRangeTms != null) {
 				response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
-				String redirecturl = outOfRangeTms.replace("{x}", x+"").replace("{y}", y+"").replace("{z}", z+"");
+				String redirecturl = outOfRangeTms.replace("{x}", x + "").replace("{y}", y + "").replace("{z}", z + "");
 				response.setHeader("Location", redirecturl);
 				response.flushBuffer();
 				logger.info("out-of-range redirect '" + redirecturl + "'");
@@ -581,9 +575,9 @@ public class MapsforgeTaskHandler {
 			}
 		}
 		if (mapsforgeConfig.getCacheControl() > 0) {
-			response.addHeader("Cache-Control", "public, max-age=" + mapsforgeConfig.getCacheControl()); //$NON-NLS-1$ //$NON-NLS-2$
+			response.addHeader("Cache-Control", "public, max-age=" + mapsforgeConfig.getCacheControl());
 		}
-		response.setContentType("image/" + ext); //$NON-NLS-1$
+		response.setContentType("image/" + ext);
 		int bufferSize = 256 + 4*image.getWidth()*image.getHeight(); // Assume image data size <= bufferSize
 		MyResponseBufferOutputStream responseBufferStream = new MyResponseBufferOutputStream(bufferSize);
 		ImageIO.write(image, ext, responseBufferStream);

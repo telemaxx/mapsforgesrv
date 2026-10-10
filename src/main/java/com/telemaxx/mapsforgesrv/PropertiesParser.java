@@ -24,17 +24,17 @@ public abstract class PropertiesParser {
 	 * FIXED VALUES *
 	 ****************/
 
-	public final static String 		VERSION = "0.30.0.0"; // 3 qualifiers = Mapsforge version, 4th qualifier = patch level //$NON-NLS-1$
+	public final static String 		VERSION = "0.30.0.1"; // 3 qualifiers = Mapsforge version, 4th qualifier = patch level
 
-	public final static String 		TILE_EXTENSION = "png"; //$NON-NLS-1$
-	protected static final String 	FILE = "file"; //$NON-NLS-1$
-	protected static final String 	FOLDER = "folder"; //$NON-NLS-1$
+	public final static String 		TILE_EXTENSION = "png";
+	protected static final String 	FILE = "file";
+	protected static final String 	FOLDER = "folder";
 	// mandatory config files & directory
-	public final static String 		FILECONFIG_JETTY = "jetty.xml"; //$NON-NLS-1$
-	public final static String 		FILECONFIG_JETTY_THREADPOOL = "jetty-threadpool.xml"; //$NON-NLS-1$
-	public final static String 		FILECONFIG_JETTY_THREADPOOL_VR = "jetty-threadpool-virtual.xml"; //$NON-NLS-1$
-	public final static String		FILECONFIG_SERVER = "server.properties"; //$NON-NLS-1$
-	public final static String		DIRCONFIG_TASKS = "tasks"+System.getProperty("file.separator"); //$NON-NLS-1$
+	public final static String 		FILECONFIG_JETTY = "jetty.xml";
+	public final static String 		FILECONFIG_JETTY_THREADPOOL = "jetty-threadpool.xml";
+	public final static String 		FILECONFIG_JETTY_THREADPOOL_VR = "jetty-threadpool-virtual.xml";
+	public final static String		FILECONFIG_SERVER = "server.properties";
+	public final static String		DIRCONFIG_TASKS = "tasks" + System.getProperty("file.separator");
 
 	// true:  More precise at tile edges but much slower / false: Less precise at tile edges but much faster
 	public final static boolean 	HILLSHADING_INTERPOLATION_OVERLAP = true;
@@ -57,7 +57,6 @@ public abstract class PropertiesParser {
 
 	// MapsforgeTaskConfig.appendWorldMap
 	protected final static boolean 	DEFAULT_APPENDWORLDMAP = false;
-	protected final static boolean 	DEFAULT_NEIGHBOURLABELS = false;
 	// MapsforgeTaskConfig.gammaValue
 	protected final static double 	DEFAULT_GAMMA = 1.;
 	// MapsforgeTaskConfig.blackValue
@@ -95,12 +94,15 @@ public abstract class PropertiesParser {
 	// There is usually no reason to set this to a value higher than 1 (the default), although it is allowed,since it makes no sense to have hill shading rendered at a higher resolution than the device's display.
 	public final static int			HILLSHADING_ADAPTIVE_CUSTOM_QUALITY_SCALE = 1;
 
+	// MapsforgeTaskConfig.neighbourLabels
+	protected final static boolean  DEFAULT_NEIGHBOURLABELS = false;
+
 	/***********
 	 * PRIVATE *
 	 ***********/
 
 	private boolean					parseError = false;
-	private final static int 		PAD_MSG = 26;
+	private final static int 		PAD_MSG = 28;
 	private final static 			Logger logger = LoggerFactory.getLogger(PropertiesParser.class);
 
 	protected String readConfig(File configFile) throws Exception {
@@ -115,10 +117,10 @@ public abstract class PropertiesParser {
 			inputStream.close();
 			checkSum = checkSum(data);
 		} catch (FileNotFoundException e) {
-			logger.error("Can't find config file '" + configFile + "': exiting"); //$NON-NLS-1$
+			logger.error("Can't find config file '" + configFile + "': exiting");
 			System.exit(1);
 		} catch (IOException e) {
-			logger.error("Can't parse config file '" + configFile + "': exiting"); //$NON-NLS-1$
+			logger.error("Can't parse config file '" + configFile + "': exiting");
 			System.exit(1);
 		}
 		return checkSum;
@@ -139,7 +141,7 @@ public abstract class PropertiesParser {
 	}
 
 	protected void parseError(String msgHeader, String msgErr) {
-		logger.error(msgHeader + ": error - " + msgErr); //$NON-NLS-1$
+		logger.error(msgHeader + ": error - " + msgErr);
 		parseError = true;
 	}
 
@@ -171,7 +173,7 @@ public abstract class PropertiesParser {
 			targetClass = defaultValue.getClass().getSimpleName();
 			target = (Number) defaultValue;
 		}
-		String configString = retrieveConfigValue(configValue); // $NON-NLS-1$
+		String configString = retrieveConfigValue(configValue);
 		if (configString != null) {
 			try {
 				configString = configString.trim();
@@ -203,15 +205,15 @@ public abstract class PropertiesParser {
 						operator = "' >= '";
 					parseError(msgHeader, "'" + target + operator + maxValue + "' ");
 				} else {
-					logger.info(msgHeader + ": defined [" + target + "]"); //$NON-NLS-1$
+					logger.info(msgHeader + ": defined [" + target + "]");
 				}
 			} catch (NumberFormatException e) {
 				parseError(msgHeader, "'" + configString + "' not a number ");
 			}
 		} else if (defaultValue instanceof String) {
-			logger.info(msgHeader + ": default [undefined]"); //$NON-NLS-1$
+			logger.info(msgHeader + ": default [undefined]");
 		} else {
-			logger.info(msgHeader + ": default [" + target + "]"); //$NON-NLS-1$
+			logger.info(msgHeader + ": default [" + target + "]");
 		}
 		return target;
 	}
@@ -220,17 +222,17 @@ public abstract class PropertiesParser {
 			throws Exception {
 		msgHeader = parsePadMsg(msgHeader);
 		String target = defaultValue;
-		String configString = retrieveConfigValue(configValue); // $NON-NLS-1$
+		String configString = retrieveConfigValue(configValue);
 		if (configString != null) {
 			configString = configString.trim();
 			if (authorizedValues != null && !Arrays.asList(authorizedValues).contains(configString)) {
 				parseError(msgHeader, "'" + configString + "' not in {" + String.join(",", authorizedValues) + "} ");
 			} else {
 				target = configString;
-				logger.info(msgHeader + ": defined [" + target + "]"); //$NON-NLS-1$
+				logger.info(msgHeader + ": defined [" + target + "]");
 			}
 		} else {
-			logger.info(msgHeader + ": default [" + target + "]"); //$NON-NLS-1$
+			logger.info(msgHeader + ": default [" + target + "]");
 		}
 		return target;
 	}
@@ -238,7 +240,7 @@ public abstract class PropertiesParser {
 	protected boolean parseBoolean(Boolean defaultValue, String configValue, String msgHeader) throws Exception {
 		msgHeader = parsePadMsg(msgHeader);		
 		boolean target = defaultValue;
-		String configString = retrieveConfigValue(configValue); // $NON-NLS-1$
+		String configString = retrieveConfigValue(configValue);
 		if (configString != null) {
 			configString = configString.trim();
 			if (configString.equals("")) {
@@ -246,9 +248,9 @@ public abstract class PropertiesParser {
 			} else {
 				target = Boolean.parseBoolean(configString);				
 			}
-			logger.info(msgHeader + ": defined [" + String.valueOf(target) + "]"); //$NON-NLS-1$
+			logger.info(msgHeader + ": defined [" + String.valueOf(target) + "]");
 		} else {
-			logger.info(msgHeader + ": default [" + String.valueOf(target) + "]"); //$NON-NLS-1$
+			logger.info(msgHeader + ": default [" + String.valueOf(target) + "]");
 		}
 		return target;
 	}
@@ -257,7 +259,7 @@ public abstract class PropertiesParser {
 			String msgDefault) throws Exception {
 		msgHeader = parsePadMsg(msgHeader + " " + fileOrFolder);
 		File target = null;
-		String configString = retrieveConfigValue(configValue); // $NON-NLS-1$
+		String configString = retrieveConfigValue(configValue);
 		if (configString != null) {
 			target = new File(configString.trim());
 			if (fileOrFolder == FILE) {
@@ -274,12 +276,12 @@ public abstract class PropertiesParser {
 					parseError(msgHeader, "'" + configString + "' empty folder");
 				}
 			} else {
-				throw new Exception("fileOrFolder '" + fileOrFolder + "' not in [file|folder]"); //$NON-NLS-1$ //$NON-NLS-2$
+				throw new Exception("fileOrFolder '" + fileOrFolder + "' not in [file|folder]");
 			}
 			if (target != null)
-				logger.info(msgHeader + ": defined [" + target.getPath() + "]"); //$NON-NLS-1$
+				logger.info(msgHeader + ": defined [" + target.getPath() + "]");
 		} else {
-			logger.info(msgHeader + ": default [" + msgDefault + "]"); //$NON-NLS-1$
+			logger.info(msgHeader + ": default [" + msgDefault + "]");
 		}
 		return target;
 	}
