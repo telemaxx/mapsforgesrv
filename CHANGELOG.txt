@@ -211,5 +211,6 @@ XML parser no longer referenced -> file moved from folder "src" to "test"
 Raise version to 0.30.0.1 (JFritzle)
 New task property "neighbour-labels" (cedricshih and claude)
 Redesigned "MAPS INFO" log output
+Modified "help" output
 Minor simplifications/optimizations/beautifications
 Removed (ignored) non-externalized string tags "$NON-NLS-*$" for better readability

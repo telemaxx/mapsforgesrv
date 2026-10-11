@@ -77,8 +77,8 @@ public class MapsforgeConfig extends PropertiesParser{
 		Options options = new Options();
 		options.addOption(Option.builder("c")
 				.longOpt("config")
-				.desc("Config directory including at least " + FILECONFIG_SERVER +
-					" and " + DIRCONFIG_TASKS + ", optionally " + FILECONFIG_JETTY +
+				.desc("Config directory including at least file " + FILECONFIG_SERVER +
+					" and folder " + DIRCONFIG_TASKS + ", optionally files " + FILECONFIG_JETTY +
 					", " + FILECONFIG_JETTY_THREADPOOL + ", " + FILECONFIG_JETTY_THREADPOOL_VR)
 				.required(false).hasArg(true).build());
 		options.addOption(Option.builder("h")
@@ -87,7 +87,7 @@ public class MapsforgeConfig extends PropertiesParser{
 				.required(false).hasArg(false).build());
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.setWidth(132);
+		formatter.setWidth(80);
 		try {
 			configCmd = parser.parse(options, args);
 			if (configCmd.hasOption("help")) {
@@ -103,18 +103,18 @@ public class MapsforgeConfig extends PropertiesParser{
 		if (config != null) {
 			config = config.trim();
 			if (new File(config).isDirectory()) {
-				configDirectory = config+System.getProperty("file.separator");
-				String configFile = configDirectory+FILECONFIG_SERVER;
+				configDirectory = config + System.getProperty("file.separator");
+				String configFile = configDirectory + FILECONFIG_SERVER;
 				if (!new File(configFile).isFile()) {
 					logger.error("Required config file '" + configFile + "' doesn't exist: exiting");
 					System.exit(1);
 				}
-				taskDirectory = configDirectory+DIRCONFIG_TASKS;
+				taskDirectory = configDirectory + DIRCONFIG_TASKS;
 				if (!new File(taskDirectory).isDirectory()) {
 					logger.error("Tasks directory '" + taskDirectory + "' doesn't exist: exiting");
 					System.exit(1);
 				}
-				readConfig(new File(configDirectory+FILECONFIG_SERVER));
+				readConfig(new File(configDirectory + FILECONFIG_SERVER));
 			} else {
 				logger.error("Config '" + config + "' set with -c is not a directory: exiting");
 				System.exit(1);

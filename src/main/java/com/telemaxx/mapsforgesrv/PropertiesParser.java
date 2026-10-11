@@ -34,7 +34,7 @@ public abstract class PropertiesParser {
 	public final static String 		FILECONFIG_JETTY_THREADPOOL = "jetty-threadpool.xml";
 	public final static String 		FILECONFIG_JETTY_THREADPOOL_VR = "jetty-threadpool-virtual.xml";
 	public final static String		FILECONFIG_SERVER = "server.properties";
-	public final static String		DIRCONFIG_TASKS = "tasks" + System.getProperty("file.separator");
+	public final static String		DIRCONFIG_TASKS = "tasks";
 
 	// true:  More precise at tile edges but much slower / false: Less precise at tile edges but much faster
 	public final static boolean 	HILLSHADING_INTERPOLATION_OVERLAP = true;

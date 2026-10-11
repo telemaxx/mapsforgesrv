@@ -85,7 +85,7 @@ public class MapsforgeSrv {
 		} else {
 			jettyXML = MapsforgeConfig.FILECONFIG_JETTY_THREADPOOL;
 		}
-		file = new File(mapsforgeConfig.getConfigDirectory()+jettyXML);
+		file = new File(mapsforgeConfig.getConfigDirectory() + jettyXML);
 		if (file.isFile()) {
 			resource = Resource.newResource(file);
 		} else {
@@ -101,7 +101,7 @@ public class MapsforgeSrv {
 		queuedThreadPool.setStopTimeout(0);
 
 		jettyXML = MapsforgeConfig.FILECONFIG_JETTY;
-		file = new File(mapsforgeConfig.getConfigDirectory()+jettyXML);
+		file = new File(mapsforgeConfig.getConfigDirectory() + jettyXML);
 		if (file.isFile()) {
 			resource = Resource.newResource(file);
 		} else {
@@ -137,7 +137,7 @@ public class MapsforgeSrv {
 
 		try {
 			server.start();
-			logger.info("Started " +server.getThreadPool().toString());
+			logger.info("Started " + server.getThreadPool().toString());
 		} catch (BindException e) {
 			logger.error("Stopping server", e);
 			System.exit(1);
