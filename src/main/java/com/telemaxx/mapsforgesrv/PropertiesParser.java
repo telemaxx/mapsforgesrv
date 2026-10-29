@@ -24,7 +24,7 @@ public abstract class PropertiesParser {
 	 * FIXED VALUES *
 	 ****************/
 
-	public final static String 		VERSION = "0.30.0.2"; // 3 qualifiers = Mapsforge version, 4th qualifier = patch level
+	public final static String 		VERSION = "0.31.0.0"; // 3 qualifiers = Mapsforge version, 4th qualifier = patch level
 
 	public final static String 		TILE_EXTENSION = "png";
 	protected static final String 	FILE = "file";

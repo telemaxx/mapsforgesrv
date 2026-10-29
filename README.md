@@ -36,10 +36,6 @@ Each configuration file can contain
 
 #### Server configuration file `server.properties` parameters:
 
-<style>
-li {margin-bottom:5px}
-</style>
-
 | Name | Description |
 | ---- | ----------- |
 | `host` | IP address to listen on<br>Default: unset = listen on all interfaces

@@ -17,7 +17,7 @@ eclipse {
 repositories {
 	mavenCentral()
 	// https://github.com/mapsforge/mapsforge/blob/master/docs/Integration.md
-	maven { url = 'https://jitpack.io' }
+	mavenLocal();
 }
 
 sourceSets {
@@ -34,16 +34,17 @@ sourceSets {
 }
 
 dependencies {
-	def mapsforgeVersion = "0.30.0"
+	def mapsforgeVersion = "0.31.0"
+	//def mapsforgeVersion = "master-SNAPSHOT"
 	// https://mvnrepository.com/artifact/org.eclipse.jetty.http2/http2-server
 	def jettyVersion = "11.0.26"
 	def slf4j = "+"
 
-	implementation "com.github.mapsforge.mapsforge:mapsforge-core:${mapsforgeVersion}"
-	implementation "com.github.mapsforge.mapsforge:mapsforge-map:${mapsforgeVersion}"
-	implementation "com.github.mapsforge.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
-	implementation "com.github.mapsforge.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
-	implementation "com.github.mapsforge.mapsforge:mapsforge-themes:${mapsforgeVersion}"
+	implementation "org.mapsforge:mapsforge-core:${mapsforgeVersion}"
+	implementation "org.mapsforge:mapsforge-map:${mapsforgeVersion}"
+	implementation "org.mapsforge:mapsforge-map-awt:${mapsforgeVersion}"
+	implementation "org.mapsforge:mapsforge-map-reader:${mapsforgeVersion}"
+	implementation "org.mapsforge:mapsforge-themes:${mapsforgeVersion}"
 
 	implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
 	runtimeOnly    "org.eclipse.jetty.http2:http2-server:${jettyVersion}"
