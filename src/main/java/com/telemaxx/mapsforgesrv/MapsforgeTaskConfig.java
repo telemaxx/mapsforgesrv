@@ -1,7 +1,9 @@
 package com.telemaxx.mapsforgesrv;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FilenameFilter;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -9,15 +11,17 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.ZipInputStream;
 
 import org.mapsforge.map.rendertheme.XmlRenderTheme;
+import org.mapsforge.map.rendertheme.ZipXmlThemeResourceProvider;
 import org.mapsforge.map.rendertheme.internal.MapsforgeThemes;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MapsforgeTaskConfig extends PropertiesParser{
+public class MapsforgeTaskConfig extends PropertiesParser {
 
 	private List<File> mapFiles = null;
 	private boolean appendWorldMap;
@@ -41,8 +45,10 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 	protected Integer hillShadingZoomMax = null;
 	private int blackValue;
 	private double gammaValue;
-	private boolean neighbourLabels;
+	private boolean neighborLabels;
 	private String checkSum = null;
+
+	public final static Pattern zipFilePattern = Pattern.compile("(.+\\.zip)((\\(.+\\.xml\\))?)");
 
 	private final static Logger logger = LoggerFactory.getLogger(MapsforgeTaskConfig.class);
 
@@ -57,22 +63,69 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 		String configString = retrieveConfigValue(configValue);
 		String msgHeader = "Theme";
 
+		if (configString == null) {
+			themeFile = new File("OSMARENDER");
+			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": default [OSMARENDER]");
+			return;
+		}
+
+		configString = configString.trim();
+
 		List<String> internalRenderThemes = new ArrayList<String>();
 		for (XmlRenderTheme enumItem : new ArrayList<XmlRenderTheme>(EnumSet.allOf(MapsforgeThemes.class))) {
 			internalRenderThemes.add(enumItem.toString());
 		};
 
-		if (configString == null) {
-			themeFile = new File("OSMARENDER");
-			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": default [OSMARENDER]");
-		} else if (internalRenderThemes.contains(configString.trim())) {
-			configString = configString.trim();
+		if (internalRenderThemes.contains(configString)) {
 			themeFile = new File(configString);
 			logger.info(parsePadMsg(msgHeader + " " + FILE) + ": defined [" + configString + "]");
-		} else {
-			themeFile = parseFile(configValue, FILE, false, msgHeader, "OSMARENDER");
-			if (themeFile == null) themeFile = new File("OSMARENDER");
+			return;
 		}
+
+		Matcher	zipFileMatcher = zipFilePattern.matcher(configString);
+		if (!zipFileMatcher.matches()) {
+			themeFile = parseFile(configValue, FILE, false, msgHeader, null);
+			return;
+		}
+
+		msgHeader = parsePadMsg(msgHeader +=  " " + FILE);
+		String file = zipFileMatcher.group(1);
+		String theme = zipFileMatcher.group(2);
+		if (theme != "") theme = theme.substring(1, theme.length()-1);
+
+		File zipFileName = new File(file);
+		file = zipFileName.getPath();
+		if (!zipFileName.isFile()) {
+			parseError(msgHeader, "'" + file + "' is not a file");
+			return;
+		}
+
+		InputStream inputStream = new FileInputStream(zipFileName);
+		ZipInputStream zipInputStream = new ZipInputStream(inputStream);
+		ZipXmlThemeResourceProvider provider = new ZipXmlThemeResourceProvider(zipInputStream);
+		List<String> themes = provider.getXmlThemes();
+		zipInputStream.close();
+		inputStream.close();
+
+		if (themes.size() == 0) {
+			parseError(msgHeader, "'" + file + "' has no themes");
+			return;
+		} else if (themes.size() == 1) {
+			if (theme == "") {
+				theme = themes.get(0);
+				configString += "(" + theme + ")";
+			}
+		}
+		if (theme == "") {
+			parseError(msgHeader, "'" + file + "' has multiple themes " + themes);
+			return;
+		} else if (!themes.contains(theme)) {
+			parseError(msgHeader, "'" + file + "' has no theme '" + theme + "'");
+			return;
+		}
+
+		themeFile = new File(configString);
+		logger.info(msgHeader + ": defined [" + themeFile.getPath() + "]");
 	}
 
 	private void parseThemeOverlays() throws Exception {
@@ -157,7 +210,7 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 		symbolScale = (float) parseNumber(DEFAULT_SYMBOLSCALE, "symbol-scale", 0., null, "Symbol scaling factor",true);
 		lineScale = (float) parseNumber(DEFAULT_LINESCALE, "line-scale", 0., null, "Line scaling factor",true);
 		tileScale = (float) parseNumber(DEFAULT_TILESCALE, "tile-scale", 0., null, "Tile scaling factor",true);
-		neighbourLabels = parseBoolean(DEFAULT_NEIGHBOURLABELS, "neighbour-labels", "Labels from neighbour tiles");
+		neighborLabels = parseBoolean(DEFAULT_NEIGHBORLABELS, "neighbor-labels", "Labels from neighbor tiles");
 		if (parseGetError()) {
 			logger.error("Properties parsing error(s) - task '" + taskName + "' disabled");
 			checkSum = null;
@@ -310,8 +363,8 @@ public class MapsforgeTaskConfig extends PropertiesParser{
 		return this.tileScale;
 	}
 
-	public boolean getNeighbourLabels() {
-		return this.neighbourLabels;
+	public boolean getNeighborLabels() {
+		return this.neighborLabels;
 	}
 
 	public String getCheckSum() {

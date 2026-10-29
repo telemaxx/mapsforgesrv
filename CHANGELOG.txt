@@ -214,3 +214,8 @@ Redesigned "MAPS INFO" log output
 Modified "help" output
 Minor simplifications/optimizations/beautifications
 Removed (ignored) non-externalized string tags "$NON-NLS-*$" for better readability
+
+0.30.0.2
+Raise version to 0.30.0.2 (JFritzle)
+New external zipped theme files support
+Renamed task property "neighbour-labels" to more convenient "neighbor-labels"
