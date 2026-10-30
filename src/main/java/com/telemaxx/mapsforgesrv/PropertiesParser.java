@@ -24,7 +24,7 @@ public abstract class PropertiesParser {
 	 * FIXED VALUES *
 	 ****************/
 
-	public final static String 		VERSION = "0.30.0.1"; // 3 qualifiers = Mapsforge version, 4th qualifier = patch level
+	public final static String 		VERSION = "0.31.0.0"; // 3 qualifiers = Mapsforge version, 4th qualifier = patch level
 
 	public final static String 		TILE_EXTENSION = "png";
 	protected static final String 	FILE = "file";
@@ -94,15 +94,15 @@ public abstract class PropertiesParser {
 	// There is usually no reason to set this to a value higher than 1 (the default), although it is allowed,since it makes no sense to have hill shading rendered at a higher resolution than the device's display.
 	public final static int			HILLSHADING_ADAPTIVE_CUSTOM_QUALITY_SCALE = 1;
 
-	// MapsforgeTaskConfig.neighbourLabels
-	protected final static boolean  DEFAULT_NEIGHBOURLABELS = false;
+	// MapsforgeTaskConfig.neighborLabels
+	protected final static boolean  DEFAULT_NEIGHBORLABELS = false;
 
 	/***********
 	 * PRIVATE *
 	 ***********/
 
 	private boolean					parseError = false;
-	private final static int 		PAD_MSG = 28;
+	private final static int 		PAD_MSG = 27;
 	private final static 			Logger logger = LoggerFactory.getLogger(PropertiesParser.class);
 
 	protected String readConfig(File configFile) throws Exception {
@@ -175,8 +175,8 @@ public abstract class PropertiesParser {
 		}
 		String configString = retrieveConfigValue(configValue);
 		if (configString != null) {
+			configString = configString.trim();
 			try {
-				configString = configString.trim();
 				String operator;
 				switch (targetClass) {
 				case "Long":
@@ -258,31 +258,30 @@ public abstract class PropertiesParser {
 	protected File parseFile(String configValue, String fileOrFolder, boolean checkFolderNotEmpty, String msgHeader,
 			String msgDefault) throws Exception {
 		msgHeader = parsePadMsg(msgHeader + " " + fileOrFolder);
-		File target = null;
 		String configString = retrieveConfigValue(configValue);
-		if (configString != null) {
-			target = new File(configString.trim());
-			if (fileOrFolder == FILE) {
-				if (!target.isFile()) {
-					target = null;
-					parseError(msgHeader, "'" + configString + "' not a file");
-				}
-			} else if (fileOrFolder == FOLDER) {
-				if (!target.isDirectory()) {
-					target = null;
-					parseError(msgHeader, "'" + configString + "' not a folder");
-				} else if (checkFolderNotEmpty && target.listFiles().length == 0) {
-					target = null;
-					parseError(msgHeader, "'" + configString + "' empty folder");
-				}
-			} else {
-				throw new Exception("fileOrFolder '" + fileOrFolder + "' not in [file|folder]");
-			}
-			if (target != null)
-				logger.info(msgHeader + ": defined [" + target.getPath() + "]");
-		} else {
+		if (configString == null) {
 			logger.info(msgHeader + ": default [" + msgDefault + "]");
+			return null;
 		}
+		File target = new File(configString.trim());
+		if (fileOrFolder == FILE) {
+			if (!target.isFile()) {
+				target = null;
+				parseError(msgHeader, "'" + configString + "' not a file");
+			}
+		} else if (fileOrFolder == FOLDER) {
+			if (!target.isDirectory()) {
+				target = null;
+				parseError(msgHeader, "'" + configString + "' not a folder");
+			} else if (checkFolderNotEmpty && target.listFiles().length == 0) {
+				target = null;
+				parseError(msgHeader, "'" + configString + "' empty folder");
+			}
+		} else {
+			throw new Exception("fileOrFolder '" + fileOrFolder + "' not in [file|folder]");
+		}
+		if (target != null)
+			logger.info(msgHeader + ": defined [" + target.getPath() + "]");
 		return target;
 	}
 }

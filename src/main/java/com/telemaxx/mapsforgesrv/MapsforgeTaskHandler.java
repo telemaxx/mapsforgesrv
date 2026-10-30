@@ -5,8 +5,10 @@ import java.awt.image.DataBufferInt;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
@@ -20,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipInputStream;
 
 import javax.imageio.ImageIO;
 
@@ -54,6 +57,8 @@ import org.mapsforge.map.rendertheme.XmlRenderThemeMenuCallback;
 import org.mapsforge.map.rendertheme.XmlRenderThemeStyleLayer;
 import org.mapsforge.map.rendertheme.XmlRenderThemeStyleMenu;
 import org.mapsforge.map.rendertheme.XmlThemeResourceProvider;
+import org.mapsforge.map.rendertheme.ZipRenderTheme;
+import org.mapsforge.map.rendertheme.ZipXmlThemeResourceProvider;
 import org.mapsforge.map.rendertheme.rule.RenderThemeFuture;
 
 import org.slf4j.Logger;
@@ -88,9 +93,9 @@ public class MapsforgeTaskHandler {
 	private int[] colorLookupTable = null;
 
 	private volatile Rendering rendering = null;
-	private boolean neighbourLabels = false;
+	private boolean neighborLabels = false;
 
-	// The renderers and, with neighbour labels, the render theme their label store was built for.
+	// The renderers and, with neighbor labels, the render theme their label store was built for.
 	// They are replaced together, so a request never pairs one theme with another theme's labels.
 	private static final class Rendering {
 		final Map<String, DatabaseRenderer> renderers;
@@ -256,6 +261,8 @@ public class MapsforgeTaskHandler {
 			MemoryCachingHgtReaderTileSource tileSource = new MemoryCachingHgtReaderTileSource(
 					demFolderFS, shadingAlgorithm, mapsforgeHandler.getGraphicFactory(),
 					MapsforgeConfig.HILLSHADING_INTERPOLATION_OVERLAP);
+			//
+			//
 			tileSource.applyConfiguration(true); // true for allow parallel
 
 			hillsRenderConfig = new HillsRenderConfig(tileSource);
@@ -265,15 +272,15 @@ public class MapsforgeTaskHandler {
 			hillsRenderConfig.indexOnThread();
 		}
 
-		// Neighbour labels: each tile reads the labels of its 3x3 neighbourhood from the map data and
+		// Neighbor labels: each tile reads the labels of its 3x3 neighborhood from the map data and
 		// places them by a fixed rule, so adjacent tiles agree on every label crossing their border no
 		// matter which process renders them or in what order. The tile-based label store only knows
-		// neighbours this process has already rendered, so with several server processes (or any
+		// neighbors this process has already rendered, so with several server processes (or any
 		// request order) a label can be drawn on one side of a tile border and missing on the other.
 		// The label store needs the render theme, so in this mode the renderers are created once the
 		// theme is ready (updateRenderThemeFuture).
-		neighbourLabels = mapsforgeTaskConfig.getNeighbourLabels() && !hillShadingOverlay;
-		if (!neighbourLabels) createDatabaseRenderers(labelStore, null);
+		neighborLabels = mapsforgeTaskConfig.getNeighborLabels() && !hillShadingOverlay;
+		if (!neighborLabels) createDatabaseRenderers(labelStore, null);
 
 		updateRenderThemeFuture(false);
 	}
@@ -351,6 +358,7 @@ public class MapsforgeTaskHandler {
 		xmlRenderTheme = null;
 		for (XmlRenderTheme enumItem : internalRenderThemes) {
 			if (enumItem.toString().equals(themeFile.getPath())) {
+				// Internal render theme from assets
 				xmlRenderTheme = enumItem;
 				internalRenderTheme = true;
 				break;
@@ -359,16 +367,34 @@ public class MapsforgeTaskHandler {
 
 		if (update && internalRenderTheme) return false;
 
+		String zipTheme = null;
+		MyZipXmlThemeResourceProvider zipProvider = null;
 		if (xmlRenderTheme == null) {
 			try {
-				xmlRenderTheme = new ExternalRenderTheme(themeFile);
+				Matcher	zipFileMatcher = MapsforgeTaskConfig.zipFilePattern.matcher(themeFile.toString());
+				if (!zipFileMatcher.matches()) {
+					// External render theme file
+					xmlRenderTheme = new ExternalRenderTheme(themeFile);
+				} else {
+					// External zipped render theme file
+					File zipFile = new File(zipFileMatcher.group(1));
+					zipTheme = zipFileMatcher.group(2);
+					zipTheme = zipTheme.substring(1, zipTheme.length()-1);
+					InputStream fileInputStream = new FileInputStream(zipFile);
+					ZipInputStream zipInputStream = new ZipInputStream(fileInputStream);
+					zipProvider = new MyZipXmlThemeResourceProvider(zipInputStream);
+					xmlRenderTheme = new ZipRenderTheme(zipTheme, zipProvider);
+					zipInputStream.close();
+					fileInputStream.close();
+				}
 			} catch (Exception e) {
-				logger.error("Defined theme file '" + themeFile + "' does not exist or cannot be read: Task '" + taskName + "' disabled");
+				logger.error("Defined theme file '" + themeFile.getPath() + "' does not exist or cannot be read: Task '" + taskName + "' disabled");
 				taskEnabled = false;
 				return false;
 			}
 		}
 
+		// Read render theme into byte array
 		InputStream inputStream = xmlRenderTheme.getRenderThemeAsStream();
 		byte[] renderThemeBytes = inputStream.readAllBytes();
 		String renderThemeString = new String(renderThemeBytes, StandardCharsets.UTF_8);
@@ -378,7 +404,7 @@ public class MapsforgeTaskHandler {
 		Pattern hsPattern = Pattern.compile("(.*)(<hillshading\\s.*?>)(.*)",Pattern.DOTALL);
 		Matcher hsMatcher = hsPattern.matcher(renderThemeString);
 		if (hsMatcher.matches()) {
-			// Built-in hillshading found
+			// Built-in hillshading found -> adjust zoom levels
 			String hsProperty = hsMatcher.group(2);
 			Pattern p = Pattern.compile(".*zoom-min=\"(\\d+)\".*");
 			Matcher m = p.matcher(hsProperty);
@@ -391,11 +417,22 @@ public class MapsforgeTaskHandler {
 			hsProperty = "<hillshading zoom-min=\"" + hsZoomMin + "\" zoom-max=\"" + hsZoomMax + "\" magnitude=\"128\" />";
 			renderThemeString = hsMatcher.group(1) + hsProperty + hsMatcher.group(3);
 			renderThemeBytes = renderThemeString.getBytes(StandardCharsets.UTF_8);
-			String relativePathPrefix = xmlRenderTheme.getRelativePathPrefix();
-			inputStream = new ByteArrayInputStream(renderThemeBytes);
-			xmlRenderTheme = new StreamRenderTheme(relativePathPrefix, inputStream);
-			inputStream.close();
+
+			if (zipProvider == null) {
+				// Internal or external render theme
+				String relativePathPrefix = xmlRenderTheme.getRelativePathPrefix();
+				inputStream = new ByteArrayInputStream(renderThemeBytes);
+				xmlRenderTheme = new StreamRenderTheme(relativePathPrefix, inputStream);
+				inputStream.close();
+			} else {
+				// External zipped render theme -> needs special treatment
+				zipProvider.replaceFilesEntry(zipTheme, renderThemeBytes);
+				xmlRenderTheme = new ZipRenderTheme(zipTheme, zipProvider);
+			}
 		}
+
+		// Suggest garbage collection
+		System.gc();
 
 		if (update) logger.info("################ UPDATING TASK '" + taskName + "' ################");
 
@@ -418,7 +455,7 @@ public class MapsforgeTaskHandler {
 
 		// Wait until renderThemeFuture becomes ready
 		try {
- 		    /* RenderTheme theme = */ renderThemeFuture.get();
+		    /* RenderTheme theme = */ renderThemeFuture.get();
 		} catch (InterruptedException | ExecutionException e) {
 		    logger.error("Render theme exception: " + e.getMessage());
 		    taskEnabled = false;
@@ -433,15 +470,16 @@ public class MapsforgeTaskHandler {
 		if (!taskEnabled) {
 			renderThemeFuture.cancel(true);	// Thread cancelled due to error
 			renderThemeFuture = null;
-		} else if (neighbourLabels) {
+		} else if (neighborLabels) {
 			// Text scaling is taken from the config here; a per-request "textScale" does not reach the labels.
 			// The theme is read once, so the label store and the snapshot cannot get two different ones.
 			RenderThemeFuture theme = renderThemeFuture;
-			createDatabaseRenderers(new NeighbourLabelStore(multiMapDataStore, theme, 1.0f,
+			createDatabaseRenderers(new NeighborLabelStore(multiMapDataStore, theme, 1.0f,
 					displayModel, mapsforgeHandler.getGraphicFactory()), theme);
 		}
+
 		return taskEnabled;
-}
+	}
 
 	protected void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String path = request.getPathInfo();
@@ -630,6 +668,25 @@ public class MapsforgeTaskHandler {
 		}
 		@Override
 		public void setResourceProvider(XmlThemeResourceProvider resourceProvider) {
+		}
+	}
+
+	// Extend class ZipXmlThemeResourceProvider
+	public static class MyZipXmlThemeResourceProvider extends ZipXmlThemeResourceProvider {
+		public MyZipXmlThemeResourceProvider(ZipInputStream zipInputStream) throws IOException {
+			super(zipInputStream);
+		}
+		// Replace key's data of parent class variable "files"
+		public void replaceFilesEntry(String key, byte[] data) {
+			try {
+				// Override "private" declaration of parent class variable "files"
+				Field field = ZipXmlThemeResourceProvider.class.getDeclaredField("files");
+				field.setAccessible(true);
+				// Reflect and access parent class variable "files"
+				@SuppressWarnings("unchecked")
+				Map<String, byte[]> files = (Map<String, byte[]>) field.get(this);
+				files.put(key, data);
+			} catch (Exception e) {}
 		}
 	}
 

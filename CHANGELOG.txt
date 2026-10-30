@@ -214,3 +214,11 @@ Redesigned "MAPS INFO" log output
 Modified "help" output
 Minor simplifications/optimizations/beautifications
 Removed (ignored) non-externalized string tags "$NON-NLS-*$" for better readability
+
+0.31.0.0
+mapsforge 0.31.0
+PropertiesParser:
+Raise version to 0.31.0.0 (JFritzle)
+MapsforgeTaskConfig and MapsforgeTaskHandler:
+New external zipped theme files support
+Renamed task property "neighbour-labels" to more convenient "neighbor-labels"
