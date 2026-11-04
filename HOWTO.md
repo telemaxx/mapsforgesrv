@@ -7,6 +7,25 @@
   - [Buildship: Eclipse Plug-ins for Gradle](https://projects.eclipse.org/projects/tools.buildship)
     - _Build Scans might be disabled in Preferences > Gradle_
   - An Eclipse workspace which doesn't already contain a project named **mapsforgesrv**
+  - Since Mapsforge version 0.31.0, a local Mapsforge repository is required  
+  along with local Mapsforge JAR files created by Gradle task `publishToMavenLocal`,  
+  see Mapsforge [Integration guide](https://github.com/mapsforge/mapsforge/blob/master/docs/Integration.md)  
+  Notes:  
+    - To avoid Android SDK requirements and create **only** JAR files necessary for building Mapsforge server,  
+    comment all `include` statements in Mapsforge repository's file _settings.gradle_  
+    **before** running Gradle task `publishToMavenLocal` except from  
+      - `include ':mapsforge-core'`  
+      - `include ':mapsforge-map'`  
+      - `include ':mapsforge-map-awt'`  
+      - `include ':mapsforge-map-reader'` 
+      - `include ':mapsforge-themes'`  
+    - To resolve all Mapsforge server build dependencies and access Mapsforge JAR files created by Gradle task `publishToMavenLocal`,   
+  line `def mapsforgeVersion = "master-SNAPSHOT"` in Mapsforge server's file _build.gradle_  
+  **must** be made active, i.e. uncommented. 
+    - To resolve all Mapsforge server build dependencies and access Mapsforge JAR files created by Gradle task `publishToMavenLocal`,   
+  by line `def mapsforgeVersion = "0.31.0"` in Mapsforge server's file _build.gradle_  
+  line `version = 'master-SNAPSHOT'` in Mapsforge's file _build.gradle_ **must** be replaced by `version = '0.31.0'` **before** running Gradle task `publishToMavenLocal`.
+ 
 
 - ### import
 
